@@ -27,6 +27,7 @@ export const createGameSession: RequestHandler = (req, res) => {
         getDataEffect,
         response: res,
         successStatus: 201,
+        redirect: true,
       })
   );
 };

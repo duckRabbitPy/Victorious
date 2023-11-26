@@ -18,6 +18,10 @@ server.get("/", (_, res) => {
   res.sendFile(path.join(__dirname, "../client/index.html"));
 });
 
+server.get("/room/:id", (_, res) => {
+  res.sendFile(path.join(__dirname, "../client/room.html"));
+});
+
 // server.use("/game-state", apiKeyMiddleware);
 server.use("/game-state", gameRouter);
 

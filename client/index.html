@@ -10,10 +10,6 @@
       <input type="text" id="username" placeholder="Enter your name" />
       <input type="text" id="room" placeholder="Enter room number" />
       <button onclick="startGame()">Start game</button>
-      <div id="game-state">
-        <h2>Game state</h2>
-        <pre id="game-state-text"></pre>
-      </div>
     </div>
     <script>
       // postrequest to /game-session to create a new game session
@@ -37,10 +33,8 @@
         })
           .then((res) => res.json())
           .then((data) => {
-            document.getElementById("game-state-text").innerHTML =
-              JSON.stringify(data, null, 2);
-
-            console.log("Success:", data);
+            // check successs
+            window.location.href = `/room/${data.room}`;
           })
           .catch((error) => {
             console.error("Error:", error);

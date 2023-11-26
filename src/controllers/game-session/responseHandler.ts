@@ -9,6 +9,7 @@ type sendResponseInput = {
   getDataEffect: Effect.Effect<never, ParseError | PostgresError, GameState>;
   response: Response;
   successStatus: number;
+  redirect?: boolean;
 };
 
 const respondWithError = (
@@ -30,6 +31,7 @@ export function sendResponse({
   getDataEffect,
   response,
   successStatus,
+  redirect,
 }: sendResponseInput) {
   return pipe(
     Effect.matchCauseEffect(getDataEffect, {
@@ -62,8 +64,9 @@ export function sendResponse({
           response.status(500).json("Internal Server error")
         );
       },
-      onSuccess: (todos) =>
-        Effect.succeed(response.status(successStatus).json(todos)),
+      onSuccess: (todos) => {
+        return Effect.succeed(response.status(successStatus).json(todos));
+      },
     }),
     Effect.runPromise
   );

@@ -94,7 +94,7 @@ export const createGameSessionQuery = (
           generatateGlobalState(actorIds),
         ]
       );
-      console.log(result.rows[0].actor_state);
+
       return result.rows[0];
     } catch (error) {
       logAndThrowError(error);
