@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dominion</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <h1>Welcome to Dominion!</h1>
+    <div style="display: flex; flex-direction: column; align-items: center">
+      <input type="text" id="username" placeholder="Enter your name" />
+      <input type="text" id="room" placeholder="Enter room number" />
+      <button onclick="startGame()">Start game</button>
+    </div>
+    <script>
+      // postrequest to /game-session to create a new game session
+      function startGame() {
+        const name = document.getElementById("username").value;
+        const room = document.getElementById("room").value;
+        const data = {
+          name,
+          room,
+          userIds: [
+            "0d3a57b4-6375-42f6-86d3-6a8635867000",
+            "607094e3-1064-48c1-b570-29aec1d0821e",
+          ],
+        };
+        fetch("/game-state", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            console.log("Success:", data);
+          })
+          .catch((error) => {
+            console.error("Error:", error);
+          });
+      }
+    </script>
+  </body>
+</html>
