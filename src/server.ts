@@ -1,13 +1,15 @@
 import express from "express";
 import { json } from "body-parser";
 import { apiKeyMiddleware } from "./routes/middleware";
+import { pipe } from "@effect/data/Function";
 import path from "path";
 import dotenv from "dotenv";
 import { gameRouter } from "./routes/game-session/game-session";
 import * as Effect from "@effect/io/Effect";
 import { WebSocketServer } from "ws";
-import { getGameSessionQuery } from "./models/gamestate";
+import { getGameSessionQuery, incrementTurnQuery } from "./models/gamestate";
 import { cons } from "fp-ts/lib/ReadonlyNonEmptyArray";
+import { increment } from "fp-ts/lib/function";
 
 dotenv.config();
 
@@ -15,23 +17,48 @@ const PORT = process.env?.PORT || 3000;
 
 const wss = new WebSocketServer({ port: 8080 });
 
+const clients = new Set();
+
 wss.on("connection", function connection(ws: any) {
   ws.on("message", function message(msg: any) {
+    clients.add(ws);
     const data = JSON.parse(msg) as any;
     console.log({ data });
-    if (!data && !data?.roomId) {
-      return;
+
+    switch (data?.effect) {
+      case "init": {
+        console.log("send back");
+        const room = Number(data.room);
+        const freshData = getGameSessionQuery(room);
+
+        Effect.runPromise(freshData).then((data) => {
+          ws.send(JSON.stringify(data));
+        });
+        break;
+      }
+
+      case "next": {
+        const room = Number(data.room);
+        // apply data transformation on game state
+
+        const incrementTurn = pipe(
+          incrementTurnQuery(room),
+          Effect.flatMap(() => getGameSessionQuery(room))
+        );
+
+        Effect.runPromise(incrementTurn).then((data) => {
+          ws.send(JSON.stringify(data));
+
+          clients?.forEach((client: any) => {
+            if (client !== ws && client.readyState === ws.OPEN) {
+              console.log("send to other clients");
+              client.send(JSON.stringify(data));
+            }
+          });
+        });
+        break;
+      }
     }
-    const room = Number(data.room);
-    // apply data transformation on game state
-    console.log("received: %s", data);
-
-    const freshData = getGameSessionQuery(room);
-
-    // todo handle multiple clients
-    Effect.runPromise(freshData).then((data) => {
-      ws.send(JSON.stringify(data));
-    });
   });
 });
 
