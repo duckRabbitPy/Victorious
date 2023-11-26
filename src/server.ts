@@ -4,10 +4,36 @@ import { apiKeyMiddleware } from "./routes/middleware";
 import path from "path";
 import dotenv from "dotenv";
 import { gameRouter } from "./routes/game-session/game-session";
+import * as Effect from "@effect/io/Effect";
+import { WebSocketServer } from "ws";
+import { getGameSessionQuery } from "./models/gamestate";
+import { cons } from "fp-ts/lib/ReadonlyNonEmptyArray";
 
 dotenv.config();
 
 const PORT = process.env?.PORT || 3000;
+
+const wss = new WebSocketServer({ port: 8080 });
+
+wss.on("connection", function connection(ws: any) {
+  ws.on("message", function message(msg: any) {
+    const data = JSON.parse(msg) as any;
+    console.log({ data });
+    if (!data && !data?.roomId) {
+      return;
+    }
+    const room = Number(data.room);
+    // apply data transformation on game state
+    console.log("received: %s", data);
+
+    const freshData = getGameSessionQuery(room);
+
+    // todo handle multiple clients
+    Effect.runPromise(freshData).then((data) => {
+      ws.send(JSON.stringify(data));
+    });
+  });
+});
 
 const server = express();
 

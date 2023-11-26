@@ -7,12 +7,45 @@
     <div id="app"></div>
     <h1>Room <span id="room-number"></span></h1>
     <div style="display: flex; flex-direction: column; align-items: center">
-      <button>Draw cards</button>
+      <button id="start" onclick="start()">Start</button>
       <div id="game-state">
         <h2>Game state</h2>
         <pre id="game-state-text"></pre>
       </div>
     </div>
-    <script></script>
+    <script>
+      const socket = new WebSocket("ws://localhost:8080");
+
+      socket.addEventListener("open", (event) => {
+        console.log("WebSocket connection opened:", event);
+      });
+
+      socket.addEventListener("message", (event) => {
+        console.log("Received message:", event.data);
+        displayMessage(event.data);
+      });
+
+      socket.addEventListener("close", (event) => {
+        console.log("WebSocket connection closed:", event);
+      });
+
+      function start() {
+        socket.send(
+          JSON.stringify({
+            type: "start",
+            room: window.location.pathname.split("/")[2],
+          })
+        );
+      }
+
+      function displayMessage(message) {
+        const data = JSON.parse(message);
+        document.getElementById("game-state-text").innerText = JSON.stringify(
+          data,
+          null,
+          2
+        );
+      }
+    </script>
   </body>
 </html>

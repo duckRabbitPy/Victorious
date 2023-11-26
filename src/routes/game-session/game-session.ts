@@ -5,7 +5,7 @@ const gameRouter = Router();
 
 gameRouter.post("/", createGameSession);
 
-// todoRouter.get("/:id", getGameSession);
+// gameRouter.get("/:id", getGameSession);
 
 // todoRouter.put("/:id", updateGameSession);
 
