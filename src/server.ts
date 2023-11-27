@@ -1,15 +1,17 @@
 import express from "express";
 import { json } from "body-parser";
-import { apiKeyMiddleware } from "./routes/middleware";
 import { pipe } from "@effect/data/Function";
 import path from "path";
 import dotenv from "dotenv";
 import { gameRouter } from "./routes/game-session/game-session";
+import * as Schema from "@effect/schema/Schema";
 import * as Effect from "@effect/io/Effect";
 import { WebSocketServer } from "ws";
-import { getGameSessionQuery, incrementTurnQuery } from "./models/gamestate";
-import { cons } from "fp-ts/lib/ReadonlyNonEmptyArray";
-import { increment } from "fp-ts/lib/function";
+import {
+  addLivePlayerQuery,
+  getGameSessionQuery,
+  incrementTurnQuery,
+} from "./models/gamestate";
 
 dotenv.config();
 
@@ -19,39 +21,50 @@ const wss = new WebSocketServer({ port: 8080 });
 
 const clients = new Set();
 
+const getUserIdFromToken = (token: string) => {
+  // todo: implement
+  return token;
+};
+
+const clientPayload = Schema.struct({
+  effect: Schema.string,
+  room: Schema.number,
+  authToken: Schema.string,
+});
+
+type ClientPayload = Schema.To<typeof clientPayload>;
+
 wss.on("connection", function connection(ws: any) {
   ws.on("message", function message(msg: any) {
     clients.add(ws);
-    const data = JSON.parse(msg) as any;
-    console.log({ data });
+    const payload = JSON.parse(msg) as ClientPayload;
+    console.log(payload);
+    switch (payload?.effect) {
+      case "addLivePlayer": {
+        const room = Number(payload.room);
+        const authToken = payload.authToken;
 
-    switch (data?.effect) {
-      case "init": {
-        console.log("send back");
-        const room = Number(data.room);
-        const freshData = getGameSessionQuery(room);
-
-        Effect.runPromise(freshData).then((data) => {
-          ws.send(JSON.stringify(data));
-        });
-        break;
-      }
-
-      case "next": {
-        const room = Number(data.room);
-        // apply data transformation on game state
-
-        const incrementTurn = pipe(
-          incrementTurnQuery(room),
-          Effect.flatMap(() => getGameSessionQuery(room))
-        );
-
-        Effect.runPromise(incrementTurn).then((data) => {
+        const userId = getUserIdFromToken(authToken);
+        console.log(userId, room);
+        Effect.runPromise(addLivePlayerQuery(userId, room)).then((data) => {
           ws.send(JSON.stringify(data));
 
           clients?.forEach((client: any) => {
             if (client !== ws && client.readyState === ws.OPEN) {
-              console.log("send to other clients");
+              client.send(JSON.stringify(data));
+            }
+          });
+        });
+        break;
+      }
+      case "next": {
+        const room = Number(payload.room);
+
+        Effect.runPromise(incrementTurnQuery(room)).then((data) => {
+          ws.send(JSON.stringify(data));
+
+          clients?.forEach((client: any) => {
+            if (client !== ws && client.readyState === ws.OPEN) {
               client.send(JSON.stringify(data));
             }
           });

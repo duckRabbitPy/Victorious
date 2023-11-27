@@ -5,19 +5,29 @@
   </head>
   <body>
     <div id="app"></div>
-    <h1>Room <span id="room-number"></span></h1>
+    <h1>
+      Room <span id="room-number"></span>
+      <span id="waiting-prefix"></span>
+    </h1>
+    <h2 id="players">Players</h2>
     <div style="display: flex; flex-direction: column; align-items: center">
-      <button id="init" onclick="init()">Start</button>
+      <a href="/">Back to home</a>
+      <button id="player-ready" onclick="addLivePlayer()">Ready</button>
       <button id="next" onclick="next()">Next</button>
+
       <div id="game-state">
         <h2>Game state</h2>
         <pre id="game-state-text"></pre>
       </div>
     </div>
     <script>
-      setRoomNumber();
+      setRoomNumberDisplay();
 
       const socket = new WebSocket("ws://localhost:8080");
+
+      if (socket.readyState !== WebSocket.OPEN) {
+        document.getElementById("waiting-prefix").innerText = "[Waiting]";
+      }
 
       socket.addEventListener("open", (event) => {
         console.log("WebSocket connection opened:", event);
@@ -25,25 +35,16 @@
 
       socket.addEventListener("message", (event) => {
         console.log("Received message:", event.data);
-        displayMessage(event.data);
+        updateState(event.data);
       });
 
       socket.addEventListener("close", (event) => {
         console.log("WebSocket connection closed:", event);
       });
 
-      function setRoomNumber() {
+      function setRoomNumberDisplay() {
         document.getElementById("room-number").innerText =
           window.location.pathname.split("/")[2];
-      }
-
-      function init() {
-        socket.send(
-          JSON.stringify({
-            effect: "init",
-            room: window.location.pathname.split("/")[2],
-          })
-        );
       }
 
       function next() {
@@ -55,12 +56,40 @@
         );
       }
 
-      function displayMessage(message) {
+      function getAuthToken() {
+        // TODO: get auth token from cookie after sign in
+        // generate a random uuid for now
+        return uuidv4();
+      }
+
+      function addLivePlayer() {
+        socket.send(
+          JSON.stringify({
+            effect: "addLivePlayer",
+            authToken: getAuthToken(),
+            room: window.location.pathname.split("/")[2],
+          })
+        );
+      }
+
+      function updateState(message) {
         const data = JSON.parse(message);
+        document.getElementById(
+          "players"
+        ).innerText = `${data?.global_state?.liveActors.length} players ready`;
         document.getElementById("game-state-text").innerText = JSON.stringify(
           data,
           null,
           2
+        );
+      }
+
+      function uuidv4() {
+        return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c) =>
+          (
+            c ^
+            (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
+          ).toString(16)
         );
       }
     </script>

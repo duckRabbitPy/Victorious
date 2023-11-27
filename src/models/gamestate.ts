@@ -79,7 +79,7 @@ export const createGameSessionQuery = (
   room: number,
   actorIds: readonly string[]
 ) => {
-  const turn = 1;
+  const turn = 0;
 
   const create = async () => {
     try {
@@ -103,6 +103,38 @@ export const createGameSessionQuery = (
 
   return Effect.tryPromise({
     try: () => create(),
+    catch: () => new PostgresError({ message: "postgres query error" }),
+  }).pipe(Effect.retryN(1));
+};
+
+export const addLivePlayerQuery = (userId: string, room: number) => {
+  const add = async () => {
+    try {
+      const currentGlobalState = (
+        await pool.query(
+          `SELECT global_state FROM game_snapshots WHERE room = $1 ORDER BY turn DESC LIMIT 1;`,
+          [room]
+        )
+      ).rows[0].global_state;
+
+      const newGlobalState = JSON.stringify({
+        ...currentGlobalState,
+        liveActors: [...currentGlobalState.liveActors, userId],
+      });
+
+      const result = await pool.query(
+        `UPDATE game_snapshots SET global_state = $1 WHERE room = $2 RETURNING *`,
+        [newGlobalState, room]
+      );
+
+      return result.rows[0];
+    } catch (error) {
+      logAndThrowError(error);
+    }
+  };
+
+  return Effect.tryPromise({
+    try: () => add(),
     catch: () => new PostgresError({ message: "postgres query error" }),
   }).pipe(Effect.retryN(1));
 };
@@ -135,7 +167,7 @@ export const incrementTurnQuery = (room: number) => {
         `UPDATE game_snapshots SET turn = turn + 1 WHERE room = $1 RETURNING *`,
         [room]
       );
-
+      console.log(result.rows[0]);
       return result.rows[0];
     } catch (error) {
       logAndThrowError(error);

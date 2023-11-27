@@ -6,7 +6,7 @@ export const GAME_SNAPSHOT_SEED_VALUES = {
     {
       id: "b3da0a35-13e4-44fe-ba4f-bb229b658aa9",
       room: 8393,
-      turn: 1,
+      turn: 0,
       actorState: [
         {
           name: "Player 1",
@@ -53,7 +53,7 @@ export const resetAndSeedDatabase = async () => {
     // create new game snapshot
     await client.query(
       `INSERT INTO game_snapshots (id,room, turn, actor_state, global_state) VALUES
-        ('b3da0a35-13e4-44fe-ba4f-bb229b658aa9', 8393, 1, 
+        ('b3da0a35-13e4-44fe-ba4f-bb229b658aa9', 8393, 0, 
          '[{"name": "Player 1", "coins": 0, "hand": [], "actions": 0, "buys": 0, "victoryPoints": 0}, {"name": "Player 2", "coins": 0, "hand": [], "actions": 0, "buys": 0, "victoryPoints": 0}]',
          '{"board": [], "deck": [], "history": []}');
       `
