@@ -1,9 +1,10 @@
 import * as Effect from "@effect/io/Effect";
 import { ParseError } from "@effect/schema/ParseResult";
-import { pipe } from "effect";
+
 import { PostgresError } from "../customErrors";
 import { Response } from "express";
 import { GameState } from "../../models/gamestate";
+import { pipe } from "effect";
 
 type sendResponseInput = {
   getDataEffect: Effect.Effect<never, ParseError | PostgresError, GameState>;
@@ -31,7 +32,6 @@ export function sendResponse({
   getDataEffect,
   response,
   successStatus,
-  redirect,
 }: sendResponseInput) {
   return pipe(
     Effect.matchCauseEffect(getDataEffect, {

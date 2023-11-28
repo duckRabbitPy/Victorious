@@ -112,7 +112,7 @@ export const addLivePlayerQuery = (userId: string, room: number) => {
     try {
       const currentGlobalState = (
         await pool.query(
-          `SELECT global_state FROM game_snapshots WHERE room = $1 ORDER BY turn DESC LIMIT 1;`,
+          "SELECT global_state FROM game_snapshots WHERE room = $1 ORDER BY turn DESC LIMIT 1;",
           [room]
         )
       ).rows[0].global_state;
@@ -123,7 +123,7 @@ export const addLivePlayerQuery = (userId: string, room: number) => {
       });
 
       const result = await pool.query(
-        `UPDATE game_snapshots SET global_state = $1 WHERE room = $2 RETURNING *`,
+        "UPDATE game_snapshots SET global_state = $1 WHERE room = $2 RETURNING *",
         [newGlobalState, room]
       );
 
@@ -144,7 +144,7 @@ export const getGameSessionQuery = (room: number) => {
     try {
       // todo: sort if turn the same?
       const result = await pool.query(
-        `SELECT * FROM game_snapshots WHERE room = $1 ORDER BY turn DESC;`,
+        "SELECT * FROM game_snapshots WHERE room = $1 ORDER BY turn DESC;",
         [room]
       );
 
@@ -164,7 +164,7 @@ export const incrementTurnQuery = (room: number) => {
   const increment = async () => {
     try {
       const result = await pool.query(
-        `UPDATE game_snapshots SET turn = turn + 1 WHERE room = $1 RETURNING *`,
+        "UPDATE game_snapshots SET turn = turn + 1 WHERE room = $1 RETURNING *",
         [room]
       );
       console.log(result.rows[0]);

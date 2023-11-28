@@ -1,17 +1,13 @@
 import express from "express";
 import { json } from "body-parser";
-import { pipe } from "@effect/data/Function";
 import path from "path";
 import dotenv from "dotenv";
 import { gameRouter } from "./routes/game-session/game-session";
 import * as Schema from "@effect/schema/Schema";
 import * as Effect from "@effect/io/Effect";
 import { WebSocketServer } from "ws";
-import {
-  addLivePlayerQuery,
-  getGameSessionQuery,
-  incrementTurnQuery,
-} from "./models/gamestate";
+import cors from "cors";
+import { addLivePlayerQuery, incrementTurnQuery } from "./models/gamestate";
 
 dotenv.config();
 
@@ -76,6 +72,15 @@ wss.on("connection", function connection(ws: any) {
 });
 
 const server = express();
+
+server.use(cors());
+
+server.use(
+  cors({
+    origin: "http://localhost:5173",
+    optionsSuccessStatus: 200,
+  })
+);
 
 server.use(json());
 server.use(express.urlencoded({ extended: true }));

@@ -2,11 +2,7 @@ import { RequestHandler } from "express";
 import { pipe } from "@effect/data/Function";
 import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
-import {
-  createGameSessionQuery,
-  getGameSessionQuery,
-  parseGameState,
-} from "../../models/gamestate";
+import { createGameSessionQuery, parseGameState } from "../../models/gamestate";
 import { sendResponse } from "./responseHandler";
 
 export const safeParseNumber = Schema.parse(

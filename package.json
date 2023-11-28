@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "@effect/match": "^0.38.0",
     "@effect/schema": "^0.33.1",
     "@effect/stream": "^0.34.0",
     "@types/express": "^4.17.20",
@@ -8,11 +7,13 @@
     "@types/pg": "^8.10.2",
     "@typescript-eslint/eslint-plugin": "^6.7.5",
     "body-parser": "^1.19.1",
+    "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "effect": "2.0.0-next.19",
     "express": "^4.18.2",
     "nodemon": "^3.0.1",
     "pg": "^8.11.3",
+    "react-router-dom": "^6.20.0",
     "start-server-and-test": "^2.0.1",
     "ts-node": "^10.9.1",
     "vitest": "^0.34.6",
@@ -25,7 +26,9 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "NODE_ENV=development nodemon --exec ts-node ./src/server.ts",
+    "dev:client": "npx vite",
+    "dev:server": "NODE_ENV=development nodemon --exec ts-node ./server/src/server.ts",
+    "dev": "NODE_ENV=development nodemon --exec ts-node ./server/src/server.ts",
     "lint": "eslint --ext .ts src",
     "test": "vitest run",
     "db:test": "start-server-and-test dev http://localhost:3000 test"
@@ -34,6 +37,7 @@
   "license": "ISC",
   "devDependencies": {
     "@total-typescript/ts-reset": "^0.4.2",
+    "@types/cors": "^2.8.17",
     "@types/pg": "^8.10.2",
     "@types/ws": "^8.5.10",
     "dotenv": "^16.3.1",

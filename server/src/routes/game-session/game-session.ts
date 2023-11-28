@@ -12,6 +12,7 @@ gameRouter.post("/", createGameSession);
 // todoRouter.delete("/:id", deleteToDoItem);
 
 gameRouter.use((req, res) => {
+  console.log(req);
   res.status(406).json({ message: "Method Not Acceptable" });
 });
 
