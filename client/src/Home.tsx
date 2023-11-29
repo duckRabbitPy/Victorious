@@ -29,6 +29,12 @@ export const Home = () => {
 
   return (
     <>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem" }}>
+        <Link to={"/login"}>Login</Link>
+        <Link to={"/register"}>
+          <span style={{ color: "green" }}> Register</span>
+        </Link>
+      </div>
       <h1>Welcome to Dominion!</h1>
       <div>
         <form
