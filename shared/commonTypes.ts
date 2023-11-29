@@ -25,4 +25,6 @@ export const GameStateStruct = Schema.struct({
   global_state: GlobalStateStruct,
 });
 
+export type ActorState = Schema.To<typeof ActorStateStruct>;
+export type GlobalState = Schema.To<typeof GlobalStateStruct>;
 export type GameState = Schema.To<typeof GameStateStruct>;

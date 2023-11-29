@@ -62,7 +62,6 @@ const Room = () => {
     );
   };
 
-  console.log("gameState", gameState);
   return (
     <>
       <h1>Room {roomNumber}</h1>
@@ -72,27 +71,19 @@ const Room = () => {
           <li key={actor.id}>{`✅ ${actor.name}`}</li>
         ))}
       </ol>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          gap: "2rem",
-          alignItems: "center",
-        }}
-      >
-        <Link to="/">Back to home</Link>
-        <button id="player-ready" onClick={addNewPlayer}>
-          Ready
-        </button>
-        <button id="next" onClick={() => {}}>
-          Next
-        </button>
-      </div>
-      <div id="game-state">
-        <h2>Game state</h2>
-        <pre style={{ width: "100px", display: "flex" }}>
-          {JSON.stringify(gameState, null, 2)}
-        </pre>
+      <div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <Link to="/">Back to home</Link>
+          {
+            <button id="player-ready" onClick={addNewPlayer}>
+              Ready
+            </button>
+          }
+        </div>
+        <div id="game-state">
+          <h2>Game state</h2>
+          <pre>{JSON.stringify(gameState, null, 2)}</pre>
+        </div>
       </div>
     </>
   );

@@ -2,7 +2,7 @@ import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
 import { pool } from "../db/connection";
 import { PostgresError } from "../controllers/customErrors";
-import { GameStateStruct } from "../../../shared/commonTypes";
+import { GameStateStruct, GlobalState } from "../../../shared/commonTypes";
 
 const logAndThrowError = (error: unknown) => {
   console.error(error);
@@ -24,11 +24,11 @@ function generateUUID(): string {
   )}-${generateSegment(4)}-${generateSegment(12)}`;
 }
 
-const generatateActorState = (actorIds: readonly string[]) => {
+const generateActorState = (actorIds: readonly string[]) => {
   const actorStates = actorIds.map((id, i) => {
     return {
       id,
-      name: `Player ${i}`,
+      name: `Player ${i + 1}`,
       coins: 0,
       hand: [],
       actions: 0,
@@ -40,19 +40,18 @@ const generatateActorState = (actorIds: readonly string[]) => {
   return JSON.stringify(actorStates);
 };
 
-const generatateGlobalState = (actorIds: readonly string[]) => {
-  return JSON.stringify({
+const generatateGlobalState = () => {
+  const startingState: GlobalState = {
     board: [],
     deck: [],
     history: [],
-    liveActors: actorIds,
-  });
+    liveActors: [],
+  };
+
+  return JSON.stringify(startingState);
 };
 
-export const createGameSessionQuery = (
-  room: number,
-  actorIds: readonly string[]
-) => {
+export const createGameSessionQuery = (room: number) => {
   const turn = 0;
 
   const create = async () => {
@@ -60,13 +59,7 @@ export const createGameSessionQuery = (
       const result = await pool.query(
         `INSERT INTO game_snapshots (id, room, turn, actor_state, global_state)
              VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-        [
-          generateUUID(),
-          room,
-          turn,
-          generatateActorState(actorIds),
-          generatateGlobalState(actorIds),
-        ]
+        [generateUUID(), room, turn, "[]", generatateGlobalState()]
       );
 
       return result.rows[0];
@@ -91,14 +84,37 @@ export const addLivePlayerQuery = (userId: string, room: number) => {
         )
       ).rows[0].global_state;
 
+      const currentActorState = (
+        await pool.query(
+          "SELECT actor_state FROM game_snapshots WHERE room = $1 ORDER BY turn DESC LIMIT 1;",
+          [room]
+        )
+      ).rows[0].actor_state;
+
       const newGlobalState = JSON.stringify({
         ...currentGlobalState,
         liveActors: [...currentGlobalState.liveActors, userId],
       });
 
+      const newActorState =
+        currentActorState.length > 0
+          ? JSON.stringify([
+              ...currentActorState,
+              {
+                id: userId,
+                name: `Player ${currentActorState.length}`,
+                coins: 0,
+                hand: [],
+                actions: 0,
+                buys: 0,
+                victoryPoints: 0,
+              },
+            ])
+          : generateActorState([userId]);
+
       const result = await pool.query(
-        "UPDATE game_snapshots SET global_state = $1 WHERE room = $2 RETURNING *",
-        [newGlobalState, room]
+        "UPDATE game_snapshots SET global_state = $1, actor_state = $2 WHERE room = $3 RETURNING *",
+        [newGlobalState, newActorState, room]
       );
 
       return result.rows[0];
@@ -141,7 +157,6 @@ export const incrementTurnQuery = (room: number) => {
         "UPDATE game_snapshots SET turn = turn + 1 WHERE room = $1 RETURNING *",
         [room]
       );
-      console.log(result.rows[0]);
       return result.rows[0];
     } catch (error) {
       logAndThrowError(error);

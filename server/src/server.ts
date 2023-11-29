@@ -32,27 +32,27 @@ const clientPayloadStruct = Schema.struct({
 
 export const parseClientMessage = Schema.parse(clientPayloadStruct);
 
-type ClientPayload = Schema.To<typeof clientPayloadStruct>;
-
 wss.on("connection", function connection(ws: WebSocket) {
   ws.on("message", function message(msg: unknown) {
     clients.add(ws);
 
-    // const parsedMsg = pipe(
-    //   Effect.try({
-    //     try: () => JSON.parse(msg as string),
-    //     catch: (e) =>
-    //       new JSONParseError({ message: `error parsing client message: ${e}` }),
-    //   }),
-    //   Effect.flatMap((msg) => parseClientMessage(msg))
-    // );
+    const safeMsg = pipe(
+      Effect.try({
+        try: () => JSON.parse(msg as string),
+        catch: (e) =>
+          new JSONParseError({ message: `error parsing client message: ${e}` }),
+      }),
+      Effect.flatMap((msg) =>
+        Effect.succeed({ ...msg, room: Number(msg.room) })
+      ),
+      Effect.flatMap((msg) => parseClientMessage(msg)),
+      Effect.runSync
+    );
 
-    const payload = JSON.parse(msg as string) as ClientPayload;
-
-    switch (payload?.effect) {
+    switch (safeMsg?.effect) {
       case "addLivePlayer": {
-        const room = Number(payload.room);
-        const authToken = payload.authToken;
+        const room = Number(safeMsg.room);
+        const authToken = safeMsg.authToken;
 
         const userId = getUserIdFromToken(authToken);
         Effect.runPromise(addLivePlayerQuery(userId, room)).then((data) => {
@@ -67,8 +67,7 @@ wss.on("connection", function connection(ws: WebSocket) {
         break;
       }
       case "next": {
-        const room = Number(payload.room);
-
+        const room = safeMsg.room;
         Effect.runPromise(incrementTurnQuery(room)).then((data) => {
           ws.send(JSON.stringify(data));
 

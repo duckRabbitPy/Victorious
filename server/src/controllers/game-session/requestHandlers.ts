@@ -12,15 +12,10 @@ export const safeParseNumber = Schema.parse(
 export const safeParseUUIDs = Schema.parse(Schema.array(Schema.UUID));
 
 export const createGameSession: RequestHandler = (req, res) => {
-  const safeArgs = {
-    room: safeParseNumber(Number(req.body.room)),
-    userIds: safeParseUUIDs(req.body.userIds),
-  };
   return pipe(
-    Effect.all(safeArgs),
-    Effect.flatMap(({ room, userIds }) =>
-      createGameSessionQuery(room, userIds)
-    ),
+    safeParseNumber(Number(req.body.room)),
+    Effect.flatMap((room) => createGameSessionQuery(room)),
+    Effect.tap((gameState) => Effect.log(JSON.stringify(gameState, null, 2))),
     Effect.flatMap(parseGameState),
     (getDataEffect) =>
       sendResponse({
