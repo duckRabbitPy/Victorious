@@ -1,9 +1,9 @@
 import * as Effect from "@effect/io/Effect";
 import { ParseError } from "@effect/schema/ParseResult";
-
+import { GameState } from "../../../../shared/commonTypes";
 import { PostgresError } from "../customErrors";
 import { Response } from "express";
-import { GameState } from "../../models/gamestate";
+
 import { pipe } from "effect";
 
 type sendResponseInput = {

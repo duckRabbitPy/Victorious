@@ -1,77 +1,98 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { GameState } from "../../shared/commonTypes";
+
+function uuidv4() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0,
+      v = c == "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 const useGameState = () => {
-  // TODO share types between client and server
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [gameState, setGameState] = useState<any | null>(null);
+  const [gameState, setGameState] = useState<GameState | null>(null);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
 
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8080");
+    const newSocket = new WebSocket("ws://localhost:8080");
 
-    socket.addEventListener("open", (event) => {
+    newSocket.addEventListener("open", (event) => {
       console.log("WebSocket connection opened:", event);
     });
 
-    socket.addEventListener("message", (event) => {
+    newSocket.addEventListener("message", (event) => {
       console.log("Received message:", event.data);
       setGameState(JSON.parse(event.data));
     });
 
-    socket.addEventListener("close", (event) => {
+    newSocket.addEventListener("close", (event) => {
       console.log("WebSocket connection closed:", event);
     });
+
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.close();
+    };
   }, []);
 
-  return gameState;
+  return { gameState, socket };
 };
 
-// const addNewPlayer = () => {
-//   function getAuthToken() {
-//     // TODO: get auth token from cookie after sign in
-//     // generate a random uuid for now
-//     return uuidv4();
-//   }
-
-//   function addLivePlayer() {
-//     socket.send(
-//       JSON.stringify({
-//         effect: "addLivePlayer",
-//         authToken: getAuthToken(),
-//         room: window.location.pathname.split("/")[2],
-//       })
-//     );
-//   }
-// };
-
 const Room = () => {
-  const gameState = useGameState();
-  const { 0: roomParam } = useParams();
+  const { gameState, socket } = useGameState();
+  const { "*": roomNumber } = useParams();
+
+  const addNewPlayer = () => {
+    function getAuthToken() {
+      // TODO: get auth token from cookie after sign in
+      // generate a random uuid for now
+      return uuidv4();
+    }
+
+    if (!socket) throw new Error("Socket is null");
+
+    socket.send(
+      JSON.stringify({
+        effect: "addLivePlayer",
+        authToken: getAuthToken(),
+        room: window.location.pathname.split("/")[2],
+      })
+    );
+  };
 
   console.log("gameState", gameState);
   return (
     <>
-      <h1>Room {roomParam}</h1>
-      <h2>Players</h2>
+      <h1>Room {roomNumber}</h1>
+      <p>Players ready: {gameState?.actor_state.length}</p>
+      <ol style={{ listStyle: "none" }}>
+        {gameState?.actor_state.map((actor) => (
+          <li key={actor.id}>{`✅ ${actor.name}`}</li>
+        ))}
+      </ol>
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
+          flexDirection: "row",
+          gap: "2rem",
           alignItems: "center",
         }}
       >
-        <Link href="/">Back to home</Link>
-        <button id="player-ready" onClick={() => {}}>
+        <Link to="/">Back to home</Link>
+        <button id="player-ready" onClick={addNewPlayer}>
           Ready
         </button>
         <button id="next" onClick={() => {}}>
           Next
         </button>
-
-        <div id="game-state">
-          <h2>Game state</h2>
-          <pre id="game-state-text"></pre>
-        </div>
+      </div>
+      <div id="game-state">
+        <h2>Game state</h2>
+        <pre style={{ width: "100px", display: "flex" }}>
+          {JSON.stringify(gameState, null, 2)}
+        </pre>
       </div>
     </>
   );

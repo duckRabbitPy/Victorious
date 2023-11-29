@@ -41,6 +41,7 @@ export const Home = () => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          gap: "2rem",
         }}
       >
         {/* form submission to get name and room */}

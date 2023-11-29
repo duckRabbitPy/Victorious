@@ -2,40 +2,14 @@ import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
 import { pool } from "../db/connection";
 import { PostgresError } from "../controllers/customErrors";
+import { GameStateStruct } from "../../../shared/commonTypes";
 
 const logAndThrowError = (error: unknown) => {
   console.error(error);
   throw error;
 };
 
-const ActorState = Schema.struct({
-  id: Schema.UUID,
-  name: Schema.string,
-  coins: Schema.number,
-  hand: Schema.array(Schema.UUID),
-  actions: Schema.number,
-  buys: Schema.number,
-  victoryPoints: Schema.number,
-});
-
-const GlobalState = Schema.struct({
-  board: Schema.array(Schema.UUID),
-  deck: Schema.array(Schema.UUID),
-  history: Schema.array(Schema.string),
-  liveActors: Schema.array(Schema.UUID),
-});
-
-const GameState = Schema.struct({
-  id: Schema.UUID,
-  room: Schema.number,
-  turn: Schema.number,
-  actor_state: Schema.array(ActorState),
-  global_state: GlobalState,
-});
-
-export type GameState = Schema.To<typeof GameState>;
-
-export const parseGameState = Schema.parse(GameState);
+export const parseGameState = Schema.parse(GameStateStruct);
 
 const hexChars = "0123456789abcdef";
 

@@ -5,9 +5,11 @@ import dotenv from "dotenv";
 import { gameRouter } from "./routes/game-session/game-session";
 import * as Schema from "@effect/schema/Schema";
 import * as Effect from "@effect/io/Effect";
-import { WebSocketServer } from "ws";
+import WebSocket, { WebSocketServer } from "ws";
 import cors from "cors";
 import { addLivePlayerQuery, incrementTurnQuery } from "./models/gamestate";
+import { pipe } from "effect";
+import { JSONParseError } from "./controllers/customErrors";
 
 dotenv.config();
 
@@ -15,37 +17,48 @@ const PORT = process.env?.PORT || 3000;
 
 const wss = new WebSocketServer({ port: 8080 });
 
-const clients = new Set();
+const clients = new Set<WebSocket>();
 
 const getUserIdFromToken = (token: string) => {
   // todo: implement
   return token;
 };
 
-const clientPayload = Schema.struct({
+const clientPayloadStruct = Schema.struct({
   effect: Schema.string,
   room: Schema.number,
   authToken: Schema.string,
 });
 
-type ClientPayload = Schema.To<typeof clientPayload>;
+export const parseClientMessage = Schema.parse(clientPayloadStruct);
 
-wss.on("connection", function connection(ws: any) {
-  ws.on("message", function message(msg: any) {
+type ClientPayload = Schema.To<typeof clientPayloadStruct>;
+
+wss.on("connection", function connection(ws: WebSocket) {
+  ws.on("message", function message(msg: unknown) {
     clients.add(ws);
-    const payload = JSON.parse(msg) as ClientPayload;
-    console.log(payload);
+
+    // const parsedMsg = pipe(
+    //   Effect.try({
+    //     try: () => JSON.parse(msg as string),
+    //     catch: (e) =>
+    //       new JSONParseError({ message: `error parsing client message: ${e}` }),
+    //   }),
+    //   Effect.flatMap((msg) => parseClientMessage(msg))
+    // );
+
+    const payload = JSON.parse(msg as string) as ClientPayload;
+
     switch (payload?.effect) {
       case "addLivePlayer": {
         const room = Number(payload.room);
         const authToken = payload.authToken;
 
         const userId = getUserIdFromToken(authToken);
-        console.log(userId, room);
         Effect.runPromise(addLivePlayerQuery(userId, room)).then((data) => {
           ws.send(JSON.stringify(data));
 
-          clients?.forEach((client: any) => {
+          clients?.forEach((client) => {
             if (client !== ws && client.readyState === ws.OPEN) {
               client.send(JSON.stringify(data));
             }
@@ -59,7 +72,7 @@ wss.on("connection", function connection(ws: any) {
         Effect.runPromise(incrementTurnQuery(room)).then((data) => {
           ws.send(JSON.stringify(data));
 
-          clients?.forEach((client: any) => {
+          clients?.forEach((client) => {
             if (client !== ws && client.readyState === ws.OPEN) {
               client.send(JSON.stringify(data));
             }
