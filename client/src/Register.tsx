@@ -41,6 +41,7 @@ export const Register = () => {
           }}
         >
           <input type="text" id="username" placeholder="Enter username" />
+          <input type="text" id="email" placeholder="Enter email" />
           <input type="password" id="password" placeholder="Enter password" />
           <button type="submit">Register</button>
         </form>

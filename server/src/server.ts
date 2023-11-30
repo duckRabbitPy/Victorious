@@ -10,6 +10,7 @@ import { addLivePlayerQuery, incrementTurnQuery } from "./models/gamestate";
 import { pipe } from "effect";
 import { JSONParseError } from "./controllers/customErrors";
 import { loginRouter } from "./routes/login/login";
+import { registerRouter } from "./routes/register/register";
 
 dotenv.config();
 
@@ -97,14 +98,8 @@ server.use(
 server.use(json());
 server.use(express.urlencoded({ extended: true }));
 
-// TODO serve react app
-// server.get("/", (_, res) => {
-//   res.sendFile(path.join(__dirname, "../client/index.html"));
-// });
-
-// server.use("/game-state", apiKeyMiddleware);
-
 server.use("/login", loginRouter);
+server.use("/register", registerRouter);
 server.use("/game-state", gameRouter);
 
 console.log("\x1b[42m", `listening on port ${PORT}`, "\x1b[0m");

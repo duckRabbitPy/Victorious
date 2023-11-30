@@ -2,6 +2,7 @@ import * as Effect from "@effect/io/Effect";
 import { PostgresError } from "../controllers/customErrors";
 import { pool } from "../db/connection";
 import { logAndThrowError } from "../utils";
+import { uuidv4 } from "../../../shared/utils";
 
 export const getHashedPasswordByUsernameQuery = (username: string) => {
   const get = async () => {
@@ -39,6 +40,49 @@ export const getUserIdByUsernameQuery = (username: string) => {
 
   return Effect.tryPromise({
     try: () => get(),
+    catch: () => new PostgresError({ message: "postgres query error" }),
+  }).pipe(Effect.retryN(1));
+};
+
+export const registerNewUserQuery = (
+  username: string,
+  hashedPassword: string
+) => {
+  const add = async () => {
+    try {
+      const confirmation_token = uuidv4();
+      const result = await pool.query(
+        "INSERT INTO users (username, password, confirmation_token) VALUES ($1, $2, $3) RETURNING email, confirmation_token",
+        [username, hashedPassword, confirmation_token]
+      );
+      return result.rows[0];
+    } catch (error) {
+      logAndThrowError(error);
+    }
+  };
+
+  return Effect.tryPromise({
+    try: () => add(),
+    catch: () => new PostgresError({ message: "postgres query error" }),
+  }).pipe(Effect.retryN(1));
+};
+
+export const confirmUserQuery = (confirmation_token: string, email: string) => {
+  const confirm = async () => {
+    try {
+      const result = await pool.query(
+        "UPDATE users SET verified = true WHERE confirmation_token = $1 AND email = $2 RETURNING user_id",
+        [confirmation_token, email]
+      );
+
+      return result.rows[0];
+    } catch (error) {
+      logAndThrowError(error);
+    }
+  };
+
+  return Effect.tryPromise({
+    try: () => confirm(),
     catch: () => new PostgresError({ message: "postgres query error" }),
   }).pipe(Effect.retryN(1));
 };

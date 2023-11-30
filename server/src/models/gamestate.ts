@@ -4,21 +4,9 @@ import { pool } from "../db/connection";
 import { PostgresError } from "../controllers/customErrors";
 import { GameStateStruct, GlobalState } from "../../../shared/commonTypes";
 import { logAndThrowError } from "../utils";
+import { uuidv4 } from "../../../shared/utils";
 
 export const parseGameState = Schema.parse(GameStateStruct);
-
-const hexChars = "0123456789abcdef";
-
-function generateUUID(): string {
-  const generateChar = (): string => hexChars[Math.floor(Math.random() * 16)];
-
-  const generateSegment = (length: number): string =>
-    Array.from({ length }, generateChar).join("");
-
-  return `${generateSegment(8)}-${generateSegment(4)}-${generateSegment(
-    4
-  )}-${generateSegment(4)}-${generateSegment(12)}`;
-}
 
 const generateActorState = (actorIds: readonly string[]) => {
   const actorStates = actorIds.map((id, i) => {
@@ -55,7 +43,7 @@ export const createGameSessionQuery = (room: number) => {
       const result = await pool.query(
         `INSERT INTO game_snapshots (id, room, turn, actor_state, global_state)
              VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-        [generateUUID(), room, turn, "[]", generatateGlobalState()]
+        [uuidv4(), room, turn, "[]", generatateGlobalState()]
       );
 
       return result.rows[0];
