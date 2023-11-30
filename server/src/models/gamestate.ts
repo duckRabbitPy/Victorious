@@ -3,11 +3,7 @@ import * as Schema from "@effect/schema/Schema";
 import { pool } from "../db/connection";
 import { PostgresError } from "../controllers/customErrors";
 import { GameStateStruct, GlobalState } from "../../../shared/commonTypes";
-
-const logAndThrowError = (error: unknown) => {
-  console.error(error);
-  throw error;
-};
+import { logAndThrowError } from "../utils";
 
 export const parseGameState = Schema.parse(GameStateStruct);
 

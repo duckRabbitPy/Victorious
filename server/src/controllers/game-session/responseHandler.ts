@@ -64,8 +64,8 @@ export function sendResponse({
           response.status(500).json("Internal Server error")
         );
       },
-      onSuccess: (todos) => {
-        return Effect.succeed(response.status(successStatus).json(todos));
+      onSuccess: (game_state) => {
+        return Effect.succeed(response.status(successStatus).json(game_state));
       },
     }),
     Effect.runPromise

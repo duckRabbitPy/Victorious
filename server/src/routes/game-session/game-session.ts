@@ -5,12 +5,6 @@ const gameRouter = Router();
 
 gameRouter.post("/", createGameSession);
 
-// gameRouter.get("/:id", getGameSession);
-
-// todoRouter.put("/:id", updateGameSession);
-
-// todoRouter.delete("/:id", deleteToDoItem);
-
 gameRouter.use((req, res) => {
   res.status(406).json({ message: "Method Not Acceptable" });
 });
