@@ -25,8 +25,10 @@ export const GameStateStruct = Schema.struct({
   global_state: GlobalStateStruct,
 });
 
-// eslint-disable-next-line no-unused-vars
+// eslint-disable-next-func no-unused-vars
 export enum SupportedEffects {
+  // eslint-disable-next-line no-unused-vars
+  getCurrentGameState = "getCurrentGameState",
   // eslint-disable-next-line no-unused-vars
   addLivePlayer = "addLivePlayer",
   // eslint-disable-next-line no-unused-vars

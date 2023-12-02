@@ -46,8 +46,28 @@ const prepareMessage = ({ effect, authToken, room }: ClientPayload) => {
 
 const Room = () => {
   const { gameState, socket } = useGameState();
-  const { "*": roomNumber } = useParams();
+  const { "*": roomParam } = useParams();
+  const roomNumber = Number(roomParam);
+  const authToken = localStorage.getItem("dominion_auth_token");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const getInititalGameState = () => {
+    if (!socket) {
+      setErrorMessage("Socket is null");
+      return;
+    }
+    if (!authToken) {
+      setErrorMessage("Auth token is null");
+      return;
+    }
+    socket?.send(
+      prepareMessage({
+        effect: SupportedEffects.getCurrentGameState,
+        room: roomNumber,
+        authToken,
+      })
+    );
+  };
 
   const addNewPlayer = () => {
     const authToken = localStorage.getItem("dominion_auth_token");
@@ -65,7 +85,7 @@ const Room = () => {
       prepareMessage({
         effect: SupportedEffects.addLivePlayer,
         authToken,
-        room: Number(window.location.pathname.split("/")[2]),
+        room: roomNumber,
       })
     );
   };
@@ -96,6 +116,7 @@ const Room = () => {
         </div>
         <div id="game-state">
           <h2>Game state</h2>
+          <button onClick={getInititalGameState}>refresh</button>
           <pre>{JSON.stringify(gameState, null, 2)}</pre>
         </div>
       </div>
