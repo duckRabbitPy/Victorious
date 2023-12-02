@@ -43,3 +43,9 @@ export const safeParseUUIDs = Schema.parse(Schema.array(Schema.UUID));
 export const safeParseUUID = Schema.parse(Schema.UUID);
 
 export const safeParseGameState = Schema.parse(GameStateStruct);
+
+export const safeParseNumberArray = Schema.parse(
+  Schema.array(
+    Schema.number.pipe(Schema.positive(), Schema.int(), Schema.nonNaN())
+  )
+);

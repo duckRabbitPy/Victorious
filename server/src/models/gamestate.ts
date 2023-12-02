@@ -151,3 +151,22 @@ export const incrementTurnQuery = (room: number) => {
     catch: () => new PostgresError({ message: "postgres query error" }),
   }).pipe(Effect.retryN(1));
 };
+
+export const getOpenGameSessionsQuery = () => {
+  const get = async () => {
+    try {
+      const result = await pool.query(
+        "SELECT room FROM game_snapshots WHERE turn = 0;"
+      );
+
+      return result.rows.map((row) => row.room);
+    } catch (error) {
+      logAndThrowError(error);
+    }
+  };
+
+  return Effect.tryPromise({
+    try: () => get(),
+    catch: () => new PostgresError({ message: "postgres query error" }),
+  }).pipe(Effect.retryN(1));
+};

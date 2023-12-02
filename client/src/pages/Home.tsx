@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 export const Home = () => {
   const [room, setRoom] = useState<number | null>(null);
+  const [openRooms, setOpenRooms] = useState<number[] | null>(null);
   const hasAuthToken = !!localStorage.getItem("dominion_auth_token");
 
   const openRoom = (e: React.FormEvent<HTMLFormElement>) => {
@@ -13,8 +14,8 @@ export const Home = () => {
       room,
     };
     // fetch from backend running on port 3000
-    fetch(`http://localhost:3000/game-state`, {
-      method: "POST",
+    fetch(`http://localhost:3000/game-sessions`, {
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
@@ -26,6 +27,20 @@ export const Home = () => {
       })
       .catch((error) => {
         console.error("Error:", error);
+      });
+  };
+
+  const getOpenRooms = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    fetch(`http://localhost:3000/game-sessions`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        setOpenRooms(json.data?.openRooms);
       });
   };
 
@@ -51,8 +66,25 @@ export const Home = () => {
           >
             <input type="text" id="room" placeholder="Enter room number" />
             <button type="submit">Create room</button>
-            {room && <Link to={`/room/${room}`}>Go to room: {room}</Link>}
           </form>
+          <div style={{ padding: "1rem" }}>
+            {room && <Link to={`/room/${room}`}>Go to room: {room}</Link>}
+          </div>
+          <p>or</p>
+          <div>
+            <div>
+              <form onClick={getOpenRooms}>
+                <button>See current rooms available</button>
+              </form>
+              <ol style={{ padding: 0 }}>
+                {openRooms?.map((room) => (
+                  <li key={room} style={{ listStyle: "none" }}>
+                    <Link to={`/room/${room}`}>Room {room}</Link>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
         </div>
       ) : (
         <div>

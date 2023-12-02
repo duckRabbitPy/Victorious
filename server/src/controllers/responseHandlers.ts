@@ -66,6 +66,12 @@ export const sendGameStateResponse = createResponseHandler<GameState>(
   })
 );
 
+export const sendOpenRoomsResponse = createResponseHandler<readonly number[]>(
+  (openRooms) => ({
+    openRooms,
+  })
+);
+
 const respondWithError = (
   res: Response,
   status: number,

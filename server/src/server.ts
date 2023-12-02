@@ -1,7 +1,7 @@
 import express from "express";
 import { json } from "body-parser";
 import dotenv from "dotenv";
-import { gameRouter } from "./routes/game-session/game-session";
+import { gameRouter } from "./routes/game-sessions/game-sessions";
 import * as Schema from "@effect/schema/Schema";
 import * as Effect from "@effect/io/Effect";
 import WebSocket, { WebSocketServer } from "ws";
@@ -134,7 +134,7 @@ server.use(express.urlencoded({ extended: true }));
 
 server.use("/login", loginRouter);
 server.use("/register", registerRouter);
-server.use("/game-state", gameRouter);
+server.use("/game-sessions", gameRouter);
 
 console.log("\x1b[42m", `listening on port ${PORT}`, "\x1b[0m");
 

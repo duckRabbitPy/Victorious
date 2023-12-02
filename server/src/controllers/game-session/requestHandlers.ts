@@ -3,10 +3,14 @@ import { pipe } from "@effect/data/Function";
 import * as Effect from "@effect/io/Effect";
 import {
   createGameSessionQuery,
+  getOpenGameSessionsQuery,
   safeParseGameState,
 } from "../../models/gamestate";
-import { safeParseNumber } from "../../utils";
-import { sendGameStateResponse } from "../responseHandlers";
+import { safeParseNumber, safeParseNumberArray } from "../../utils";
+import {
+  sendGameStateResponse,
+  sendOpenRoomsResponse,
+} from "../responseHandlers";
 
 export const createGameSession: RequestHandler = (req, res) => {
   return pipe(
@@ -18,6 +22,19 @@ export const createGameSession: RequestHandler = (req, res) => {
         dataOrError: dataOrError,
         res,
         successStatus: 201,
+      })
+  );
+};
+
+export const getOpenGameSessions: RequestHandler = (req, res) => {
+  return pipe(
+    getOpenGameSessionsQuery(),
+    Effect.flatMap((rooms) => safeParseNumberArray(rooms)),
+    (dataOrError) =>
+      sendOpenRoomsResponse({
+        dataOrError: dataOrError,
+        res,
+        successStatus: 200,
       })
   );
 };
