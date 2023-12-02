@@ -8,7 +8,7 @@ export const logAndThrowError = (error: unknown) => {
   throw error;
 };
 
-export const TapPipeLine = <R, E, A>(
+export const tapPipeLine = <R, E, A>(
   effect: Effect.Effect<R, E, A>
 ): Effect.Effect<R, E, A> =>
   pipe(
@@ -30,6 +30,16 @@ export const safeParseNonEmptyString = Schema.parse(
   Schema.string.pipe(Schema.minLength(1))
 );
 
+export const safeParseJWT = Schema.parse(
+  Schema.struct({
+    userId: Schema.string,
+    iat: Schema.number,
+    exp: Schema.number,
+  })
+);
+
 export const safeParseUUIDs = Schema.parse(Schema.array(Schema.UUID));
+
+export const safeParseUUID = Schema.parse(Schema.UUID);
 
 export const safeParseGameState = Schema.parse(GameStateStruct);

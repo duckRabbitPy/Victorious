@@ -15,7 +15,7 @@ import {
 import { loginRouter } from "./routes/login/login";
 import { registerRouter } from "./routes/register/register";
 import jwt from "jsonwebtoken";
-import { TapPipeLine, safeParseNonEmptyString } from "./utils";
+import { safeParseJWT, safeParseNonEmptyString, tapPipeLine } from "./utils";
 
 dotenv.config();
 
@@ -33,7 +33,6 @@ const verifyJwt = (token: string, secret: string | undefined) => {
         new AuthenticationError({ message: "server secret key not found" })
       )
     ),
-    TapPipeLine,
     Effect.flatMap((secret) => {
       return Effect.tryPromise({
         try: () =>
@@ -47,16 +46,8 @@ const verifyJwt = (token: string, secret: string | undefined) => {
           }),
         catch: () => new AuthenticationError({ message: "Invalid API key" }),
       });
-    }),
-    TapPipeLine
+    })
   );
-};
-
-const getUserIdFromToken = (token: string) => {
-  const decodedJwt = verifyJwt(token, process.env.JWT_SECRET_KEY);
-
-  // todo: implement
-  return Effect.runPromise(decodedJwt);
 };
 
 const clientPayloadStruct = Schema.struct({
@@ -89,10 +80,17 @@ wss.on("connection", function connection(ws: WebSocket) {
         const room = Number(safeMsg.room);
         const authToken = safeMsg.authToken;
 
-        console.log(getUserIdFromToken(authToken));
-        // const userId = getUserIdFromToken(authToken);
-        const userId = "2abb7402-8b4c-4494-a763-283fa50a21a6";
-        Effect.runPromise(addLivePlayerQuery(userId, room)).then((data) => {
+        const decodedJwt = verifyJwt(authToken, process.env.JWT_SECRET_KEY);
+
+        const addLivePlayer = pipe(
+          decodedJwt,
+          Effect.flatMap((decoded) => safeParseJWT(decoded)),
+          Effect.flatMap((decoded) => Effect.succeed(decoded.userId)),
+          Effect.flatMap((userId) => addLivePlayerQuery(userId, room)),
+          Effect.runPromise
+        );
+
+        addLivePlayer.then((data) => {
           ws.send(JSON.stringify(data));
 
           clients?.forEach((client) => {

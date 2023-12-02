@@ -111,7 +111,7 @@ const createAuthToken = (userId: string) => {
   }
 
   const payload = {
-    userId: userId,
+    userId,
   };
 
   const expiresIn = "24h";

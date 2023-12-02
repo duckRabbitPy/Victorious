@@ -33,7 +33,7 @@ export const getUserIdByUsernameQuery = (username: string) => {
         [username]
       );
 
-      return result.rows[0];
+      return result.rows[0].user_id;
     } catch (error) {
       logAndThrowError(error);
     }
@@ -57,7 +57,6 @@ export const registerNewUserQuery = (
         "INSERT INTO users (username, password, email, confirmation_token) VALUES ($1, $2, $3, $4) RETURNING email, confirmation_token",
         [username, hashedPassword, email, confirmation_token]
       );
-      console.log(result.rows[0]);
       return result.rows[0];
     } catch (error) {
       logAndThrowError(error);
