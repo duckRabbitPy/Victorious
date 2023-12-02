@@ -52,7 +52,6 @@ export const registerNewUserQuery = (
 ) => {
   const add = async () => {
     try {
-      console.log("registerNewUserQuery", username, email, hashedPassword);
       const confirmation_token = uuidv4();
       const result = await pool.query(
         "INSERT INTO users (username, password, email, confirmation_token) VALUES ($1, $2, $3, $4) RETURNING email, confirmation_token",

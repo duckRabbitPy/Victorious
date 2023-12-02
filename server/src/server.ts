@@ -8,9 +8,14 @@ import WebSocket, { WebSocketServer } from "ws";
 import cors from "cors";
 import { addLivePlayerQuery, incrementTurnQuery } from "./models/gamestate";
 import { pipe } from "effect";
-import { JSONParseError } from "./controllers/customErrors";
+import {
+  AuthenticationError,
+  JSONParseError,
+} from "./controllers/customErrors";
 import { loginRouter } from "./routes/login/login";
 import { registerRouter } from "./routes/register/register";
+import jwt from "jsonwebtoken";
+import { TapPipeLine, safeParseNonEmptyString } from "./utils";
 
 dotenv.config();
 
@@ -20,9 +25,38 @@ const wss = new WebSocketServer({ port: 8080 });
 
 const clients = new Set<WebSocket>();
 
+const verifyJwt = (token: string, secret: string | undefined) => {
+  return pipe(
+    safeParseNonEmptyString(secret),
+    Effect.orElseFail(() =>
+      Effect.succeed(
+        new AuthenticationError({ message: "server secret key not found" })
+      )
+    ),
+    TapPipeLine,
+    Effect.flatMap((secret) => {
+      return Effect.tryPromise({
+        try: () =>
+          new Promise((resolve, reject) => {
+            jwt.verify(token, secret, (err: unknown, decoded: unknown) => {
+              if (err) {
+                reject(new Error("Invalid token"));
+              }
+              resolve(decoded);
+            });
+          }),
+        catch: () => new AuthenticationError({ message: "Invalid API key" }),
+      });
+    }),
+    TapPipeLine
+  );
+};
+
 const getUserIdFromToken = (token: string) => {
+  const decodedJwt = verifyJwt(token, process.env.JWT_SECRET_KEY);
+
   // todo: implement
-  return token;
+  return Effect.runPromise(decodedJwt);
 };
 
 const clientPayloadStruct = Schema.struct({
@@ -55,6 +89,7 @@ wss.on("connection", function connection(ws: WebSocket) {
         const room = Number(safeMsg.room);
         const authToken = safeMsg.authToken;
 
+        console.log(getUserIdFromToken(authToken));
         // const userId = getUserIdFromToken(authToken);
         const userId = "2abb7402-8b4c-4494-a763-283fa50a21a6";
         Effect.runPromise(addLivePlayerQuery(userId, room)).then((data) => {
