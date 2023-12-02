@@ -51,9 +51,9 @@ export const Home = () => {
         if (json.data.openRooms.length) {
           setErrorMessage(null);
           setOpenRooms(json.data?.openRooms);
+        } else {
+          setErrorMessage("Error: fetching rooms failed");
         }
-
-        setErrorMessage("Error: fetching rooms failed");
       })
       .catch(() => {
         setErrorMessage("Error: fetching rooms failed");
