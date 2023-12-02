@@ -1,17 +1,22 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
-export const Login = () => {
+export const Register = () => {
+  const [emailSent, setEmailSent] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const login = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const username = e.currentTarget.username.value;
+    const email = e.currentTarget.email.value;
     const password = e.currentTarget.password.value;
 
     const data = {
       username,
+      email,
       password,
     };
     // fetch from backend running on port 3000
-    fetch(`http://localhost:3000/login`, {
+    fetch(`http://localhost:3000/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -20,10 +25,15 @@ export const Login = () => {
     })
       .then((res) => res.json())
       .then((data) => {
-        // set jwt token in local storage
-        localStorage.setItem("dominion_auth_token", data.authToken);
+        if (data.success) {
+          setErrorMessage(null);
+          setEmailSent(true);
+        } else {
+          setErrorMessage("An error occurred, please try again.");
+        }
       })
       .catch((error) => {
+        setErrorMessage("An error occurred, please try again.");
         console.error("Error:", error);
       });
   };
@@ -32,7 +42,7 @@ export const Login = () => {
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <Link to={"/"}>Home</Link>
       </div>
-      <h1>Login</h1>
+      <h1>Register</h1>
       <div>
         <form
           onSubmit={login}
@@ -44,12 +54,15 @@ export const Login = () => {
           }}
         >
           <input type="text" id="username" placeholder="Enter username" />
+          <input type="text" id="email" placeholder="Enter email" />
           <input type="password" id="password" placeholder="Enter password" />
-          <button type="submit">Login</button>
+          <button type="submit">Register</button>
         </form>
+        {emailSent && <p style={{ color: "green" }}>Email sent!</p>}
+        {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
       </div>
     </>
   );
 };
 
-export default Login;
+export default Register;

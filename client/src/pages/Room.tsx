@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { GameState } from "../../shared/commonTypes";
+import { GameState } from "../../../shared/commonTypes";
 
 const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);

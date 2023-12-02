@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 
 export const Home = () => {
   const [room, setRoom] = useState<number | null>(null);
+  const hasAuthToken = !!localStorage.getItem("dominion_auth_token");
+
   const openRoom = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const room = e.currentTarget.room.value;
@@ -36,21 +38,27 @@ export const Home = () => {
         </Link>
       </div>
       <h1>Welcome to Dominion!</h1>
-      <div>
-        <form
-          onSubmit={openRoom}
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "2rem",
-          }}
-        >
-          <input type="text" id="room" placeholder="Enter room number" />
-          <button type="submit">Create room</button>
-          {room && <Link to={`/room/${room}`}>Go to room: {room}</Link>}
-        </form>
-      </div>
+      {hasAuthToken ? (
+        <div>
+          <form
+            onSubmit={openRoom}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: "2rem",
+            }}
+          >
+            <input type="text" id="room" placeholder="Enter room number" />
+            <button type="submit">Create room</button>
+            {room && <Link to={`/room/${room}`}>Go to room: {room}</Link>}
+          </form>
+        </div>
+      ) : (
+        <div>
+          <p>Please login or register to play!</p>
+        </div>
+      )}
     </>
   );
 };

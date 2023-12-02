@@ -15,7 +15,7 @@ import {
 import { loginRouter } from "./routes/login/login";
 import { registerRouter } from "./routes/register/register";
 import jwt from "jsonwebtoken";
-import { safeParseJWT, safeParseNonEmptyString, tapPipeLine } from "./utils";
+import { safeParseJWT, safeParseNonEmptyString } from "./utils";
 
 dotenv.config();
 
