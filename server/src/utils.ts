@@ -4,6 +4,7 @@ import * as Effect from "@effect/io/Effect";
 import { pipe } from "effect";
 import { AuthenticationError } from "./controllers/customErrors";
 import jwt from "jsonwebtoken";
+
 export const logAndThrowError = (error: unknown) => {
   console.error(error);
   throw error;

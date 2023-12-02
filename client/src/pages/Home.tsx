@@ -12,7 +12,7 @@ export const Home = () => {
     const room = e.currentTarget.room.value;
 
     const data = {
-      room,
+      room: Number(room),
     };
     // fetch from backend running on port 3000
     fetch(`http://localhost:3000/game-sessions`, {

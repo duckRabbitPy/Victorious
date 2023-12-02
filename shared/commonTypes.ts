@@ -25,6 +25,13 @@ export const GameStateStruct = Schema.struct({
   global_state: GlobalStateStruct,
 });
 
+export const ClientPayloadStruct = Schema.struct({
+  effect: Schema.string,
+  room: Schema.number,
+  authToken: Schema.string,
+});
+
 export type ActorState = Schema.To<typeof ActorStateStruct>;
 export type GlobalState = Schema.To<typeof GlobalStateStruct>;
 export type GameState = Schema.To<typeof GameStateStruct>;
+export type ClientPayload = Schema.To<typeof ClientPayloadStruct>;

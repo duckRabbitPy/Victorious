@@ -47,7 +47,7 @@ const Room = () => {
       JSON.stringify({
         effect: "addLivePlayer",
         authToken: getAuthToken(),
-        room: window.location.pathname.split("/")[2],
+        room: Number(window.location.pathname.split("/")[2]),
       })
     );
   };
