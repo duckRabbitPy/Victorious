@@ -1,4 +1,5 @@
 import * as Schema from "@effect/schema/Schema";
+import { GameStateStruct } from "../../shared/commonTypes";
 
 export const logAndThrowError = (error: unknown) => {
   console.error(error);
@@ -14,3 +15,5 @@ export const safeParseNonEmptyString = Schema.parse(
 );
 
 export const safeParseUUIDs = Schema.parse(Schema.array(Schema.UUID));
+
+export const safeParseGameState = Schema.parse(GameStateStruct);

@@ -4,9 +4,11 @@ export const Login = () => {
   const login = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const username = e.currentTarget.username.value;
+    const password = e.currentTarget.password.value;
 
     const data = {
       username,
+      password,
     };
     // fetch from backend running on port 3000
     fetch(`http://localhost:3000/login`, {
@@ -18,7 +20,8 @@ export const Login = () => {
     })
       .then((res) => res.json())
       .then((data) => {
-        console.log(data);
+        // set jwt token in local storage
+        localStorage.setItem("dominion_auth_token", data.authToken);
       })
       .catch((error) => {
         console.error("Error:", error);

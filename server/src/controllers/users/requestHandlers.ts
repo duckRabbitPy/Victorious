@@ -34,6 +34,7 @@ export const login: RequestHandler = (req, res) => {
     dataOrError: authToken,
     res,
     successStatus: 200,
+    label: "authToken",
   });
 };
 
@@ -53,6 +54,7 @@ export const register: RequestHandler = (req, res) => {
     dataOrError: successMsgOrError,
     res,
     successStatus: 201,
+    label: "message",
   });
 };
 
@@ -75,6 +77,7 @@ export const verify: RequestHandler = (req, res) => {
     dataOrError: usernameOrError,
     res,
     successStatus: 201,
+    label: "message",
   });
 };
 
@@ -139,8 +142,7 @@ const getAuthToken = (username: string, passwordMatch: boolean) => {
 
 const authenticateUser = (username: string, password: string) => {
   return pipe(
-    getUserIdByUsernameQuery(username),
-    Effect.flatMap((userId) => getHashedPasswordByUsernameQuery(userId)),
+    getHashedPasswordByUsernameQuery(username),
     Effect.flatMap((hashedPassword) => safeParseNonEmptyString(hashedPassword)),
     Effect.orElseFail(
       () => new AuthenticationError({ message: "User not registered" })

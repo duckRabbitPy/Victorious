@@ -19,8 +19,8 @@ export const Home = () => {
       body: JSON.stringify(data),
     })
       .then((res) => res.json())
-      .then((data) => {
-        setRoom(data?.room);
+      .then((json) => {
+        setRoom(json.data?.gameState?.room);
       })
       .catch((error) => {
         console.error("Error:", error);

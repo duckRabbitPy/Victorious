@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { GameState } from "../../shared/commonTypes";
-import { uuidv4 } from "../../shared/utils";
 
 const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -39,9 +38,7 @@ const Room = () => {
 
   const addNewPlayer = () => {
     function getAuthToken() {
-      // TODO: get auth token from cookie after sign in
-      // generate a random uuid for now
-      return uuidv4();
+      return localStorage.getItem("dominion_auth_token");
     }
 
     if (!socket) throw new Error("Socket is null");

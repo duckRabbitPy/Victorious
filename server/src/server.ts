@@ -55,7 +55,8 @@ wss.on("connection", function connection(ws: WebSocket) {
         const room = Number(safeMsg.room);
         const authToken = safeMsg.authToken;
 
-        const userId = getUserIdFromToken(authToken);
+        // const userId = getUserIdFromToken(authToken);
+        const userId = "2abb7402-8b4c-4494-a763-283fa50a21a6";
         Effect.runPromise(addLivePlayerQuery(userId, room)).then((data) => {
           ws.send(JSON.stringify(data));
 

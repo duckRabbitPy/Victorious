@@ -7,12 +7,13 @@ import { uuidv4 } from "../../../shared/utils";
 export const getHashedPasswordByUsernameQuery = (username: string) => {
   const get = async () => {
     try {
+      console.log("username", username);
       const result = await pool.query(
         "SELECT password FROM users WHERE username = $1",
         [username]
       );
 
-      return result.rows[0];
+      return result.rows[0].password;
     } catch (error) {
       logAndThrowError(error);
     }

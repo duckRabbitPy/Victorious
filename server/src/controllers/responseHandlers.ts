@@ -17,11 +17,12 @@ type SendResponseProps<T> = {
   dataOrError: DataOrError<T>;
   res: Response;
   successStatus: number;
+  label?: string;
 };
 
 const createResponseHandler =
   <T>(onSuccess: (data: T) => unknown) =>
-  ({ dataOrError, res, successStatus }: SendResponseProps<T>) =>
+  ({ dataOrError, res, successStatus, label }: SendResponseProps<T>) =>
     pipe(
       Effect.matchCauseEffect(dataOrError, {
         onFailure: (cause) => {
@@ -34,7 +35,11 @@ const createResponseHandler =
           return Effect.succeed(res.status(500).json("Internal Server error"));
         },
         onSuccess: (data) =>
-          Effect.succeed(res.status(successStatus).json(onSuccess(data))),
+          Effect.succeed(
+            res
+              .status(successStatus)
+              .json({ [label ?? "data"]: onSuccess(data) })
+          ),
       }),
       Effect.runPromise
     );

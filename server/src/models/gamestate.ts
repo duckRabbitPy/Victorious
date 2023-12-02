@@ -61,6 +61,7 @@ export const createGameSessionQuery = (room: number) => {
 export const addLivePlayerQuery = (userId: string, room: number) => {
   const add = async () => {
     try {
+      console.log("addLivePlayerQuery", { userId }, { room });
       const currentGlobalState = (
         await pool.query(
           "SELECT global_state FROM game_snapshots WHERE room = $1 ORDER BY turn DESC LIMIT 1;",
@@ -100,7 +101,7 @@ export const addLivePlayerQuery = (userId: string, room: number) => {
         "UPDATE game_snapshots SET global_state = $1, actor_state = $2 WHERE room = $3 RETURNING *",
         [newGlobalState, newActorState, room]
       );
-
+      console.log("addLivePlayerQuery", result.rows[0]);
       return result.rows[0];
     } catch (error) {
       logAndThrowError(error);
