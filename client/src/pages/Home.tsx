@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 export const Home = () => {
   const [room, setRoom] = useState<number | null>(null);
   const [openRooms, setOpenRooms] = useState<number[] | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const hasAuthToken = !!localStorage.getItem("dominion_auth_token");
 
   const openRoom = (e: React.FormEvent<HTMLFormElement>) => {
@@ -23,10 +24,11 @@ export const Home = () => {
     })
       .then((res) => res.json())
       .then((json) => {
+        setErrorMessage(null);
         setRoom(json.data?.gameState?.room);
       })
-      .catch((error) => {
-        console.error("Error:", error);
+      .catch(() => {
+        setErrorMessage("Error: room creation failed");
       });
   };
 
@@ -40,7 +42,21 @@ export const Home = () => {
     })
       .then((res) => res.json())
       .then((json) => {
-        setOpenRooms(json.data?.openRooms);
+        if (json.data && json.data.openRooms.length === 0) {
+          setErrorMessage(
+            "There are no open rooms at this time. Please create a room."
+          );
+        }
+
+        if (json.data.openRooms.length) {
+          setErrorMessage(null);
+          setOpenRooms(json.data?.openRooms);
+        }
+
+        setErrorMessage("Error: fetching rooms failed");
+      })
+      .catch(() => {
+        setErrorMessage("Error: fetching rooms failed");
       });
   };
 
@@ -55,6 +71,9 @@ export const Home = () => {
       <h1>Welcome to Dominion!</h1>
       {hasAuthToken ? (
         <div>
+          <div>
+            {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+          </div>
           <form
             onSubmit={openRoom}
             style={{
