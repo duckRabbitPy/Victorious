@@ -51,7 +51,7 @@ export const resetAndSeedDatabase = async () => {
 
     await client.query(`
         CREATE TABLE IF NOT EXISTS users (
-          user_id uuid PRIMARY KEY, 
+          user_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
           username varchar(255) UNIQUE NOT NULL,
           password varchar(255) NOT NULL,
           email varchar(255) UNIQUE NOT NULL,

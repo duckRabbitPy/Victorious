@@ -4,9 +4,13 @@ export const Register = () => {
   const login = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const username = e.currentTarget.username.value;
+    const email = e.currentTarget.email.value;
+    const password = e.currentTarget.password.value;
 
     const data = {
       username,
+      email,
+      password,
     };
     // fetch from backend running on port 3000
     fetch(`http://localhost:3000/register`, {

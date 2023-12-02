@@ -9,58 +9,61 @@ import {
   getUserIdByUsernameQuery,
   registerNewUserQuery,
 } from "../../models/users";
+
 import { safeParseNonEmptyString } from "../../utils";
 import { RequestHandler } from "express";
 import nodemailer from "nodemailer";
+import { sendLoginResponse, sendRegisterResponse } from "./responseHandlers";
 
 export const login: RequestHandler = (req, res) => {
-  const userName = safeParseNonEmptyString(req.body.userName);
+  const username = safeParseNonEmptyString(req.body.username);
   const password = safeParseNonEmptyString(req.body.password);
 
-  return pipe(
-    Effect.all({ userName, password }),
-    Effect.flatMap(({ userName, password }) =>
-      authenticateUser(userName, password)
-    ),
-    Effect.flatMap((authToken) =>
-      Effect.succeed(res.status(200).json({ authToken }))
+  const authToken = pipe(
+    Effect.all({ username, password }),
+    Effect.flatMap(({ username, password }) =>
+      authenticateUser(username, password)
     )
   );
+
+  return sendLoginResponse({
+    dataOrError: authToken,
+    res,
+    successStatus: 200,
+  });
 };
 
 export const register: RequestHandler = (req, res) => {
-  const userName = safeParseNonEmptyString(req.body.userName);
+  const username = safeParseNonEmptyString(req.body.username);
   const email = safeParseNonEmptyString(req.body.email);
   const password = safeParseNonEmptyString(req.body.password);
 
-  return pipe(
-    Effect.all({ userName, email, password }),
-    Effect.flatMap(({ userName, email, password }) =>
-      registerUser(userName, email, password)
-    ),
-    Effect.flatMap((authToken) =>
-      Effect.succeed(res.status(200).json({ authToken }))
+  const successMsgOrError = pipe(
+    Effect.all({ username, email, password }),
+    Effect.flatMap(({ username, email, password }) =>
+      registerUser(username, email, password)
     )
   );
+
+  return sendRegisterResponse({
+    dataOrError: successMsgOrError,
+    res,
+    successStatus: 201,
+  });
 };
 
 const registerUser = (username: string, email: string, password: string) => {
   const saltRounds = 10;
   const hashedPassword = bcrypt.hashSync(password, saltRounds);
 
-  // todo: check if user already exists
+  // todo: check if user already exists first
 
   return pipe(
-    registerNewUserQuery(username, hashedPassword),
-    Effect.flatMap((res) =>
-      Effect.all({
-        email: safeParseNonEmptyString(res.email),
-        confirmation_token: safeParseNonEmptyString(res.confirmation_token),
-      })
-    ),
+    registerNewUserQuery(username, email, hashedPassword),
     Effect.flatMap(({ email, confirmation_token }) =>
       sendConfirmationEmail({ email, confirmation_token })
-    )
+    ),
+    Effect.flatMap(() => Effect.succeed("Email sent"))
   );
 };
 
@@ -140,7 +143,7 @@ const authenticateUser = (username: string, password: string) => {
   );
 };
 
-const sendConfirmationEmail = ({
+export const sendConfirmationEmail = ({
   email,
   confirmation_token,
 }: {
@@ -152,14 +155,17 @@ const sendConfirmationEmail = ({
       return new Promise((resolve, reject) => {
         const transporter = nodemailer.createTransport({
           service: "gmail",
+          host: "smtp.gmail.com",
+          port: 587,
+          secure: false,
           auth: {
-            user: process.env.EMAIL,
-            pass: process.env.PASSWORD,
+            user: "duck.rabbit.python@gmail.com",
+            pass: `${process.env.GMAIL_APP_PASSWORD}`,
           },
         });
 
         const mailOptions = {
-          from: process.env.EMAIL,
+          from: process.env.SENDER_EMAIL,
           to: email,
           subject: "Confirm your email",
           text: `Click the link to confirm your email: http://localhost:3000/confirm/${confirmation_token}`,
@@ -174,6 +180,8 @@ const sendConfirmationEmail = ({
             resolve(info.response);
           }
         });
+
+        transporter.close();
       });
     },
     catch: () => new Error("Error sending confirmation email"),

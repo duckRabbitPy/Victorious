@@ -46,15 +46,18 @@ export const getUserIdByUsernameQuery = (username: string) => {
 
 export const registerNewUserQuery = (
   username: string,
+  email: string,
   hashedPassword: string
 ) => {
   const add = async () => {
     try {
+      console.log("registerNewUserQuery", username, email, hashedPassword);
       const confirmation_token = uuidv4();
       const result = await pool.query(
-        "INSERT INTO users (username, password, confirmation_token) VALUES ($1, $2, $3) RETURNING email, confirmation_token",
-        [username, hashedPassword, confirmation_token]
+        "INSERT INTO users (username, password, email, confirmation_token) VALUES ($1, $2, $3, $4) RETURNING email, confirmation_token",
+        [username, hashedPassword, email, confirmation_token]
       );
+      console.log(result.rows[0]);
       return result.rows[0];
     } catch (error) {
       logAndThrowError(error);

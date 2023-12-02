@@ -1,24 +1,23 @@
 import * as Effect from "@effect/io/Effect";
 import { ParseError } from "@effect/schema/ParseResult";
-import { GameState } from "../../../../shared/commonTypes";
-import { PostgresError } from "../customErrors";
+import { AuthenticationError, PostgresError } from "../customErrors";
 import { Response } from "express";
 
 import { pipe } from "effect";
 
-type GameStateOrError = Effect.Effect<
+type AuthtokenOrError = Effect.Effect<
   never,
-  ParseError | PostgresError,
-  GameState
+  ParseError | PostgresError | AuthenticationError | Error,
+  string
 >;
 
 type sendResponseProps = {
-  dataOrError: GameStateOrError;
+  dataOrError: AuthtokenOrError;
   res: Response;
   successStatus: number;
 };
 
-export function sendResponse({
+export function sendLoginResponse({
   dataOrError: dataOrErrorEffect,
   res,
   successStatus,
@@ -34,8 +33,32 @@ export function sendResponse({
         }
         return Effect.succeed(res.status(500).json("Internal Server error"));
       },
-      onSuccess: (game_state) => {
-        return Effect.succeed(res.status(successStatus).json(game_state));
+      onSuccess: (authToken) => {
+        return Effect.succeed(res.status(successStatus).json(authToken));
+      },
+    }),
+    Effect.runPromise
+  );
+}
+
+export function sendRegisterResponse({
+  dataOrError: dataOrErrorEffect,
+  res,
+  successStatus,
+}: sendResponseProps) {
+  return pipe(
+    Effect.matchCauseEffect(dataOrErrorEffect, {
+      onFailure: (cause) => {
+        console.error(JSON.stringify(cause));
+        switch (cause._tag) {
+          case "Die":
+          case "Interrupt":
+            respondWithError(res, 500, "Internal server error");
+        }
+        return Effect.succeed(res.status(500).json("Internal Server error"));
+      },
+      onSuccess: (successMsg) => {
+        return Effect.succeed(res.status(successStatus).json({ successMsg }));
       },
     }),
     Effect.runPromise

@@ -5,7 +5,7 @@ const gameRouter = Router();
 
 gameRouter.post("/", createGameSession);
 
-gameRouter.use((req, res) => {
+gameRouter.use((_, res) => {
   res.status(406).json({ message: "Method Not Acceptable" });
 });
 
