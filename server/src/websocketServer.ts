@@ -39,7 +39,7 @@ export function useWebsocketServer(port: number): void {
       return Effect.unit;
     };
 
-    switch (msg?.effect) {
+    switch (msg.effect) {
       case "addLivePlayer": {
         pipe(
           userIdOrError,
@@ -50,17 +50,13 @@ export function useWebsocketServer(port: number): void {
         );
         break;
       }
-      case "next": {
-        const room = msg.room;
-        Effect.runPromise(incrementTurnQuery(room)).then((data) => {
-          ws.send(JSON.stringify(data));
-
-          clients?.forEach((client) => {
-            if (client !== ws && client.readyState === ws.OPEN) {
-              client.send(JSON.stringify(data));
-            }
-          });
-        });
+      case "incrementTurn": {
+        pipe(
+          incrementTurnQuery(room),
+          Effect.flatMap((gameState) => safeParseGameState(gameState)),
+          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
+          Effect.runPromise
+        );
         break;
       }
     }

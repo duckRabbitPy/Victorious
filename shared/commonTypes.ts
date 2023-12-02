@@ -25,8 +25,16 @@ export const GameStateStruct = Schema.struct({
   global_state: GlobalStateStruct,
 });
 
+// eslint-disable-next-line no-unused-vars
+export enum SupportedEffects {
+  // eslint-disable-next-line no-unused-vars
+  addLivePlayer = "addLivePlayer",
+  // eslint-disable-next-line no-unused-vars
+  incrementTurn = "incrementTurn",
+}
+
 export const ClientPayloadStruct = Schema.struct({
-  effect: Schema.string,
+  effect: Schema.enums(SupportedEffects),
   room: Schema.number,
   authToken: Schema.string,
 });

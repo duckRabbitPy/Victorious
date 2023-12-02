@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { GameState } from "../../../shared/commonTypes";
+import {
+  ClientPayload,
+  GameState,
+  SupportedEffects,
+} from "../../../shared/commonTypes";
 
 const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -32,21 +36,35 @@ const useGameState = () => {
   return { gameState, socket };
 };
 
+const prepareMessage = ({ effect, authToken, room }: ClientPayload) => {
+  return JSON.stringify({
+    effect,
+    authToken,
+    room,
+  });
+};
+
 const Room = () => {
   const { gameState, socket } = useGameState();
   const { "*": roomNumber } = useParams();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const addNewPlayer = () => {
-    function getAuthToken() {
-      return localStorage.getItem("dominion_auth_token");
+    const authToken = localStorage.getItem("dominion_auth_token");
+
+    if (!socket) {
+      setErrorMessage("Socket is null");
+      return;
+    }
+    if (!authToken) {
+      setErrorMessage("Auth token is null");
+      return;
     }
 
-    if (!socket) throw new Error("Socket is null");
-
     socket.send(
-      JSON.stringify({
-        effect: "addLivePlayer",
-        authToken: getAuthToken(),
+      prepareMessage({
+        effect: SupportedEffects.addLivePlayer,
+        authToken,
         room: Number(window.location.pathname.split("/")[2]),
       })
     );
@@ -54,6 +72,12 @@ const Room = () => {
 
   return (
     <>
+      {errorMessage && (
+        <>
+          <div style={{ color: "red" }}>{`Error: ${errorMessage}`}</div>
+          <button onClick={() => setErrorMessage(null)}>clear</button>
+        </>
+      )}
       <h1>Room {roomNumber}</h1>
       <p>Players ready: {gameState?.actor_state.length}</p>
       <ol style={{ listStyle: "none" }}>
