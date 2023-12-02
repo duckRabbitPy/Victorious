@@ -1,14 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { GameState } from "../../shared/commonTypes";
-
-function uuidv4() {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0,
-      v = c == "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
+import { GameState } from "../../../shared/commonTypes";
 
 const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -46,9 +38,7 @@ const Room = () => {
 
   const addNewPlayer = () => {
     function getAuthToken() {
-      // TODO: get auth token from cookie after sign in
-      // generate a random uuid for now
-      return uuidv4();
+      return localStorage.getItem("dominion_auth_token");
     }
 
     if (!socket) throw new Error("Socket is null");

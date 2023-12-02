@@ -47,6 +47,19 @@ export const resetAndSeedDatabase = async () => {
   try {
     await client.query("DROP TABLE IF EXISTS game_snapshots");
 
+    await client.query("DROP TABLE IF EXISTS users");
+
+    await client.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          user_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+          username varchar(255) UNIQUE NOT NULL,
+          password varchar(255) NOT NULL,
+          email varchar(255) UNIQUE NOT NULL,
+          confirmation_token uuid NOT NULL,
+          verified boolean NOT NULL DEFAULT false
+        )
+      `);
+
     await client.query(`
         CREATE TABLE IF NOT EXISTS game_snapshots (
           id uuid PRIMARY KEY, 

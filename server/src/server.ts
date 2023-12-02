@@ -1,6 +1,5 @@
 import express from "express";
 import { json } from "body-parser";
-import path from "path";
 import dotenv from "dotenv";
 import { gameRouter } from "./routes/game-session/game-session";
 import * as Schema from "@effect/schema/Schema";
@@ -9,7 +8,14 @@ import WebSocket, { WebSocketServer } from "ws";
 import cors from "cors";
 import { addLivePlayerQuery, incrementTurnQuery } from "./models/gamestate";
 import { pipe } from "effect";
-import { JSONParseError } from "./controllers/customErrors";
+import {
+  AuthenticationError,
+  JSONParseError,
+} from "./controllers/customErrors";
+import { loginRouter } from "./routes/login/login";
+import { registerRouter } from "./routes/register/register";
+import jwt from "jsonwebtoken";
+import { safeParseJWT, safeParseNonEmptyString } from "./utils";
 
 dotenv.config();
 
@@ -19,9 +25,29 @@ const wss = new WebSocketServer({ port: 8080 });
 
 const clients = new Set<WebSocket>();
 
-const getUserIdFromToken = (token: string) => {
-  // todo: implement
-  return token;
+const verifyJwt = (token: string, secret: string | undefined) => {
+  return pipe(
+    safeParseNonEmptyString(secret),
+    Effect.orElseFail(() =>
+      Effect.succeed(
+        new AuthenticationError({ message: "server secret key not found" })
+      )
+    ),
+    Effect.flatMap((secret) => {
+      return Effect.tryPromise({
+        try: () =>
+          new Promise((resolve, reject) => {
+            jwt.verify(token, secret, (err: unknown, decoded: unknown) => {
+              if (err) {
+                reject(new Error("Invalid token"));
+              }
+              resolve(decoded);
+            });
+          }),
+        catch: () => new AuthenticationError({ message: "Invalid API key" }),
+      });
+    })
+  );
 };
 
 const clientPayloadStruct = Schema.struct({
@@ -54,8 +80,17 @@ wss.on("connection", function connection(ws: WebSocket) {
         const room = Number(safeMsg.room);
         const authToken = safeMsg.authToken;
 
-        const userId = getUserIdFromToken(authToken);
-        Effect.runPromise(addLivePlayerQuery(userId, room)).then((data) => {
+        const decodedJwt = verifyJwt(authToken, process.env.JWT_SECRET_KEY);
+
+        const addLivePlayer = pipe(
+          decodedJwt,
+          Effect.flatMap((decoded) => safeParseJWT(decoded)),
+          Effect.flatMap((decoded) => Effect.succeed(decoded.userId)),
+          Effect.flatMap((userId) => addLivePlayerQuery(userId, room)),
+          Effect.runPromise
+        );
+
+        addLivePlayer.then((data) => {
           ws.send(JSON.stringify(data));
 
           clients?.forEach((client) => {
@@ -97,15 +132,8 @@ server.use(
 server.use(json());
 server.use(express.urlencoded({ extended: true }));
 
-server.get("/", (_, res) => {
-  res.sendFile(path.join(__dirname, "../client/index.html"));
-});
-
-server.get("/room/:id", (_, res) => {
-  res.sendFile(path.join(__dirname, "../client/room.html"));
-});
-
-// server.use("/game-state", apiKeyMiddleware);
+server.use("/login", loginRouter);
+server.use("/register", registerRouter);
 server.use("/game-state", gameRouter);
 
 console.log("\x1b[42m", `listening on port ${PORT}`, "\x1b[0m");
