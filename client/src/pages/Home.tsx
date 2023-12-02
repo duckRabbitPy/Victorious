@@ -46,6 +46,7 @@ export const Home = () => {
           setErrorMessage(
             "There are no open rooms at this time. Please create a room."
           );
+          return;
         }
 
         if (json.data.openRooms.length) {

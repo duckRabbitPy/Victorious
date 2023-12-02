@@ -4,8 +4,12 @@ import { addLivePlayerQuery, incrementTurnQuery } from "./models/gamestate";
 import * as Schema from "@effect/schema/Schema";
 import { pipe } from "effect";
 import { JSONParseError } from "./controllers/customErrors";
-import { ClientPayloadStruct, ClientPayload } from "../../shared/commonTypes";
-import { safeParseJWT, verifyJwt } from "./utils";
+import {
+  ClientPayloadStruct,
+  ClientPayload,
+  GameState,
+} from "../../shared/commonTypes";
+import { safeParseGameState, safeParseJWT, verifyJwt } from "./utils";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -25,23 +29,25 @@ export function useWebsocketServer(port: number): void {
       Effect.flatMap((decoded) => Effect.succeed(decoded.userId))
     );
 
+    const broacastNewGameState = (newGameState: GameState) => {
+      ws.send(JSON.stringify(newGameState));
+      clients?.forEach((client) => {
+        if (client !== ws && client.readyState === ws.OPEN) {
+          client.send(JSON.stringify(newGameState));
+        }
+      });
+      return Effect.unit;
+    };
+
     switch (msg?.effect) {
       case "addLivePlayer": {
-        const addLivePlayer = pipe(
+        pipe(
           userIdOrError,
           Effect.flatMap((userId) => addLivePlayerQuery(userId, room)),
+          Effect.flatMap((gameState) => safeParseGameState(gameState)),
+          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
           Effect.runPromise
         );
-
-        addLivePlayer.then((data) => {
-          ws.send(JSON.stringify(data));
-
-          clients?.forEach((client) => {
-            if (client !== ws && client.readyState === ws.OPEN) {
-              client.send(JSON.stringify(data));
-            }
-          });
-        });
         break;
       }
       case "next": {
