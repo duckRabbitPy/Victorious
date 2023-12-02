@@ -70,15 +70,15 @@ export const registerNewUserQuery = (
   }).pipe(Effect.retryN(1));
 };
 
-export const confirmUserQuery = (confirmation_token: string, email: string) => {
+export const verifyUserQuery = (confirmation_token: string) => {
   const confirm = async () => {
     try {
       const result = await pool.query(
-        "UPDATE users SET verified = true WHERE confirmation_token = $1 AND email = $2 RETURNING user_id",
-        [confirmation_token, email]
+        "UPDATE users SET verified = true WHERE confirmation_token = $1 RETURNING username",
+        [confirmation_token]
       );
 
-      return result.rows[0];
+      return result.rows[0].username;
     } catch (error) {
       logAndThrowError(error);
     }

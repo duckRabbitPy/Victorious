@@ -4,16 +4,20 @@ import { pipe } from "effect";
 import jwt from "jsonwebtoken";
 import { AuthenticationError } from "../customErrors";
 import {
-  confirmUserQuery,
   getHashedPasswordByUsernameQuery,
   getUserIdByUsernameQuery,
   registerNewUserQuery,
+  verifyUserQuery,
 } from "../../models/users";
 
 import { safeParseNonEmptyString } from "../../utils";
 import { RequestHandler } from "express";
 import nodemailer from "nodemailer";
-import { sendLoginResponse, sendRegisterResponse } from "./responseHandlers";
+import {
+  sendConfirmUserResponse,
+  sendLoginResponse,
+  sendRegisterResponse,
+} from "../responseHandlers";
 
 export const login: RequestHandler = (req, res) => {
   const username = safeParseNonEmptyString(req.body.username);
@@ -52,6 +56,28 @@ export const register: RequestHandler = (req, res) => {
   });
 };
 
+export const verify: RequestHandler = (req, res) => {
+  const confirmation_token = safeParseNonEmptyString(
+    req.params.confirmation_token
+  );
+
+  const usernameOrError = pipe(
+    confirmation_token,
+    Effect.flatMap((confirmation_token) => verifyUserQuery(confirmation_token)),
+    Effect.flatMap((username) =>
+      Effect.succeed(
+        `Verified ${username}. You can now log in with your account.`
+      )
+    )
+  );
+
+  return sendConfirmUserResponse({
+    dataOrError: usernameOrError,
+    res,
+    successStatus: 201,
+  });
+};
+
 const registerUser = (username: string, email: string, password: string) => {
   const saltRounds = 10;
   const hashedPassword = bcrypt.hashSync(password, saltRounds);
@@ -64,23 +90,6 @@ const registerUser = (username: string, email: string, password: string) => {
       sendConfirmationEmail({ email, confirmation_token })
     ),
     Effect.flatMap(() => Effect.succeed("Email sent"))
-  );
-};
-
-export const confirmAccount: RequestHandler = (req, res) => {
-  const confirmation_token = safeParseNonEmptyString(
-    req.query.confirmation_token
-  );
-  const email = safeParseNonEmptyString(req.query.email);
-
-  return pipe(
-    Effect.all({ confirmation_token, email }),
-    Effect.flatMap(({ confirmation_token, email }) =>
-      confirmUserQuery(confirmation_token, email)
-    ),
-    Effect.flatMap((authToken) =>
-      Effect.succeed(res.status(200).json({ authToken }))
-    )
   );
 };
 
@@ -168,7 +177,7 @@ export const sendConfirmationEmail = ({
           from: process.env.SENDER_EMAIL,
           to: email,
           subject: "Confirm your email",
-          text: `Click the link to confirm your email: http://localhost:3000/confirm/${confirmation_token}`,
+          text: `Click the link to confirm your email: http://localhost:3000/register/confirm/${confirmation_token}`,
         };
 
         transporter.sendMail(mailOptions, (error, info) => {

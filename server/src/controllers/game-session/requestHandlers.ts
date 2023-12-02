@@ -3,7 +3,7 @@ import { pipe } from "@effect/data/Function";
 import * as Effect from "@effect/io/Effect";
 import { createGameSessionQuery, parseGameState } from "../../models/gamestate";
 import { safeParseNumber } from "../../utils";
-import { sendResponse } from "./responseHandler";
+import { sendGameStateResponse } from "../responseHandlers";
 
 export const createGameSession: RequestHandler = (req, res) => {
   return pipe(
@@ -11,7 +11,7 @@ export const createGameSession: RequestHandler = (req, res) => {
     Effect.flatMap((room) => createGameSessionQuery(room)),
     Effect.flatMap(parseGameState),
     (dataOrError) =>
-      sendResponse({
+      sendGameStateResponse({
         dataOrError: dataOrError,
         res,
         successStatus: 201,
