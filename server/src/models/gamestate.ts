@@ -4,7 +4,6 @@ import { pool } from "../db/connection";
 import { PostgresError } from "../controllers/customErrors";
 import { GameStateStruct, GlobalState } from "../../../shared/commonTypes";
 import { logAndThrowError } from "../utils";
-import { uuidv4 } from "../../../shared/utils";
 
 export const safeParseGameState = Schema.parse(GameStateStruct);
 
@@ -40,10 +39,19 @@ export const createGameSessionQuery = (room: number) => {
 
   const create = async () => {
     try {
+      const existingOpenRooms = await pool.query(
+        "SELECT room FROM game_snapshots WHERE room = $1 AND turn = 0",
+        [room]
+      );
+
+      if (existingOpenRooms.rows.length > 0) {
+        throw new Error(`There is already an open room ${room}`);
+      }
+
       const result = await pool.query(
-        `INSERT INTO game_snapshots (id, room, turn, actor_state, global_state)
-             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-        [uuidv4(), room, turn, "[]", generatateGlobalState()]
+        `INSERT INTO game_snapshots (room, turn, actor_state, global_state)
+             VALUES ($1, $2, $3, $4) RETURNING *`,
+        [room, turn, "[]", generatateGlobalState()]
       );
 
       return result.rows[0];
