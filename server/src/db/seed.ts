@@ -80,7 +80,7 @@ export const resetAndSeedDatabase = async () => {
     await client.query(`
         CREATE TABLE IF NOT EXISTS game_snapshots (
             id serial PRIMARY KEY,
-            session_id uuid NOT NULL DEFAULT gen_random_uuid(),
+            session_id uuid DEFAULT gen_random_uuid(),
             mutation_index serial NOT NULL,
             room integer NOT NULL,
             turn integer NOT NULL,

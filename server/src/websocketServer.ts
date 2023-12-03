@@ -22,11 +22,8 @@ type RoomConnections = {
   room: number;
 }[];
 
-export function useWebsocketServer(port: number): void {
-  const clients = new Set<WebSocket>();
+export function createWebsocketServer(port: number): void {
   const roomConnections: RoomConnections = [];
-
-  console.log(roomConnections.map((connection) => connection.room));
 
   const wss = new WebSocket.Server({ port });
 
@@ -47,11 +44,16 @@ export function useWebsocketServer(port: number): void {
     );
 
     const currentGameState = getLatestLiveGameSnapshot({ room });
-    // lock postgres gamestate row
 
     const broacastNewGameState = (newGameState: GameState) => {
-      ws.send(JSON.stringify(newGameState));
+      if (
+        roomConnections.map((connection) => connection.room).includes(room) ===
+        false
+      ) {
+        roomConnections.push({ socket: ws, room });
+      }
 
+      ws.send(JSON.stringify(newGameState));
       roomConnections?.forEach((connection) => {
         // only broadcast to sessions with same room
         // todo: narrow to session and cleanup dead connections
@@ -111,11 +113,8 @@ export function useWebsocketServer(port: number): void {
     return Effect.unit;
   };
 
-  wss.on("connection", function connection(ws: WebSocket, room: number) {
+  wss.on("connection", function connection(ws: WebSocket) {
     ws.on("message", function message(msg: unknown) {
-      roomConnections.push({ socket: ws, room });
-      clients.add(ws);
-
       pipe(
         Effect.try({
           try: () => JSON.parse(msg as string),

@@ -115,7 +115,7 @@ const createAuthToken = (userId: string, username: string) => {
     username,
   };
 
-  const expiresIn = "24h";
+  const expiresIn = "72h";
 
   const authToken = jwt.sign(payload, secretKey, { expiresIn });
 

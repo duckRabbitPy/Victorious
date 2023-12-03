@@ -29,7 +29,7 @@ export const getOpenGameSessionsQuery = () => {
   const get = async () => {
     try {
       const result = await pool.query(
-        "SELECT room FROM game_snapshots WHERE turn = 0;"
+        "SELECT DISTINCT room FROM game_snapshots WHERE turn = 0 AND game_over = false;"
       );
 
       return result.rows.map((row) => row.room);
