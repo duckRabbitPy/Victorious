@@ -17,8 +17,16 @@ import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHan
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
+type RoomConnections = {
+  socket: WebSocket;
+  room: number;
+}[];
+
 export function useWebsocketServer(port: number): void {
   const clients = new Set<WebSocket>();
+  const roomConnections: RoomConnections = [];
+
+  console.log(roomConnections.map((connection) => connection.room));
 
   const wss = new WebSocket.Server({ port });
 
@@ -43,9 +51,17 @@ export function useWebsocketServer(port: number): void {
 
     const broacastNewGameState = (newGameState: GameState) => {
       ws.send(JSON.stringify(newGameState));
-      clients?.forEach((client) => {
-        if (client !== ws && client.readyState === ws.OPEN) {
-          client.send(JSON.stringify(newGameState));
+
+      roomConnections?.forEach((connection) => {
+        // only broadcast to sessions with same room
+        // todo: narrow to session and cleanup dead connections
+        if (
+          connection.socket !== ws &&
+          connection.socket.readyState === ws.OPEN &&
+          connection.room === room &&
+          connection.socket !== ws
+        ) {
+          connection.socket.send(JSON.stringify(newGameState));
         }
       });
       return Effect.unit;
@@ -95,8 +111,9 @@ export function useWebsocketServer(port: number): void {
     return Effect.unit;
   };
 
-  wss.on("connection", function connection(ws: WebSocket) {
+  wss.on("connection", function connection(ws: WebSocket, room: number) {
     ws.on("message", function message(msg: unknown) {
+      roomConnections.push({ socket: ws, room });
       clients.add(ws);
 
       pipe(
