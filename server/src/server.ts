@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { useWebsocketServer as createWebsocketServer } from "./websocketServer";
+import { createWebsocketServer } from "./websocketServer";
 import { createHttpServer } from "./httpServer";
 
 // server env set up

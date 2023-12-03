@@ -127,8 +127,15 @@ export const addLivePlayerQuery = ({
       });
 
       const result = await pool.query(
-        `INSERT INTO game_snapshots (room, turn, actor_state, global_state, mutation_index, game_over, session_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `
+        WITH max_mutation AS (
+            SELECT MAX(mutation_index) AS max_mutation_index
+            FROM game_snapshots
+            WHERE session_id = $7
+        )
+        INSERT INTO game_snapshots (room, turn, actor_state, global_state, mutation_index, game_over, session_id)
+        SELECT $1, $2, $3, $4, $5, $6, $7
+        WHERE $5 = (SELECT max_mutation_index FROM max_mutation) + 1
         RETURNING *;
         `,
         [
@@ -170,8 +177,15 @@ export const incrementTurnQuery = (currentGameState: GameState) => {
   const increment = async () => {
     try {
       const result = await pool.query(
-        `INSERT INTO game_snapshots (room, turn, actor_state, global_state, mutation_index, game_over, session_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `
+        WITH max_mutation AS (
+            SELECT MAX(mutation_index) AS max_mutation_index
+            FROM game_snapshots
+            WHERE session_id = $7
+        )
+        INSERT INTO game_snapshots (room, turn, actor_state, global_state, mutation_index, game_over, session_id)
+        SELECT $1, $2, $3, $4, $5, $6, $7
+        WHERE $5 = (SELECT max_mutation_index FROM max_mutation) + 1
         RETURNING *;
         `,
         [
