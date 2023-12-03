@@ -99,8 +99,14 @@ export const addLivePlayerQuery = ({
   const add = async () => {
     try {
       const room = currentGameState.room;
-      const { turn, actor_state, global_state, mutation_index, game_over } =
-        currentGameState;
+      const {
+        turn,
+        actor_state,
+        global_state,
+        mutation_index,
+        game_over,
+        session_id,
+      } = currentGameState;
       const newMutationIndex = mutation_index + 1;
 
       if (global_state.liveActors?.includes(userId)) {
@@ -122,8 +128,19 @@ export const addLivePlayerQuery = ({
       });
 
       const result = await pool.query(
-        "INSERT INTO game_snapshots (room, turn, actor_state, global_state, mutation_index, game_over) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-        [room, turn, newActorState, newGlobalState, newMutationIndex, game_over]
+        `INSERT INTO game_snapshots (room, turn, actor_state, global_state, mutation_index, game_over, session_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *;
+        `,
+        [
+          room,
+          turn,
+          newActorState,
+          newGlobalState,
+          newMutationIndex,
+          game_over,
+          session_id,
+        ]
       );
       return result.rows[0];
     } catch (error) {
@@ -139,15 +156,25 @@ export const addLivePlayerQuery = ({
 
 // @mutation
 export const incrementTurnQuery = (currentGameState: GameState) => {
-  const { room, turn, actor_state, global_state, game_over, mutation_index } =
-    currentGameState;
+  const {
+    room,
+    turn,
+    actor_state,
+    global_state,
+    game_over,
+    mutation_index,
+    session_id,
+  } = currentGameState;
   const newTurn = turn + 1;
   const newMutationIndex = mutation_index + 1;
 
   const increment = async () => {
     try {
       const result = await pool.query(
-        "INSERT INTO game_snapshots (room, turn, actor_state, global_state, mutation_index, game_over) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+        `INSERT INTO game_snapshots (room, turn, actor_state, global_state, mutation_index, game_over, session_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING *;
+        `,
         [
           room,
           newTurn,
@@ -155,6 +182,7 @@ export const incrementTurnQuery = (currentGameState: GameState) => {
           JSON.stringify(global_state),
           newMutationIndex,
           game_over,
+          session_id,
         ]
       );
       return result.rows[0];

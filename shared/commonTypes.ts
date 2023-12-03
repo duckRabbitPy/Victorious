@@ -26,9 +26,10 @@ const GlobalStateStruct = Schema.struct({
 });
 
 export const GameStateStruct = Schema.struct({
-  id: Schema.UUID,
+  id: Schema.number,
   room: Schema.number,
   turn: Schema.number,
+  session_id: Schema.UUID,
   mutation_index: Schema.number,
   actor_state: Schema.array(ActorStateStruct),
   global_state: GlobalStateStruct,

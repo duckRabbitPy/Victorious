@@ -1,5 +1,5 @@
 import * as Schema from "@effect/schema/Schema";
-import { GameStateStruct } from "../../shared/commonTypes";
+import { ClientPayloadStruct, GameStateStruct } from "../../shared/commonTypes";
 import * as Effect from "@effect/io/Effect";
 import { pipe } from "effect";
 import { AuthenticationError } from "./controllers/customErrors";
@@ -51,6 +51,8 @@ export const safeParseNumberArray = Schema.parse(
     Schema.number.pipe(Schema.positive(), Schema.int(), Schema.nonNaN())
   )
 );
+
+export const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
 export const verifyJwt = (token: string, secret: string | undefined) => {
   return pipe(
