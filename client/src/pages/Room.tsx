@@ -6,15 +6,78 @@ import {
   SupportedEffects,
 } from "../../../shared/commonTypes";
 
+const getInititalGameState = ({
+  socket,
+  authToken,
+  roomNumber,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  setErrorMessage?: (message: string | null) => void;
+}) => {
+  if (!socket || !authToken) {
+    setErrorMessage?.("Socket or auth token is null");
+    return;
+  }
+  socket?.send(
+    prepareMessage({
+      effect: SupportedEffects.getCurrentGameState,
+      room: roomNumber,
+      authToken,
+    })
+  );
+};
+
+const addNewPlayer = ({
+  socket,
+  authToken,
+  roomNumber,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  setErrorMessage: (message: string | null) => void;
+}) => {
+  if (!socket) {
+    setErrorMessage("Socket is null");
+    return;
+  }
+  if (!authToken) {
+    setErrorMessage("Auth token is null");
+    return;
+  }
+
+  socket.send(
+    prepareMessage({
+      effect: SupportedEffects.addLivePlayer,
+      authToken,
+      room: roomNumber,
+    })
+  );
+};
+
 const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [initialGameStateFetched, setInitialGameStateFetched] = useState(false);
 
   useEffect(() => {
     const newSocket = new WebSocket("ws://localhost:8080");
 
     newSocket.addEventListener("open", (event) => {
       console.log("WebSocket connection opened:", event);
+
+      if (!initialGameStateFetched) {
+        getInititalGameState({
+          socket: newSocket,
+          authToken: localStorage.getItem("dominion_auth_token"),
+          roomNumber: Number(window.location.pathname.split("/").pop()),
+        });
+        setInitialGameStateFetched(true);
+      }
     });
 
     newSocket.addEventListener("message", (event) => {
@@ -31,6 +94,7 @@ const useGameState = () => {
     return () => {
       newSocket.close();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { gameState, socket };
@@ -51,45 +115,6 @@ const Room = () => {
   const authToken = localStorage.getItem("dominion_auth_token");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const getInititalGameState = () => {
-    if (!socket) {
-      setErrorMessage("Socket is null");
-      return;
-    }
-    if (!authToken) {
-      setErrorMessage("Auth token is null");
-      return;
-    }
-    socket?.send(
-      prepareMessage({
-        effect: SupportedEffects.getCurrentGameState,
-        room: roomNumber,
-        authToken,
-      })
-    );
-  };
-
-  const addNewPlayer = () => {
-    const authToken = localStorage.getItem("dominion_auth_token");
-
-    if (!socket) {
-      setErrorMessage("Socket is null");
-      return;
-    }
-    if (!authToken) {
-      setErrorMessage("Auth token is null");
-      return;
-    }
-
-    socket.send(
-      prepareMessage({
-        effect: SupportedEffects.addLivePlayer,
-        authToken,
-        room: roomNumber,
-      })
-    );
-  };
-
   return (
     <>
       {errorMessage && (
@@ -109,14 +134,30 @@ const Room = () => {
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <Link to="/">Back to home</Link>
           {
-            <button id="player-ready" onClick={addNewPlayer}>
+            <button
+              id="player-ready"
+              onClick={() =>
+                addNewPlayer({
+                  socket,
+                  authToken,
+                  roomNumber,
+                  setErrorMessage,
+                })
+              }
+            >
               Ready
             </button>
           }
         </div>
         <div id="game-state">
           <h2>Game state</h2>
-          <button onClick={getInititalGameState}>refresh</button>
+          <button
+            onClick={() =>
+              getInititalGameState({ socket, authToken, roomNumber })
+            }
+          >
+            refresh
+          </button>
           <pre>{JSON.stringify(gameState, null, 2)}</pre>
         </div>
       </div>
