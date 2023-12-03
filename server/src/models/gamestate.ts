@@ -86,7 +86,7 @@ export const addLivePlayerQuery = (userId: string, room: number) => {
               ...currentActorState,
               {
                 id: userId,
-                name: `Player ${currentActorState.length}`,
+                name: `Player ${currentActorState.length + 1}`,
                 coins: 0,
                 hand: [],
                 actions: 0,
@@ -148,6 +148,25 @@ export const incrementTurnQuery = (room: number) => {
 
   return Effect.tryPromise({
     try: () => increment(),
+    catch: () => new PostgresError({ message: "postgres query error" }),
+  }).pipe(Effect.retryN(1));
+};
+
+export const getOpenGameSessionsQuery = () => {
+  const get = async () => {
+    try {
+      const result = await pool.query(
+        "SELECT room FROM game_snapshots WHERE turn = 0;"
+      );
+
+      return result.rows.map((row) => row.room);
+    } catch (error) {
+      logAndThrowError(error);
+    }
+  };
+
+  return Effect.tryPromise({
+    try: () => get(),
     catch: () => new PostgresError({ message: "postgres query error" }),
   }).pipe(Effect.retryN(1));
 };

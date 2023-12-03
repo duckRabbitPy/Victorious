@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 
 export const Home = () => {
   const [room, setRoom] = useState<number | null>(null);
+  const [openRooms, setOpenRooms] = useState<number[] | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const hasAuthToken = !!localStorage.getItem("dominion_auth_token");
 
   const openRoom = (e: React.FormEvent<HTMLFormElement>) => {
@@ -10,11 +12,11 @@ export const Home = () => {
     const room = e.currentTarget.room.value;
 
     const data = {
-      room,
+      room: Number(room),
     };
     // fetch from backend running on port 3000
-    fetch(`http://localhost:3000/game-state`, {
-      method: "POST",
+    fetch(`http://localhost:3000/game-sessions`, {
+      method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
@@ -22,10 +24,40 @@ export const Home = () => {
     })
       .then((res) => res.json())
       .then((json) => {
+        setErrorMessage(null);
         setRoom(json.data?.gameState?.room);
       })
-      .catch((error) => {
-        console.error("Error:", error);
+      .catch(() => {
+        setErrorMessage("Error: room creation failed");
+      });
+  };
+
+  const getOpenRooms = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    fetch(`http://localhost:3000/game-sessions`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data && json.data.openRooms.length === 0) {
+          setErrorMessage(
+            "There are no open rooms at this time. Please create a room."
+          );
+          return;
+        }
+
+        if (json.data.openRooms.length) {
+          setErrorMessage(null);
+          setOpenRooms(json.data?.openRooms);
+        } else {
+          setErrorMessage("Error: fetching rooms failed");
+        }
+      })
+      .catch(() => {
+        setErrorMessage("Error: fetching rooms failed");
       });
   };
 
@@ -40,6 +72,9 @@ export const Home = () => {
       <h1>Welcome to Dominion!</h1>
       {hasAuthToken ? (
         <div>
+          <div>
+            {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+          </div>
           <form
             onSubmit={openRoom}
             style={{
@@ -51,8 +86,25 @@ export const Home = () => {
           >
             <input type="text" id="room" placeholder="Enter room number" />
             <button type="submit">Create room</button>
-            {room && <Link to={`/room/${room}`}>Go to room: {room}</Link>}
           </form>
+          <div style={{ padding: "1rem" }}>
+            {room && <Link to={`/room/${room}`}>Go to room: {room}</Link>}
+          </div>
+          <p>or</p>
+          <div>
+            <div>
+              <form onClick={getOpenRooms}>
+                <button>See current rooms available</button>
+              </form>
+              <ol style={{ padding: 0 }}>
+                {openRooms?.map((room) => (
+                  <li key={room} style={{ listStyle: "none" }}>
+                    <Link to={`/room/${room}`}>Room {room}</Link>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
         </div>
       ) : (
         <div>
