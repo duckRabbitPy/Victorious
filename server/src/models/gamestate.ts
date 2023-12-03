@@ -76,6 +76,12 @@ export const addLivePlayerQuery = (userId: string, room: number) => {
         )
       ).rows[0].global_state;
 
+      if (currentGlobalState?.liveActors?.includes(userId)) {
+        // no change in state if player already in game
+        const currState = await Effect.runPromise(getGameSessionQuery(room));
+        return currState;
+      }
+
       const currentActorState = (
         await pool.query(
           "SELECT actor_state FROM game_snapshots WHERE room = $1 ORDER BY turn DESC LIMIT 1;",
