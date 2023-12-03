@@ -103,7 +103,7 @@ const comparePasswords = (password: string, hashedPassword: string) => {
   });
 };
 
-const createAuthToken = (userId: string) => {
+const createAuthToken = (userId: string, username: string) => {
   const secretKey = process.env.JWT_SECRET_KEY;
 
   if (!secretKey) {
@@ -112,6 +112,7 @@ const createAuthToken = (userId: string) => {
 
   const payload = {
     userId,
+    username,
   };
 
   const expiresIn = "24h";
@@ -136,7 +137,7 @@ const getAuthToken = (username: string, passwordMatch: boolean) => {
     }),
 
     Effect.flatMap(() => getUserIdByUsernameQuery(username)),
-    Effect.flatMap((userId) => createAuthToken(userId))
+    Effect.flatMap((userId) => createAuthToken(userId, username))
   );
 };
 

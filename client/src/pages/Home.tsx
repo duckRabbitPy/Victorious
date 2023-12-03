@@ -25,7 +25,12 @@ export const Home = () => {
       .then((res) => res.json())
       .then((json) => {
         setErrorMessage(null);
-        setRoom(json.data?.gameState?.room);
+
+        if (json.data?.gameState?.room) {
+          setRoom(json.data?.gameState?.room);
+        } else {
+          setErrorMessage("Error: room creation failed");
+        }
       })
       .catch(() => {
         setErrorMessage("Error: room creation failed");

@@ -154,11 +154,13 @@ const Room = () => {
       )}
       <h1>Room {roomNumber}</h1>
       <p>Players ready: {gameState?.actor_state.length}</p>
-      <ol style={{ listStyle: "none" }}>
-        {gameState?.actor_state.map((actor) => (
-          <li key={actor.id}>{`✅ ${actor.name}`}</li>
-        ))}
-      </ol>
+      {
+        <ol style={{ listStyle: "none" }}>
+          {gameState?.actor_state?.map((actor) => (
+            <li key={actor.id}>{`✅ ${actor.name}`}</li>
+          ))}
+        </ol>
+      }
       <div>
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <Link to="/">Back to home</Link>

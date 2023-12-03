@@ -2,9 +2,8 @@ import * as Effect from "@effect/io/Effect";
 import WebSocket from "ws";
 import {
   addLivePlayerQuery,
-  getGameSessionQuery,
   incrementTurnQuery,
-} from "./models/gamestate";
+} from "./models/gamestate/mutations";
 import * as Schema from "@effect/schema/Schema";
 import { pipe } from "effect";
 import { JSONParseError } from "./controllers/customErrors";
@@ -13,17 +12,21 @@ import {
   ClientPayload,
   GameState,
 } from "../../shared/commonTypes";
-import {
-  safeParseGameState,
-  safeParseJWT,
-  tapPipeLine,
-  verifyJwt,
-} from "./utils";
+import { safeParseGameState, safeParseJWT, verifyJwt } from "./utils";
+import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
+type RoomConnections = {
+  socket: WebSocket;
+  room: number;
+}[];
+
 export function useWebsocketServer(port: number): void {
   const clients = new Set<WebSocket>();
+  const roomConnections: RoomConnections = [];
+
+  console.log(roomConnections.map((connection) => connection.room));
 
   const wss = new WebSocket.Server({ port });
 
@@ -32,49 +35,72 @@ export function useWebsocketServer(port: number): void {
     const authToken = msg.authToken;
     const decodedJwt = verifyJwt(authToken, process.env.JWT_SECRET_KEY);
 
-    const userIdOrError = pipe(
+    const userDetailsOrError = pipe(
       decodedJwt,
       Effect.flatMap((decoded) => safeParseJWT(decoded)),
-      Effect.flatMap((decoded) => Effect.succeed(decoded.userId))
+      Effect.flatMap((decoded) =>
+        Effect.succeed({
+          userId: decoded.userId,
+          username: decoded.username,
+        })
+      )
     );
+
+    const currentGameState = getLatestLiveGameSnapshot({ room });
+    // lock postgres gamestate row
 
     const broacastNewGameState = (newGameState: GameState) => {
       ws.send(JSON.stringify(newGameState));
-      clients?.forEach((client) => {
-        if (client !== ws && client.readyState === ws.OPEN) {
-          client.send(JSON.stringify(newGameState));
+
+      roomConnections?.forEach((connection) => {
+        // only broadcast to sessions with same room
+        // todo: narrow to session and cleanup dead connections
+        if (
+          connection.socket !== ws &&
+          connection.socket.readyState === ws.OPEN &&
+          connection.room === room &&
+          connection.socket !== ws
+        ) {
+          connection.socket.send(JSON.stringify(newGameState));
         }
       });
       return Effect.unit;
     };
 
     switch (msg.effect) {
-      case "addLivePlayer": {
-        pipe(
-          userIdOrError,
-          Effect.flatMap((userId) => addLivePlayerQuery(userId, room)),
-          Effect.flatMap((gameState) => safeParseGameState(gameState)),
-          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
-          Effect.runPromise
-        );
-        break;
-      }
+      // read only operation
       case "getCurrentGameState": {
         pipe(
-          userIdOrError,
-          tapPipeLine,
-          Effect.flatMap(() => getGameSessionQuery(room)),
-          Effect.flatMap((gameState) => safeParseGameState(gameState)),
+          userDetailsOrError,
+          Effect.flatMap(() => getLatestLiveGameSnapshot({ room })),
           Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
           Effect.runPromise
         );
-
         break;
       }
+      // mutation operations
+      case "addLivePlayer": {
+        pipe(
+          Effect.all({ userInfo: userDetailsOrError, currentGameState }),
+          Effect.flatMap(({ userInfo, currentGameState }) =>
+            addLivePlayerQuery({
+              userId: userInfo.userId,
+              username: userInfo.username,
+              currentGameState,
+            })
+          ),
+          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
+          Effect.runPromise
+        );
+        break;
+      }
+
       case "incrementTurn": {
         pipe(
-          userIdOrError,
-          Effect.flatMap(() => incrementTurnQuery(room)),
+          Effect.all({ userId: userDetailsOrError, currentGameState }),
+          Effect.flatMap(({ currentGameState }) =>
+            incrementTurnQuery(currentGameState)
+          ),
           Effect.flatMap((gameState) => safeParseGameState(gameState)),
           Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
           Effect.runPromise
@@ -85,8 +111,9 @@ export function useWebsocketServer(port: number): void {
     return Effect.unit;
   };
 
-  wss.on("connection", function connection(ws: WebSocket) {
+  wss.on("connection", function connection(ws: WebSocket, room: number) {
     ws.on("message", function message(msg: unknown) {
+      roomConnections.push({ socket: ws, room });
       clients.add(ws);
 
       pipe(

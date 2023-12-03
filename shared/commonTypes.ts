@@ -1,10 +1,18 @@
 import * as Schema from "@effect/schema/Schema";
 
+const CardCountStruct = Schema.struct({
+  copper: Schema.number,
+  silver: Schema.number,
+  gold: Schema.number,
+  estate: Schema.number,
+  duchy: Schema.number,
+  province: Schema.number,
+});
+
 const ActorStateStruct = Schema.struct({
   id: Schema.UUID,
   name: Schema.string,
-  coins: Schema.number,
-  hand: Schema.array(Schema.UUID),
+  hand: CardCountStruct,
   actions: Schema.number,
   buys: Schema.number,
   victoryPoints: Schema.number,
@@ -18,11 +26,14 @@ const GlobalStateStruct = Schema.struct({
 });
 
 export const GameStateStruct = Schema.struct({
-  id: Schema.UUID,
+  id: Schema.number,
   room: Schema.number,
   turn: Schema.number,
+  session_id: Schema.UUID,
+  mutation_index: Schema.number,
   actor_state: Schema.array(ActorStateStruct),
   global_state: GlobalStateStruct,
+  game_over: Schema.boolean,
 });
 
 // eslint-disable-next-func no-unused-vars
@@ -31,6 +42,7 @@ export enum SupportedEffects {
   getCurrentGameState = "getCurrentGameState",
   // eslint-disable-next-line no-unused-vars
   addLivePlayer = "addLivePlayer",
+  buyCard = "buyCard",
   // eslint-disable-next-line no-unused-vars
   incrementTurn = "incrementTurn",
 }

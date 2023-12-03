@@ -27,7 +27,7 @@ export const tokenMiddleware = (
       jwt.verify(token, secretKey, (err, decoded) => {
         if (err) {
           return Effect.fail(
-            new AuthorisationError({ message: "Invalid API key" })
+            new AuthorisationError({ message: "Invalid Auth Token" })
           );
         }
         console.log(decoded);
