@@ -86,7 +86,7 @@ export const addLivePlayerQuery = (userId: string, room: number) => {
               ...currentActorState,
               {
                 id: userId,
-                name: `Player ${currentActorState.length}`,
+                name: `Player ${currentActorState.length + 1}`,
                 coins: 0,
                 hand: [],
                 actions: 0,

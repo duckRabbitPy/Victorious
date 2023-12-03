@@ -59,6 +59,35 @@ const addNewPlayer = ({
   );
 };
 
+const incrementTurn = ({
+  socket,
+  authToken,
+  roomNumber,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  setErrorMessage: (message: string | null) => void;
+}) => {
+  if (!socket) {
+    setErrorMessage("Socket is null");
+    return;
+  }
+  if (!authToken) {
+    setErrorMessage("Auth token is null");
+    return;
+  }
+
+  socket.send(
+    prepareMessage({
+      effect: SupportedEffects.incrementTurn,
+      authToken,
+      room: roomNumber,
+    })
+  );
+};
+
 const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -148,6 +177,23 @@ const Room = () => {
               Ready
             </button>
           }
+        </div>
+        <div>
+          {gameState?.actor_state && gameState.actor_state.length > 1 && (
+            <button
+              id="start-game"
+              onClick={() =>
+                incrementTurn({
+                  socket,
+                  authToken,
+                  roomNumber,
+                  setErrorMessage,
+                })
+              }
+            >
+              {gameState?.turn === 0 ? "Start game" : "Next turn"}
+            </button>
+          )}
         </div>
         <div id="game-state">
           <h2>Game state</h2>
