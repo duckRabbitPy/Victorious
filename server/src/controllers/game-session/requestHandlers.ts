@@ -3,6 +3,7 @@ import { pipe } from "@effect/data/Function";
 import * as Effect from "@effect/io/Effect";
 import {
   createGameSessionQuery,
+  getLatestGameSnapshotQuery,
   getOpenGameSessionsQuery,
   safeParseGameState,
 } from "../../models/gamestate";
@@ -23,6 +24,13 @@ export const createGameSession: RequestHandler = (req, res) => {
         res,
         successStatus: 201,
       })
+  );
+};
+
+export const getLatestLiveGameSnapshot = ({ room }: { room: number }) => {
+  return pipe(
+    getLatestGameSnapshotQuery(room),
+    Effect.flatMap(safeParseGameState)
   );
 };
 

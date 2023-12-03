@@ -1,10 +1,6 @@
 import * as Effect from "@effect/io/Effect";
 import WebSocket from "ws";
-import {
-  addLivePlayerQuery,
-  getGameSessionQuery,
-  incrementTurnQuery,
-} from "./models/gamestate";
+import { addLivePlayerQuery, incrementTurnQuery } from "./models/gamestate";
 import * as Schema from "@effect/schema/Schema";
 import { pipe } from "effect";
 import { JSONParseError } from "./controllers/customErrors";
@@ -13,12 +9,8 @@ import {
   ClientPayload,
   GameState,
 } from "../../shared/commonTypes";
-import {
-  safeParseGameState,
-  safeParseJWT,
-  tapPipeLine,
-  verifyJwt,
-} from "./utils";
+import { safeParseGameState, safeParseJWT, verifyJwt } from "./utils";
+import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -62,9 +54,7 @@ export function useWebsocketServer(port: number): void {
       case "getCurrentGameState": {
         pipe(
           userIdOrError,
-          tapPipeLine,
-          Effect.flatMap(() => getGameSessionQuery(room)),
-          Effect.flatMap((gameState) => safeParseGameState(gameState)),
+          Effect.flatMap(() => getLatestLiveGameSnapshot({ room })),
           Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
           Effect.runPromise
         );

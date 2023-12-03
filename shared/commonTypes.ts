@@ -23,6 +23,7 @@ export const GameStateStruct = Schema.struct({
   turn: Schema.number,
   actor_state: Schema.array(ActorStateStruct),
   global_state: GlobalStateStruct,
+  game_over: Schema.boolean,
 });
 
 // eslint-disable-next-func no-unused-vars

@@ -40,7 +40,7 @@ export const createGameSessionQuery = (room: number) => {
   const create = async () => {
     try {
       const existingOpenRooms = await pool.query(
-        "SELECT room FROM game_snapshots WHERE room = $1 AND turn = 0",
+        "SELECT room FROM game_snapshots WHERE room = $1 AND turn = 0 AND game_over = false;",
         [room]
       );
 
@@ -78,7 +78,9 @@ export const addLivePlayerQuery = (userId: string, room: number) => {
 
       if (currentGlobalState?.liveActors?.includes(userId)) {
         // no change in state if player already in game
-        const currState = await Effect.runPromise(getGameSessionQuery(room));
+        const currState = await Effect.runPromise(
+          getLatestGameSnapshotQuery(room)
+        );
         return currState;
       }
 
@@ -126,12 +128,11 @@ export const addLivePlayerQuery = (userId: string, room: number) => {
   }).pipe(Effect.retryN(1));
 };
 
-export const getGameSessionQuery = (room: number) => {
+export const getLatestGameSnapshotQuery = (room: number) => {
   const get = async () => {
     try {
-      // todo: sort if turn the same?
       const result = await pool.query(
-        "SELECT * FROM game_snapshots WHERE room = $1 ORDER BY turn DESC;",
+        "SELECT * FROM game_snapshots WHERE room = $1 AND game_over = false ORDER BY turn DESC LIMIT 1;",
         [room]
       );
 

@@ -11,6 +11,7 @@ export const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
       id: "b3da0a35-13e4-44fe-ba4f-bb229b658aa9",
       room: 8393,
       turn: 0,
+      game_over: false,
       actor_state: [
         {
           id: "g7kd0l89-39j4-4j3k-9j3k-3j4k3j4k3j4k",
@@ -65,6 +66,7 @@ export const resetAndSeedDatabase = async () => {
           id uuid PRIMARY KEY DEFAULT gen_random_uuid(), 
           room integer NOT NULL,
           turn integer NOT NULL,
+          game_over boolean NOT NULL DEFAULT false,
           actor_state JSONB NOT NULL,
           global_state JSONB NOT NULL
         )
