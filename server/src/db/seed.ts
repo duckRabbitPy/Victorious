@@ -17,8 +17,14 @@ export const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
         {
           id: "g7kd0l89-39j4-4j3k-9j3k-3j4k3j4k3j4k",
           name: "Player 1",
-          coins: 0,
-          hand: [],
+          hand: {
+            copper: 7,
+            silver: 0,
+            gold: 0,
+            estate: 3,
+            duchy: 0,
+            province: 0,
+          },
           actions: 0,
           buys: 0,
           victoryPoints: 0,
@@ -26,8 +32,15 @@ export const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
         {
           id: "l8sw0l89-39j4-4j3k-9j3k-3j4k3j4k3j4k",
           name: "Player 2",
-          coins: 0,
-          hand: [],
+          hand: {
+            copper: 7,
+            silver: 0,
+            gold: 0,
+            estate: 3,
+            duchy: 0,
+            province: 0,
+          },
+
           actions: 0,
           buys: 0,
           victoryPoints: 0,

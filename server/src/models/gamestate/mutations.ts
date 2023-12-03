@@ -3,6 +3,7 @@ import * as Schema from "@effect/schema/Schema";
 import { pool } from "../../db/connection";
 import { PostgresError } from "../../controllers/customErrors";
 import {
+  ActorState,
   GameState,
   GameStateStruct,
   GlobalState,
@@ -10,22 +11,37 @@ import {
 import { logAndThrowError } from "../../utils";
 import { getLatestGameSnapshotQuery } from "./queries";
 
-export const safeParseGameState = Schema.parse(GameStateStruct);
-
-const generateActorState = (actorIds: readonly string[]) => {
-  const actorStates = actorIds.map((id, i) => {
-    return {
-      id,
-      name: `Player ${i + 1}`,
-      coins: 0,
-      hand: [],
+const setUpActorsForGame = ({
+  currentActorStateArray,
+  userId,
+}: {
+  currentActorStateArray: readonly ActorState[];
+  userId: string;
+}) => {
+  const newActorState: ActorState[] = [
+    ...(currentActorStateArray.length > 0 ? currentActorStateArray : []),
+    {
+      id: userId,
+      name: `Player ${
+        currentActorStateArray.length > 0
+          ? currentActorStateArray.length + 1
+          : 1
+      }`,
+      hand: {
+        copper: 7,
+        silver: 0,
+        gold: 0,
+        estate: 3,
+        duchy: 0,
+        province: 0,
+      },
       actions: 0,
       buys: 0,
       victoryPoints: 0,
-    };
-  });
+    },
+  ];
 
-  return JSON.stringify(actorStates);
+  return JSON.stringify(newActorState);
 };
 
 const generatateGlobalState = () => {
@@ -100,21 +116,10 @@ export const addLivePlayerQuery = ({
         liveActors: [...global_state.liveActors, userId],
       });
 
-      const newActorState =
-        actor_state.length > 0
-          ? JSON.stringify([
-              ...actor_state,
-              {
-                id: userId,
-                name: `Player ${actor_state.length + 1}`,
-                coins: 0,
-                hand: [],
-                actions: 0,
-                buys: 0,
-                victoryPoints: 0,
-              },
-            ])
-          : generateActorState([userId]);
+      const newActorState = setUpActorsForGame({
+        currentActorStateArray: actor_state,
+        userId,
+      });
 
       const result = await pool.query(
         "INSERT INTO game_snapshots (room, turn, actor_state, global_state, mutation_index, game_over) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",

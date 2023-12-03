@@ -2,16 +2,20 @@ import { RequestHandler } from "express";
 import { pipe } from "@effect/data/Function";
 import * as Effect from "@effect/io/Effect";
 import {
-  createGameSessionQuery,
   getLatestGameSnapshotQuery,
   getOpenGameSessionsQuery,
+} from "../../models/gamestate/queries";
+
+import {
   safeParseGameState,
-} from "../../models/gamestate";
-import { safeParseNumber, safeParseNumberArray } from "../../utils";
+  safeParseNumber,
+  safeParseNumberArray,
+} from "../../utils";
 import {
   sendGameStateResponse,
   sendOpenRoomsResponse,
 } from "../responseHandlers";
+import { createGameSessionQuery } from "../../models/gamestate/mutations";
 
 export const createGameSession: RequestHandler = (req, res) => {
   return pipe(
