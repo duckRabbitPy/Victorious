@@ -21,6 +21,7 @@ export const GameStateStruct = Schema.struct({
   id: Schema.UUID,
   room: Schema.number,
   turn: Schema.number,
+  mutation_index: Schema.number,
   actor_state: Schema.array(ActorStateStruct),
   global_state: GlobalStateStruct,
   game_over: Schema.boolean,

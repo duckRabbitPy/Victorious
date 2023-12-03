@@ -9,7 +9,12 @@ import {
   ClientPayload,
   GameState,
 } from "../../shared/commonTypes";
-import { safeParseGameState, safeParseJWT, verifyJwt } from "./utils";
+import {
+  safeParseGameState,
+  safeParseJWT,
+  tapPipeLine,
+  verifyJwt,
+} from "./utils";
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
@@ -30,6 +35,9 @@ export function useWebsocketServer(port: number): void {
       Effect.flatMap((decoded) => Effect.succeed(decoded.userId))
     );
 
+    const currentGameState = getLatestLiveGameSnapshot({ room });
+    // lock postgres gamestate row
+
     const broacastNewGameState = (newGameState: GameState) => {
       ws.send(JSON.stringify(newGameState));
       clients?.forEach((client) => {
@@ -41,16 +49,7 @@ export function useWebsocketServer(port: number): void {
     };
 
     switch (msg.effect) {
-      case "addLivePlayer": {
-        pipe(
-          userIdOrError,
-          Effect.flatMap((userId) => addLivePlayerQuery(userId, room)),
-          Effect.flatMap((gameState) => safeParseGameState(gameState)),
-          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
-          Effect.runPromise
-        );
-        break;
-      }
+      // read only operation
       case "getCurrentGameState": {
         pipe(
           userIdOrError,
@@ -61,10 +60,26 @@ export function useWebsocketServer(port: number): void {
 
         break;
       }
+      // mutation operations
+      case "addLivePlayer": {
+        pipe(
+          Effect.all({ userId: userIdOrError, currentGameState }),
+          Effect.flatMap(({ userId, currentGameState }) =>
+            addLivePlayerQuery({ userId, currentGameState })
+          ),
+          tapPipeLine,
+          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
+          Effect.runPromise
+        );
+        break;
+      }
+
       case "incrementTurn": {
         pipe(
-          userIdOrError,
-          Effect.flatMap(() => incrementTurnQuery(room)),
+          Effect.all({ userId: userIdOrError, currentGameState }),
+          Effect.flatMap(({ currentGameState }) =>
+            incrementTurnQuery(currentGameState)
+          ),
           Effect.flatMap((gameState) => safeParseGameState(gameState)),
           Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
           Effect.runPromise

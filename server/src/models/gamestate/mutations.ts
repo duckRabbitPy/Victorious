@@ -1,13 +1,14 @@
 import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
-import { pool } from "../db/connection";
-import { PostgresError } from "../controllers/customErrors";
+import { pool } from "../../db/connection";
+import { PostgresError } from "../../controllers/customErrors";
 import {
   GameState,
   GameStateStruct,
   GlobalState,
-} from "../../../shared/commonTypes";
-import { logAndThrowError } from "../utils";
+} from "../../../../shared/commonTypes";
+import { logAndThrowError } from "../../utils";
+import { getLatestGameSnapshotQuery } from "./queries";
 
 export const safeParseGameState = Schema.parse(GameStateStruct);
 
@@ -159,47 +160,6 @@ export const incrementTurnQuery = (currentGameState: GameState) => {
 
   return Effect.tryPromise({
     try: () => increment(),
-    catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(Effect.retryN(1));
-};
-
-// @query
-export const getLatestGameSnapshotQuery = (room: number) => {
-  const get = async () => {
-    try {
-      const result = await pool.query(
-        "SELECT * FROM game_snapshots WHERE room = $1 AND game_over = false ORDER BY mutation_index DESC LIMIT 1;",
-        [room]
-      );
-
-      return result.rows[0];
-    } catch (error) {
-      logAndThrowError(error);
-    }
-  };
-
-  return Effect.tryPromise({
-    try: () => get(),
-    catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(Effect.retryN(1));
-};
-
-// @query
-export const getOpenGameSessionsQuery = () => {
-  const get = async () => {
-    try {
-      const result = await pool.query(
-        "SELECT room FROM game_snapshots WHERE turn = 0;"
-      );
-
-      return result.rows.map((row) => row.room);
-    } catch (error) {
-      logAndThrowError(error);
-    }
-  };
-
-  return Effect.tryPromise({
-    try: () => get(),
     catch: () => new PostgresError({ message: "postgres query error" }),
   }).pipe(Effect.retryN(1));
 };
