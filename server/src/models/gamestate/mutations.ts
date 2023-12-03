@@ -1,11 +1,9 @@
 import * as Effect from "@effect/io/Effect";
-import * as Schema from "@effect/schema/Schema";
 import { pool } from "../../db/connection";
 import { PostgresError } from "../../controllers/customErrors";
 import {
   ActorState,
   GameState,
-  GameStateStruct,
   GlobalState,
 } from "../../../../shared/commonTypes";
 import { logAndThrowError } from "../../utils";
@@ -13,20 +11,18 @@ import { getLatestGameSnapshotQuery } from "./queries";
 
 const setUpActorsForGame = ({
   currentActorStateArray,
-  userId,
+  newUserId,
+  newUserName,
 }: {
   currentActorStateArray: readonly ActorState[];
-  userId: string;
+  newUserId: string;
+  newUserName: string;
 }) => {
   const newActorState: ActorState[] = [
     ...(currentActorStateArray.length > 0 ? currentActorStateArray : []),
     {
-      id: userId,
-      name: `Player ${
-        currentActorStateArray.length > 0
-          ? currentActorStateArray.length + 1
-          : 1
-      }`,
+      id: newUserId,
+      name: newUserName,
       hand: {
         copper: 7,
         silver: 0,
@@ -91,9 +87,11 @@ export const createGameSessionQuery = (room: number) => {
 // @mutation
 export const addLivePlayerQuery = ({
   userId,
+  username,
   currentGameState,
 }: {
   userId: string;
+  username: string;
   currentGameState: GameState;
 }) => {
   const add = async () => {
@@ -124,7 +122,8 @@ export const addLivePlayerQuery = ({
 
       const newActorState = setUpActorsForGame({
         currentActorStateArray: actor_state,
-        userId,
+        newUserId: userId,
+        newUserName: username,
       });
 
       const result = await pool.query(

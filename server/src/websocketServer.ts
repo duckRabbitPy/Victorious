@@ -27,10 +27,15 @@ export function useWebsocketServer(port: number): void {
     const authToken = msg.authToken;
     const decodedJwt = verifyJwt(authToken, process.env.JWT_SECRET_KEY);
 
-    const userIdOrError = pipe(
+    const userDetailsOrError = pipe(
       decodedJwt,
       Effect.flatMap((decoded) => safeParseJWT(decoded)),
-      Effect.flatMap((decoded) => Effect.succeed(decoded.userId))
+      Effect.flatMap((decoded) =>
+        Effect.succeed({
+          userId: decoded.userId,
+          username: decoded.username,
+        })
+      )
     );
 
     const currentGameState = getLatestLiveGameSnapshot({ room });
@@ -50,7 +55,7 @@ export function useWebsocketServer(port: number): void {
       // read only operation
       case "getCurrentGameState": {
         pipe(
-          userIdOrError,
+          userDetailsOrError,
           Effect.flatMap(() => getLatestLiveGameSnapshot({ room })),
           Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
           Effect.runPromise
@@ -60,9 +65,13 @@ export function useWebsocketServer(port: number): void {
       // mutation operations
       case "addLivePlayer": {
         pipe(
-          Effect.all({ userId: userIdOrError, currentGameState }),
-          Effect.flatMap(({ userId, currentGameState }) =>
-            addLivePlayerQuery({ userId, currentGameState })
+          Effect.all({ userInfo: userDetailsOrError, currentGameState }),
+          Effect.flatMap(({ userInfo, currentGameState }) =>
+            addLivePlayerQuery({
+              userId: userInfo.userId,
+              username: userInfo.username,
+              currentGameState,
+            })
           ),
           Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
           Effect.runPromise
@@ -72,7 +81,7 @@ export function useWebsocketServer(port: number): void {
 
       case "incrementTurn": {
         pipe(
-          Effect.all({ userId: userIdOrError, currentGameState }),
+          Effect.all({ userId: userDetailsOrError, currentGameState }),
           Effect.flatMap(({ currentGameState }) =>
             incrementTurnQuery(currentGameState)
           ),
