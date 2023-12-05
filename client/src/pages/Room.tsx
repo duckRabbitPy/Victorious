@@ -88,6 +88,38 @@ const incrementTurn = ({
   );
 };
 
+const buyCard = ({
+  socket,
+  authToken,
+  roomNumber,
+  cardName,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  cardName: CardNames;
+  setErrorMessage: (message: string | null) => void;
+}) => {
+  if (!socket) {
+    setErrorMessage("Socket is null");
+    return;
+  }
+  if (!authToken) {
+    setErrorMessage("Auth token is null");
+    return;
+  }
+
+  socket.send(
+    prepareMessage({
+      effect: SupportedEffects.buyCard,
+      authToken,
+      room: roomNumber,
+      cardName,
+    })
+  );
+};
+
 const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -196,6 +228,27 @@ const Room = () => {
               {gameState?.turn === 0 ? "Start game" : "Next turn"}
             </button>
           )}
+        </div>
+        <div>
+          <h2>Buy card</h2>
+          <div>
+            {Object.values(CardNames).map((cardName) => (
+              <button
+                key={cardName}
+                onClick={() =>
+                  buyCard({
+                    socket,
+                    authToken,
+                    roomNumber,
+                    cardName,
+                    setErrorMessage,
+                  })
+                }
+              >
+                {cardName}
+              </button>
+            ))}
+          </div>
         </div>
         <div id="game-state">
           <h2>Game state</h2>

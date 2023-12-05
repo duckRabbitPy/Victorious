@@ -1,21 +1,26 @@
 import * as Schema from "@effect/schema/Schema";
 
-export enum CardNames {
-  Copper = "copper",
-  Silver = "silver",
-  Gold = "gold",
-  Estate = "estate",
-  Duchy = "duchy",
-  Province = "province",
-  Curse = "curse",
-  Village = "village",
-  Smithy = "smithy",
-  Market = "market",
-  CouncilRoom = "councilRoom",
-  Mine = "mine",
-  Festival = "festival",
-  Laboratory = "laboratory",
-}
+const Treasure = Schema.union(
+  Schema.literal("copper"),
+  Schema.literal("silver"),
+  Schema.literal("gold")
+);
+
+const Victory = Schema.union(
+  Schema.literal("estate"),
+  Schema.literal("duchy"),
+  Schema.literal("province")
+);
+
+const Action = Schema.union(
+  Schema.literal("village"),
+  Schema.literal("smithy"),
+  Schema.literal("market"),
+  Schema.literal("councilRoom"),
+  Schema.literal("laboratory"),
+  Schema.literal("festival"),
+  Schema.literal("mine")
+);
 
 export enum Phases {
   Action = "action",
@@ -23,8 +28,10 @@ export enum Phases {
   Cleanup = "cleanup",
 }
 
-const CardCountStruct = Schema.record(Schema.enums(CardNames), Schema.number);
-export type CardCount = Schema.To<typeof CardCountStruct>;
+const CardCountStruct = Schema.record(
+  Schema.union(Treasure, Victory, Action),
+  Schema.number
+);
 
 const ActorStateStruct = Schema.struct({
   id: Schema.UUID,
@@ -33,8 +40,8 @@ const ActorStateStruct = Schema.struct({
   actions: Schema.number,
   buys: Schema.number,
   victoryPoints: Schema.number,
-  discardPile: Schema.array(Schema.enums(CardNames)),
-  deck: Schema.array(Schema.enums(CardNames)),
+  discardPile: Schema.array(Schema.union(Treasure, Victory, Action)),
+  deck: Schema.array(Schema.union(Treasure, Victory, Action)),
   phase: Schema.enums(Phases),
 });
 
@@ -65,11 +72,18 @@ export enum SupportedEffects {
 
 export const ClientPayloadStruct = Schema.struct({
   effect: Schema.enums(SupportedEffects),
+  cardName: Schema.union(Treasure, Victory, Action).pipe(Schema.optional),
   room: Schema.number,
   authToken: Schema.string,
 });
+
+export type CardCount = Schema.To<typeof CardCountStruct>;
 
 export type ActorState = Schema.To<typeof ActorStateStruct>;
 export type GlobalState = Schema.To<typeof GlobalStateStruct>;
 export type GameState = Schema.To<typeof GameStateStruct>;
 export type ClientPayload = Schema.To<typeof ClientPayloadStruct>;
+
+export type Treasure = Schema.To<typeof Treasure>;
+export type Victory = Schema.To<typeof Victory>;
+export type Action = Schema.To<typeof Action>;
