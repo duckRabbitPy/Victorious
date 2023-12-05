@@ -1,13 +1,30 @@
 import * as Schema from "@effect/schema/Schema";
 
-const CardCountStruct = Schema.struct({
-  copper: Schema.number,
-  silver: Schema.number,
-  gold: Schema.number,
-  estate: Schema.number,
-  duchy: Schema.number,
-  province: Schema.number,
-});
+export enum Cards {
+  Copper = "copper",
+  Silver = "silver",
+  Gold = "gold",
+  Estate = "estate",
+  Duchy = "duchy",
+  Province = "province",
+  Curse = "curse",
+  Village = "village",
+  Smithy = "smithy",
+  Market = "market",
+  CouncilRoom = "councilRoom",
+  Mine = "mine",
+  Festival = "festival",
+  Laboratory = "laboratory",
+}
+
+export enum Phases {
+  Action = "action",
+  Buy = "buy",
+  Cleanup = "cleanup",
+}
+
+const CardCountStruct = Schema.record(Schema.enums(Cards), Schema.number);
+export type CardCount = Schema.To<typeof CardCountStruct>;
 
 const ActorStateStruct = Schema.struct({
   id: Schema.UUID,
@@ -16,13 +33,15 @@ const ActorStateStruct = Schema.struct({
   actions: Schema.number,
   buys: Schema.number,
   victoryPoints: Schema.number,
+  discardPile: Schema.array(Schema.enums(Cards)),
+  deck: Schema.array(Schema.enums(Cards)),
+  phase: Schema.enums(Phases),
 });
 
 const GlobalStateStruct = Schema.struct({
-  board: Schema.array(Schema.UUID),
-  deck: Schema.array(Schema.UUID),
+  supply: CardCountStruct,
   history: Schema.array(Schema.string),
-  liveActors: Schema.array(Schema.UUID),
+  playerUserIds: Schema.array(Schema.UUID),
 });
 
 export const GameStateStruct = Schema.struct({
@@ -38,12 +57,9 @@ export const GameStateStruct = Schema.struct({
 
 // eslint-disable-next-func no-unused-vars
 export enum SupportedEffects {
-  // eslint-disable-next-line no-unused-vars
   getCurrentGameState = "getCurrentGameState",
-  // eslint-disable-next-line no-unused-vars
   addLivePlayer = "addLivePlayer",
   buyCard = "buyCard",
-  // eslint-disable-next-line no-unused-vars
   incrementTurn = "incrementTurn",
 }
 
