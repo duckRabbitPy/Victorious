@@ -1,6 +1,6 @@
 import * as Schema from "@effect/schema/Schema";
 
-export enum Cards {
+export enum CardNames {
   Copper = "copper",
   Silver = "silver",
   Gold = "gold",
@@ -23,7 +23,7 @@ export enum Phases {
   Cleanup = "cleanup",
 }
 
-const CardCountStruct = Schema.record(Schema.enums(Cards), Schema.number);
+const CardCountStruct = Schema.record(Schema.enums(CardNames), Schema.number);
 export type CardCount = Schema.To<typeof CardCountStruct>;
 
 const ActorStateStruct = Schema.struct({
@@ -33,8 +33,8 @@ const ActorStateStruct = Schema.struct({
   actions: Schema.number,
   buys: Schema.number,
   victoryPoints: Schema.number,
-  discardPile: Schema.array(Schema.enums(Cards)),
-  deck: Schema.array(Schema.enums(Cards)),
+  discardPile: Schema.array(Schema.enums(CardNames)),
+  deck: Schema.array(Schema.enums(CardNames)),
   phase: Schema.enums(Phases),
 });
 
