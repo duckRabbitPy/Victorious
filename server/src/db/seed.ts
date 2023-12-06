@@ -1,4 +1,4 @@
-import { GameState, Phases, CardCount } from "../../../shared/commonTypes";
+import { GameState, Phases, CardCount } from "../../../shared/common";
 import { pool } from "./connection";
 
 type GameSnapshot = {

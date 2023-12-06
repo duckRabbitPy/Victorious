@@ -8,10 +8,10 @@ import * as Schema from "@effect/schema/Schema";
 import { pipe } from "effect";
 import { JSONParseError } from "./controllers/customErrors";
 import {
-  ClientPayloadStruct,
   ClientPayload,
   GameState,
-} from "../../shared/commonTypes";
+  ClientPayloadStruct,
+} from "../../shared/common";
 import { safeParseGameState, safeParseJWT, verifyJwt } from "./utils";
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
 
@@ -107,6 +107,10 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
           Effect.runPromise
         );
+        break;
+      }
+
+      case "buyCard": {
         break;
       }
     }

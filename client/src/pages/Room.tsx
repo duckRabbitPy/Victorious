@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+
 import {
+  CardName,
   ClientPayload,
   GameState,
+  getAllCardNames,
   SupportedEffects,
-} from "../../../shared/commonTypes";
+} from "../../../shared/common";
 
 const getInititalGameState = ({
   socket,
@@ -98,7 +101,7 @@ const buyCard = ({
   socket: WebSocket | null;
   authToken: string | null;
   roomNumber: number;
-  cardName: CardNames;
+  cardName: CardName;
   setErrorMessage: (message: string | null) => void;
 }) => {
   if (!socket) {
@@ -232,7 +235,7 @@ const Room = () => {
         <div>
           <h2>Buy card</h2>
           <div>
-            {Object.values(CardNames).map((cardName) => (
+            {getAllCardNames().map((cardName) => (
               <button
                 key={cardName}
                 onClick={() =>

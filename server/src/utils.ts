@@ -1,5 +1,5 @@
 import * as Schema from "@effect/schema/Schema";
-import { ClientPayloadStruct, GameStateStruct } from "../../shared/commonTypes";
+import { GameStateStruct, ClientPayloadStruct } from "../../shared/common";
 import * as Effect from "@effect/io/Effect";
 import { pipe } from "effect";
 import { AuthenticationError } from "./controllers/customErrors";

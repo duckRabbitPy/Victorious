@@ -7,7 +7,7 @@ import {
   GameState,
   GlobalState,
   Phases,
-} from "../../../../shared/commonTypes";
+} from "../../../../shared/common";
 import { logAndThrowError } from "../../utils";
 import { getLatestGameSnapshotQuery } from "./queries";
 
