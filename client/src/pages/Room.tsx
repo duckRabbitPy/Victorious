@@ -177,7 +177,10 @@ const Room = () => {
   const { "*": roomParam } = useParams();
   const roomNumber = Number(roomParam);
   const authToken = localStorage.getItem("dominion_auth_token");
+  const currentUserName = localStorage.getItem("dominion_user_name");
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  if (!gameState) return <div>Error fetching game state from server...</div>;
 
   return (
     <>
@@ -188,18 +191,25 @@ const Room = () => {
         </>
       )}
       <h1>Room {roomNumber}</h1>
-      <p>Players ready: {gameState?.actor_state.length}</p>
+      <p>Players ready: {gameState.actor_state.length}/2</p>
       {
         <ol style={{ listStyle: "none" }}>
-          {gameState?.actor_state?.map((actor) => (
+          {gameState.actor_state.map((actor) => (
             <li key={actor.id}>{`✅ ${actor.name}`}</li>
           ))}
         </ol>
       }
       <div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "1rem",
+          }}
+        >
           <Link to="/">Back to home</Link>
-          {
+
+          {gameState.actor_state.every((a) => a.name !== currentUserName) && (
             <button
               id="player-ready"
               onClick={() =>
@@ -213,10 +223,10 @@ const Room = () => {
             >
               Ready
             </button>
-          }
+          )}
         </div>
         <div>
-          {gameState?.actor_state && gameState.actor_state.length > 1 && (
+          {gameState.actor_state.length > 1 && (
             <button
               id="start-game"
               onClick={() =>
@@ -228,31 +238,34 @@ const Room = () => {
                 })
               }
             >
-              {gameState?.turn === 0 ? "Start game" : "Next turn"}
+              {gameState.turn === 0 ? "Start game" : "Next turn"}
             </button>
           )}
         </div>
-        <div>
-          <h2>Buy card</h2>
+
+        {(gameState.turn || 0) > 0 && (
           <div>
-            {getAllCardNames().map((cardName) => (
-              <button
-                key={cardName}
-                onClick={() =>
-                  buyCard({
-                    socket,
-                    authToken,
-                    roomNumber,
-                    cardName,
-                    setErrorMessage,
-                  })
-                }
-              >
-                {cardName}
-              </button>
-            ))}
+            <h2>Buy card</h2>
+            <div>
+              {getAllCardNames().map((cardName) => (
+                <button
+                  key={cardName}
+                  onClick={() =>
+                    buyCard({
+                      socket,
+                      authToken,
+                      roomNumber,
+                      cardName,
+                      setErrorMessage,
+                    })
+                  }
+                >
+                  {cardName}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
         <div id="game-state">
           <h2>Game state</h2>
           <button

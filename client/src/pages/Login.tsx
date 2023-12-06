@@ -29,7 +29,9 @@ export const Login = () => {
           setLoginStatus(true);
           setErrorMessage(null);
           localStorage.removeItem("dominion_auth_token");
+          localStorage.removeItem("dominion_user_name");
           localStorage.setItem("dominion_auth_token", data.authToken);
+          localStorage.setItem("dominion_user_name", username);
         } else {
           setErrorMessage(
             "A login error occurred, are you sure you entered the correct username and password?"
@@ -54,6 +56,7 @@ export const Login = () => {
         <button
           onClick={() => {
             localStorage.removeItem("dominion_auth_token");
+            localStorage.removeItem("dominion_user_name");
             setLoginStatus(false);
             setErrorMessage(null);
           }}
