@@ -1,92 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+
+import { GameState } from "../../../shared/common";
 import {
-  ClientPayload,
-  GameState,
-  SupportedEffects,
-} from "../../../shared/commonTypes";
-
-const getInititalGameState = ({
-  socket,
-  authToken,
-  roomNumber,
-  setErrorMessage,
-}: {
-  socket: WebSocket | null;
-  authToken: string | null;
-  roomNumber: number;
-  setErrorMessage?: (message: string | null) => void;
-}) => {
-  if (!socket || !authToken) {
-    setErrorMessage?.("Socket or auth token is null");
-    return;
-  }
-  socket?.send(
-    prepareMessage({
-      effect: SupportedEffects.getCurrentGameState,
-      room: roomNumber,
-      authToken,
-    })
-  );
-};
-
-const addNewPlayer = ({
-  socket,
-  authToken,
-  roomNumber,
-  setErrorMessage,
-}: {
-  socket: WebSocket | null;
-  authToken: string | null;
-  roomNumber: number;
-  setErrorMessage: (message: string | null) => void;
-}) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
-    return;
-  }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
-    return;
-  }
-
-  socket.send(
-    prepareMessage({
-      effect: SupportedEffects.addLivePlayer,
-      authToken,
-      room: roomNumber,
-    })
-  );
-};
-
-const incrementTurn = ({
-  socket,
-  authToken,
-  roomNumber,
-  setErrorMessage,
-}: {
-  socket: WebSocket | null;
-  authToken: string | null;
-  roomNumber: number;
-  setErrorMessage: (message: string | null) => void;
-}) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
-    return;
-  }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
-    return;
-  }
-
-  socket.send(
-    prepareMessage({
-      effect: SupportedEffects.incrementTurn,
-      authToken,
-      room: roomNumber,
-    })
-  );
-};
+  addNewPlayer,
+  getInititalGameState,
+  incrementTurn,
+  startGame,
+} from "../effects/effects";
 
 const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -127,14 +48,6 @@ const useGameState = () => {
   }, []);
 
   return { gameState, socket };
-};
-
-const prepareMessage = ({ effect, authToken, room }: ClientPayload) => {
-  return JSON.stringify({
-    effect,
-    authToken,
-    room,
-  });
 };
 
 const Room = () => {
@@ -184,16 +97,25 @@ const Room = () => {
           {gameState?.actor_state && gameState.actor_state.length > 1 && (
             <button
               id="start-game"
-              onClick={() =>
+              onClick={() => {
+                if (gameState.turn === 0) {
+                  startGame({
+                    socket,
+                    authToken,
+                    roomNumber,
+                    setErrorMessage,
+                  });
+                }
+
                 incrementTurn({
                   socket,
                   authToken,
                   roomNumber,
                   setErrorMessage,
-                })
-              }
+                });
+              }}
             >
-              {gameState?.turn === 0 ? "Start game" : "Next turn"}
+              {gameState.turn === 0 ? "Start game" : "End turn"}
             </button>
           )}
         </div>
