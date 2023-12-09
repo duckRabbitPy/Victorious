@@ -155,6 +155,49 @@ const getCardValueByName = (cardName: CardName): number => {
   return cardNameToCard(cardName).value;
 };
 
+// do these need to be shuffled before being added to the discard pile?
+const countToCardNamesArray = (cardCount: CardCount): CardName[] => {
+  const cardNames: CardName[] = [];
+  for (const cardName of getAllCardNames()) {
+    for (let i = 0; i < cardCount[cardName]; i++) {
+      cardNames.push(cardName);
+    }
+  }
+  return cardNames;
+};
+
+export const cardNamesToCount = (cardNames: readonly CardName[]): CardCount => {
+  const temporaryCardCount = {
+    copper: 0,
+    silver: 0,
+    gold: 0,
+    estate: 0,
+    duchy: 0,
+    province: 0,
+    curse: 0,
+    village: 0,
+    smithy: 0,
+    market: 0,
+    councilRoom: 0,
+    mine: 0,
+    festival: 0,
+    laboratory: 0,
+  };
+
+  for (const cardName of cardNames) {
+    temporaryCardCount[cardName]++;
+  }
+
+  return temporaryCardCount;
+};
+
+export const discardHand = (
+  currentHand: CardCount,
+  currentDiscardPile: readonly CardName[]
+): readonly CardName[] => {
+  return currentDiscardPile.concat(countToCardNamesArray(currentHand));
+};
+
 const getCardTypeByName = (cardName: CardName): string => {
   return cardNameToCard(cardName).type;
 };
@@ -257,6 +300,7 @@ export type GameState = Schema.To<typeof GameStateStruct>;
 export type ClientPayload = Schema.To<typeof ClientPayloadStruct>;
 
 export enum SupportedEffects {
+  startGame = "startGame",
   getCurrentGameState = "getCurrentGameState",
   addLivePlayer = "addLivePlayer",
   buyCard = "buyCard",

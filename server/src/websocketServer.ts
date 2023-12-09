@@ -9,11 +9,17 @@ import { pipe } from "effect";
 import { JSONParseError } from "./controllers/customErrors";
 import {
   ClientPayload,
-  GameState,
   ClientPayloadStruct,
+  GameState,
 } from "../../shared/common";
-import { safeParseGameState, safeParseJWT, verifyJwt } from "./utils";
+import {
+  safeParseGameState,
+  safeParseJWT,
+  tapPipeLine,
+  verifyJwt,
+} from "./utils";
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
+import { dealHandsTransform } from "./controllers/transformers/hand";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -91,6 +97,22 @@ export function createWebsocketServer(port: number): void {
               currentGameState,
             })
           ),
+          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
+          Effect.runPromise
+        );
+        break;
+      }
+
+      case "startGame": {
+        pipe(
+          Effect.all({ userId: userDetailsOrError, currentGameState }),
+          Effect.flatMap(({ currentGameState }) =>
+            dealHandsTransform(currentGameState)
+          ),
+          Effect.flatMap((currentGameState) =>
+            incrementTurnQuery(currentGameState)
+          ),
+          Effect.flatMap((gameState) => safeParseGameState(gameState)),
           Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
           Effect.runPromise
         );
