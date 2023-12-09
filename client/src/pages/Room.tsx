@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
-import { GameState, getAllCardNames } from "../../../shared/common";
+import {
+  CardCount,
+  CardName,
+  GameState,
+  getAllCardNames,
+  getCardValueByName,
+} from "../../../shared/common";
 import {
   addNewPlayer,
   buyCard,
@@ -52,18 +58,62 @@ const useGameState = () => {
   return { gameState, socket };
 };
 
+const diffCardCounts = (a: CardCount, b: CardCount): CardCount => {
+  const diff = Object.entries(a).reduce((acc, [cardName, count]) => {
+    const diff = count - b[cardName as CardName];
+    if (diff > 0) {
+      acc[cardName] = diff;
+    }
+    return acc;
+  }, {} as Record<string, number>);
+
+  return diff as CardCount;
+};
+
 const Room = () => {
   const { gameState, socket } = useGameState();
   const { "*": roomParam } = useParams();
   const roomNumber = Number(roomParam);
   const authToken = localStorage.getItem("dominion_auth_token");
   const currentUserName = localStorage.getItem("dominion_user_name");
+  const [selectedTreasureValue, setSelectedTreasureValue] = useState(0);
+  const [cardsInPlay, setCardsInPlay] = useState<CardCount>({
+    copper: 0,
+    silver: 0,
+    gold: 0,
+    estate: 0,
+    duchy: 0,
+    province: 0,
+    village: 0,
+    smithy: 0,
+    market: 0,
+    mine: 0,
+    laboratory: 0,
+    festival: 0,
+    councilRoom: 0,
+  });
+
+  const updateCardsInPlay = (cardName: CardName) => {
+    setCardsInPlay((cardsInPlay) => ({
+      ...cardsInPlay,
+      [cardName]: cardsInPlay[cardName] + 1,
+    }));
+  };
+
+  const currentUserState = gameState?.actor_state.find(
+    (a) => a.name === localStorage.getItem("dominion_user_name")
+  );
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   if (!currentUserName) {
     return <div>Must be logged in to play</div>;
   }
-  if (!gameState) return <div>Error fetching game state from server...</div>;
+  if (!gameState || !currentUserState)
+    return <div>Error fetching game state from server...</div>;
+
+  const currentHand = currentUserState.hand;
+
+  const visibleHand = diffCardCounts(currentHand, cardsInPlay);
 
   return (
     <>
@@ -150,13 +200,19 @@ const Room = () => {
                 <button
                   key={cardName}
                   disabled={
-                    !canBuyCard({ gameState, currentUserName, cardName })
+                    !canBuyCard({
+                      gameState,
+                      currentUserName,
+                      cardName,
+                      selectedTreasureValue,
+                    })
                   }
                   style={{
                     cursor: canBuyCard({
                       gameState,
                       currentUserName,
                       cardName,
+                      selectedTreasureValue,
                     })
                       ? "pointer"
                       : "not-allowed",
@@ -165,20 +221,22 @@ const Room = () => {
                         gameState,
                         currentUserName,
                         cardName,
+                        selectedTreasureValue,
                       })
                         ? "green"
                         : "red"
                     }`,
                   }}
-                  onClick={() =>
+                  onClick={() => {
                     buyCard({
                       socket,
                       authToken,
                       roomNumber,
                       cardName,
                       setErrorMessage,
-                    })
-                  }
+                    });
+                    setSelectedTreasureValue(0);
+                  }}
                 >
                   {cardName}
                 </button>
@@ -186,15 +244,45 @@ const Room = () => {
             </div>
           </div>
         )}
+
+        <div>
+          <h3>Hand</h3>
+          <div>
+            <h4>Treasure value: {selectedTreasureValue}</h4>
+            <button
+              onClick={() => {
+                setSelectedTreasureValue(0);
+              }}
+            >
+              reset played treasures
+            </button>
+          </div>
+          {Object.entries(visibleHand).map(([cardName, count]) => (
+            <div key={cardName}>
+              {
+                <>
+                  {new Array(count).fill(0).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setSelectedTreasureValue(
+                          (currValue) =>
+                            currValue + getCardValueByName(cardName as CardName)
+                        );
+                        updateCardsInPlay(cardName as CardName);
+                      }}
+                    >
+                      {cardName}
+                    </button>
+                  ))}
+                </>
+              }
+            </div>
+          ))}
+        </div>
         <div id="game-state">
           <h2>Game state</h2>
-          <button
-            onClick={() =>
-              getInititalGameState({ socket, authToken, roomNumber })
-            }
-          >
-            refresh
-          </button>
+          <button onClick={() => window.location.reload()}>reconnect</button>
           <pre>{JSON.stringify(gameState, null, 2)}</pre>
         </div>
       </div>

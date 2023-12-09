@@ -145,6 +145,7 @@ export function createWebsocketServer(port: number): void {
               cardName: msg.cardName,
             })
           ),
+          tapPipeLine,
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(broacastNewGameState),
           Effect.runPromise

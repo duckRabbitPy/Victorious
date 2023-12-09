@@ -31,16 +31,20 @@ export const canBuyCard = ({
   gameState,
   currentUserName,
   cardName,
+  selectedTreasureValue,
 }: {
   gameState: GameState;
   currentUserName: string;
   cardName: CardName;
+  selectedTreasureValue: number;
 }) => {
   const actor = getActorFromGameState(gameState, currentUserName);
   const cardCost = cardNameToCard(cardName).cost;
   const handValue = getHandTreasureValue(actor.hand);
 
   return (
-    handValue >= cardCost && isCurrentUsersTurn(gameState, currentUserName)
+    handValue >= cardCost &&
+    selectedTreasureValue >= cardCost &&
+    isCurrentUsersTurn(gameState, currentUserName)
   );
 };

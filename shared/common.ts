@@ -128,6 +128,7 @@ const CardStruct = Schema.struct({
 });
 
 const CardNames = Schema.union(TreasureNames, VictoryNames, ActionNames);
+export const safeParseCardNames = Schema.parse(CardNames);
 
 export const getAllCardNames = (): CardName[] => {
   return [
@@ -151,7 +152,7 @@ const getCardCostByName = (cardName: CardName): number => {
   return cardNameToCard(cardName).cost;
 };
 
-const getCardValueByName = (cardName: CardName): number => {
+export const getCardValueByName = (cardName: CardName): number => {
   return cardNameToCard(cardName).value;
 };
 
