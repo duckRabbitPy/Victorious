@@ -4,11 +4,17 @@ import {
   SupportedEffects,
 } from "../../../shared/common";
 
-const prepareMessage = ({ effect, authToken, room }: ClientPayload) => {
+const prepareMessage = ({
+  effect,
+  authToken,
+  room,
+  cardName,
+}: ClientPayload) => {
   return JSON.stringify({
     effect,
     authToken,
     room,
+    cardName,
   });
 };
 
@@ -115,7 +121,15 @@ export const buyCard = ({
     setErrorMessage("Auth token is null");
     return;
   }
-
+  console.log(cardName);
+  console.log(
+    prepareMessage({
+      effect: SupportedEffects.buyCard,
+      authToken,
+      room: roomNumber,
+      cardName,
+    })
+  );
   socket.send(
     prepareMessage({
       effect: SupportedEffects.buyCard,

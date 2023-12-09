@@ -20,7 +20,10 @@ import {
 } from "./utils";
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
 import { dealHandsTransform } from "./controllers/transformers/hand";
-import { resetBuysAndActions } from "./controllers/transformers/buysAndActions";
+import {
+  buyCardTransform,
+  resetBuysAndActions,
+} from "./controllers/transformers/buysAndActions";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -106,7 +109,7 @@ export function createWebsocketServer(port: number): void {
 
       case "startGame": {
         pipe(
-          Effect.all({ userId: userDetailsOrError, currentGameState }),
+          Effect.all({ userInfo: userDetailsOrError, currentGameState }),
           Effect.flatMap(({ currentGameState }) =>
             dealHandsTransform(currentGameState)
           ),
@@ -121,7 +124,7 @@ export function createWebsocketServer(port: number): void {
 
       case "incrementTurn": {
         pipe(
-          Effect.all({ userId: userDetailsOrError, currentGameState }),
+          Effect.all({ userInfo: userDetailsOrError, currentGameState }),
           Effect.flatMap(({ currentGameState }) =>
             incrementTurnQuery(currentGameState)
           ),
@@ -133,6 +136,19 @@ export function createWebsocketServer(port: number): void {
       }
 
       case "buyCard": {
+        pipe(
+          Effect.all({ userInfo: userDetailsOrError, currentGameState }),
+          Effect.flatMap(({ userInfo, currentGameState }) =>
+            buyCardTransform({
+              gameState: currentGameState,
+              userId: userInfo.userId,
+              cardName: msg.cardName,
+            })
+          ),
+          Effect.flatMap(safeParseGameState),
+          Effect.flatMap(broacastNewGameState),
+          Effect.runPromise
+        );
         break;
       }
     }

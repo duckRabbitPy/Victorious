@@ -202,7 +202,7 @@ const getCardTypeByName = (cardName: CardName): string => {
   return cardNameToCard(cardName).type;
 };
 
-const getHandTreasureValue = (hand: CardCount): number => {
+export const getHandTreasureValue = (hand: CardCount): number => {
   return (
     hand.copper * getCardValueByName("copper") +
     hand.silver * getCardValueByName("silver") +
@@ -218,7 +218,7 @@ const getPlayerVictoryPoints = (deck: CardCount): number => {
   );
 };
 
-const cardNameToCard = (cardName: CardName): Card => {
+export const cardNameToCard = (cardName: CardName): Card => {
   switch (cardName) {
     case "copper":
       return copper;

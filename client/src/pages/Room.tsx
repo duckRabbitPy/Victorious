@@ -9,6 +9,7 @@ import {
   incrementTurn,
   startGame,
 } from "../effects/effects";
+import { canBuyCard } from "../effects/clientValidation";
 
 const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -51,20 +52,6 @@ const useGameState = () => {
   return { gameState, socket };
 };
 
-const isCurrentUsersTurn = (gameState: GameState) => {
-  if (gameState.turn === 0) {
-    return false;
-  }
-
-  const numberOfActors = gameState.actor_state.length;
-  const currentUserName = localStorage.getItem("dominion_user_name");
-  const turn = gameState.turn;
-
-  const currentActvePlayerIndex = gameState.actor_state[turn % numberOfActors];
-
-  return currentActvePlayerIndex.name === currentUserName;
-};
-
 const Room = () => {
   const { gameState, socket } = useGameState();
   const { "*": roomParam } = useParams();
@@ -73,6 +60,9 @@ const Room = () => {
   const currentUserName = localStorage.getItem("dominion_user_name");
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  if (!currentUserName) {
+    return <div>Must be logged in to play</div>;
+  }
   if (!gameState) return <div>Error fetching game state from server...</div>;
 
   return (
@@ -148,13 +138,36 @@ const Room = () => {
         {(gameState.turn || 0) > 0 && (
           <div>
             <h2>Buy card</h2>
-            <div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: "0.5rem",
+              }}
+            >
               {getAllCardNames().map((cardName) => (
                 <button
                   key={cardName}
+                  disabled={
+                    !canBuyCard({ gameState, currentUserName, cardName })
+                  }
                   style={{
+                    cursor: canBuyCard({
+                      gameState,
+                      currentUserName,
+                      cardName,
+                    })
+                      ? "pointer"
+                      : "not-allowed",
                     border: `2px solid ${
-                      isCurrentUsersTurn(gameState) ? "green" : "red"
+                      canBuyCard({
+                        gameState,
+                        currentUserName,
+                        cardName,
+                      })
+                        ? "green"
+                        : "red"
                     }`,
                   }}
                   onClick={() =>
