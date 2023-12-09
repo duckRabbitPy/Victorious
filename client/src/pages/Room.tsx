@@ -51,6 +51,20 @@ const useGameState = () => {
   return { gameState, socket };
 };
 
+const isCurrentUsersTurn = (gameState: GameState) => {
+  if (gameState.turn === 0) {
+    return false;
+  }
+
+  const numberOfActors = gameState.actor_state.length;
+  const currentUserName = localStorage.getItem("dominion_user_name");
+  const turn = gameState.turn;
+
+  const currentActvePlayerIndex = gameState.actor_state[turn % numberOfActors];
+
+  return currentActvePlayerIndex.name === currentUserName;
+};
+
 const Room = () => {
   const { gameState, socket } = useGameState();
   const { "*": roomParam } = useParams();
@@ -138,6 +152,11 @@ const Room = () => {
               {getAllCardNames().map((cardName) => (
                 <button
                   key={cardName}
+                  style={{
+                    border: `2px solid ${
+                      isCurrentUsersTurn(gameState) ? "green" : "red"
+                    }`,
+                  }}
                   onClick={() =>
                     buyCard({
                       socket,

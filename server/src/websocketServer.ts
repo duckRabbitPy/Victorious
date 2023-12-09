@@ -20,6 +20,7 @@ import {
 } from "./utils";
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
 import { dealHandsTransform } from "./controllers/transformers/hand";
+import { resetBuysAndActions } from "./controllers/transformers/buysAndActions";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -81,7 +82,7 @@ export function createWebsocketServer(port: number): void {
         pipe(
           userDetailsOrError,
           Effect.flatMap(() => getLatestLiveGameSnapshot({ room })),
-          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
+          Effect.flatMap(broacastNewGameState),
           Effect.runPromise
         );
         break;
@@ -97,7 +98,7 @@ export function createWebsocketServer(port: number): void {
               currentGameState,
             })
           ),
-          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
+          Effect.flatMap(broacastNewGameState),
           Effect.runPromise
         );
         break;
@@ -109,11 +110,10 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(({ currentGameState }) =>
             dealHandsTransform(currentGameState)
           ),
-          Effect.flatMap((currentGameState) =>
-            incrementTurnQuery(currentGameState)
-          ),
-          Effect.flatMap((gameState) => safeParseGameState(gameState)),
-          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
+          Effect.flatMap(resetBuysAndActions),
+          Effect.flatMap(incrementTurnQuery),
+          Effect.flatMap(safeParseGameState),
+          Effect.flatMap(broacastNewGameState),
           Effect.runPromise
         );
         break;
@@ -125,8 +125,8 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(({ currentGameState }) =>
             incrementTurnQuery(currentGameState)
           ),
-          Effect.flatMap((gameState) => safeParseGameState(gameState)),
-          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
+          Effect.flatMap(safeParseGameState),
+          Effect.flatMap(broacastNewGameState),
           Effect.runPromise
         );
         break;
