@@ -30,6 +30,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
+    "regen": "rm -rf ./client/node_modules && cd ./client && yarn && npx vite",
     "dev:client": "npx vite",
     "dev:server": "NODE_ENV=development nodemon --exec ts-node ./server/src/server.ts",
     "dev": "NODE_ENV=development nodemon --exec ts-node ./server/src/server.ts",

@@ -3,6 +3,7 @@ import cors from "cors";
 import { loginRouter } from "./routes/login/login";
 import { gameRouter } from "./routes/game-sessions/game-sessions";
 import { registerRouter } from "./routes/register/register";
+import { authRouter } from "./routes/auth/auth";
 
 export function createHttpServer(port: number): Express {
   const server = express();
@@ -21,6 +22,7 @@ export function createHttpServer(port: number): Express {
 
   server.use("/login", loginRouter);
   server.use("/register", registerRouter);
+  server.use("/auth", authRouter);
   server.use("/game-sessions", gameRouter);
 
   console.log("\x1b[42m", `listening on port ${port}`, "\x1b[0m");

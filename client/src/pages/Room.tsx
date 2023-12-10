@@ -5,6 +5,7 @@ import {
   CardCount,
   CardName,
   GameState,
+  cardNameToCard,
   getAllCardNames,
   getCardValueByName,
 } from "../../../shared/common";
@@ -108,12 +109,13 @@ const Room = () => {
   if (!currentUserName) {
     return <div>Must be logged in to play</div>;
   }
-  if (!gameState || !currentUserState)
-    return <div>Error fetching game state from server...</div>;
+  if (!gameState) return <div>Error fetching game state from server...</div>;
 
-  const currentHand = currentUserState.hand;
+  const currentHand = currentUserState?.hand;
 
-  const visibleHand = diffCardCounts(currentHand, cardsInPlay);
+  const visibleHand = currentHand
+    ? diffCardCounts(currentHand, cardsInPlay)
+    : {};
 
   return (
     <>
@@ -248,7 +250,7 @@ const Room = () => {
         <div>
           <h3>Hand</h3>
           <div>
-            <h4>Treasure value: {selectedTreasureValue}</h4>
+            <h4>Coins: {selectedTreasureValue}</h4>
             <button
               onClick={() => {
                 setSelectedTreasureValue(0);
@@ -264,6 +266,10 @@ const Room = () => {
                   {new Array(count).fill(0).map((_, i) => (
                     <button
                       key={i}
+                      disabled={
+                        // todo fix typing
+                        cardNameToCard(cardName as CardName).type === "victory"
+                      }
                       onClick={() => {
                         setSelectedTreasureValue(
                           (currValue) =>

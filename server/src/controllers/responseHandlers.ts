@@ -72,6 +72,10 @@ export const sendOpenRoomsResponse = createResponseHandler<readonly number[]>(
   })
 );
 
+export const sendAuthenticatedUserResponse = createResponseHandler<string>(
+  (username) => username
+);
+
 const respondWithError = (
   res: Response,
   status: number,

@@ -41,8 +41,10 @@ export const canBuyCard = ({
   const actor = getActorFromGameState(gameState, currentUserName);
   const cardCost = cardNameToCard(cardName).cost;
   const handValue = getHandTreasureValue(actor.hand);
+  const buysRemaining = actor.buys;
 
   return (
+    buysRemaining > 0 &&
     handValue >= cardCost &&
     selectedTreasureValue >= cardCost &&
     isCurrentUsersTurn(gameState, currentUserName)
