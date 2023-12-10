@@ -5,7 +5,7 @@ import {
   getHandTreasureValue,
 } from "../../../shared/common";
 
-export const isCurrentUsersTurn = (gameState: GameState, userName: string) => {
+export const isUsersTurn = (gameState: GameState, userName: string) => {
   if (gameState.turn === 0) {
     return false;
   }
@@ -14,9 +14,9 @@ export const isCurrentUsersTurn = (gameState: GameState, userName: string) => {
 
   const turn = gameState.turn;
 
-  const currentActvePlayerIndex = gameState.actor_state[turn % numberOfActors];
+  const currentActivePlayer = gameState.actor_state[turn % numberOfActors];
 
-  return currentActvePlayerIndex.name === userName;
+  return !!currentActivePlayer.name && currentActivePlayer.name === userName;
 };
 
 const getActorFromGameState = (gameState: GameState, userName: string) => {
@@ -29,16 +29,16 @@ const getActorFromGameState = (gameState: GameState, userName: string) => {
 
 export const canBuyCard = ({
   gameState,
-  currentUserName,
+  loggedInUsername,
   cardName,
   selectedTreasureValue,
 }: {
   gameState: GameState;
-  currentUserName: string;
+  loggedInUsername: string;
   cardName: CardName;
   selectedTreasureValue: number;
 }) => {
-  const actor = getActorFromGameState(gameState, currentUserName);
+  const actor = getActorFromGameState(gameState, loggedInUsername);
   const cardCost = cardNameToCard(cardName).cost;
   const handValue = getHandTreasureValue(actor.hand);
   const buysRemaining = actor.buys;
@@ -47,6 +47,6 @@ export const canBuyCard = ({
     buysRemaining > 0 &&
     handValue >= cardCost &&
     selectedTreasureValue >= cardCost &&
-    isCurrentUsersTurn(gameState, currentUserName)
+    isUsersTurn(gameState, loggedInUsername)
   );
 };

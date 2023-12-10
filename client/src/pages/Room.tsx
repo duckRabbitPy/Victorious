@@ -16,7 +16,12 @@ import {
   incrementTurn,
   startGame,
 } from "../effects/effects";
-import { canBuyCard } from "../effects/clientValidation";
+import { canBuyCard, isUsersTurn } from "../effects/clientValidation";
+import {
+  diffCardCounts,
+  initialCardsInPlay,
+  updateCardsInPlay,
+} from "../utils";
 
 const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -59,56 +64,21 @@ const useGameState = () => {
   return { gameState, socket };
 };
 
-const diffCardCounts = (a: CardCount, b: CardCount): CardCount => {
-  const diff = Object.entries(a).reduce((acc, [cardName, count]) => {
-    const diff = count - b[cardName as CardName];
-    if (diff > 0) {
-      acc[cardName] = diff;
-    }
-    return acc;
-  }, {} as Record<string, number>);
-
-  return diff as CardCount;
-};
-
-const Room = () => {
+const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
   const { gameState, socket } = useGameState();
   const { "*": roomParam } = useParams();
   const roomNumber = Number(roomParam);
+
   const authToken = localStorage.getItem("dominion_auth_token");
-  const currentUserName = localStorage.getItem("dominion_user_name");
+
   const [selectedTreasureValue, setSelectedTreasureValue] = useState(0);
-  const [cardsInPlay, setCardsInPlay] = useState<CardCount>({
-    copper: 0,
-    silver: 0,
-    gold: 0,
-    estate: 0,
-    duchy: 0,
-    province: 0,
-    village: 0,
-    smithy: 0,
-    market: 0,
-    mine: 0,
-    laboratory: 0,
-    festival: 0,
-    councilRoom: 0,
-  });
-
-  const updateCardsInPlay = (cardName: CardName) => {
-    setCardsInPlay((cardsInPlay) => ({
-      ...cardsInPlay,
-      [cardName]: cardsInPlay[cardName] + 1,
-    }));
-  };
-
+  const [cardsInPlay, setCardsInPlay] = useState<CardCount>(initialCardsInPlay);
   const currentUserState = gameState?.actor_state.find(
     (a) => a.name === localStorage.getItem("dominion_user_name")
   );
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  if (!currentUserName) {
-    return <div>Must be logged in to play</div>;
-  }
+
   if (!gameState) return <div>Error fetching game state from server...</div>;
 
   const currentHand = currentUserState?.hand;
@@ -125,12 +95,22 @@ const Room = () => {
           <button onClick={() => setErrorMessage(null)}>clear</button>
         </>
       )}
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        playing as : {loggedInUsername}
+      </div>
       <h1>Room {roomNumber}</h1>
       <p>Players ready: {gameState.actor_state.length}/2</p>
       {
         <ol style={{ listStyle: "none" }}>
           {gameState.actor_state.map((actor) => (
-            <li key={actor.id}>{`✅ ${actor.name}`}</li>
+            <li
+              key={actor.id}
+              style={{
+                color: isUsersTurn(gameState, actor.name) ? "green" : "black",
+              }}
+            >{`✅ ${actor.name} ${
+              isUsersTurn(gameState, actor.name) ? "👈" : ""
+            }`}</li>
           ))}
         </ol>
       }
@@ -144,7 +124,7 @@ const Room = () => {
         >
           <Link to="/">Back to home</Link>
 
-          {gameState.actor_state.every((a) => a.name !== currentUserName) && (
+          {gameState.actor_state.every((a) => a.name !== loggedInUsername) && (
             <button
               id="player-ready"
               onClick={() =>
@@ -189,7 +169,12 @@ const Room = () => {
 
         {(gameState.turn || 0) > 0 && (
           <div>
-            <h2>Buy card</h2>
+            {isUsersTurn(gameState, loggedInUsername) && (
+              <>
+                <h2>Buy card</h2>
+                <p>{`buys remaining ${currentUserState?.buys}`}</p>
+              </>
+            )}
             <div
               style={{
                 display: "flex",
@@ -204,7 +189,7 @@ const Room = () => {
                   disabled={
                     !canBuyCard({
                       gameState,
-                      currentUserName,
+                      loggedInUsername,
                       cardName,
                       selectedTreasureValue,
                     })
@@ -212,19 +197,21 @@ const Room = () => {
                   style={{
                     cursor: canBuyCard({
                       gameState,
-                      currentUserName,
+                      loggedInUsername,
                       cardName,
                       selectedTreasureValue,
                     })
                       ? "pointer"
                       : "not-allowed",
                     border: `2px solid ${
-                      canBuyCard({
-                        gameState,
-                        currentUserName,
-                        cardName,
-                        selectedTreasureValue,
-                      })
+                      !isUsersTurn(gameState, loggedInUsername)
+                        ? "blue"
+                        : canBuyCard({
+                            gameState,
+                            loggedInUsername,
+                            cardName,
+                            selectedTreasureValue,
+                          })
                         ? "green"
                         : "red"
                     }`,
@@ -249,16 +236,7 @@ const Room = () => {
 
         <div>
           <h3>Hand</h3>
-          <div>
-            <h4>Coins: {selectedTreasureValue}</h4>
-            <button
-              onClick={() => {
-                setSelectedTreasureValue(0);
-              }}
-            >
-              reset played treasures
-            </button>
-          </div>
+
           {Object.entries(visibleHand).map(([cardName, count]) => (
             <div key={cardName}>
               {
@@ -268,6 +246,7 @@ const Room = () => {
                       key={i}
                       disabled={
                         // todo fix typing
+                        isUsersTurn(gameState, loggedInUsername) ||
                         cardNameToCard(cardName as CardName).type === "victory"
                       }
                       onClick={() => {
@@ -275,7 +254,7 @@ const Room = () => {
                           (currValue) =>
                             currValue + getCardValueByName(cardName as CardName)
                         );
-                        updateCardsInPlay(cardName as CardName);
+                        updateCardsInPlay(cardName as CardName, setCardsInPlay);
                       }}
                     >
                       {cardName}
@@ -285,6 +264,18 @@ const Room = () => {
               }
             </div>
           ))}
+          <div>
+            <h4>Coins: {selectedTreasureValue}</h4>
+            {selectedTreasureValue > 0 && (
+              <button
+                onClick={() => {
+                  setSelectedTreasureValue(0);
+                }}
+              >
+                reset played treasures
+              </button>
+            )}
+          </div>
         </div>
         <div id="game-state">
           <h2>Game state</h2>

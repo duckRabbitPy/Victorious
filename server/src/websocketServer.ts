@@ -24,6 +24,7 @@ import {
   buyCardTransform,
   resetBuysAndActions,
 } from "./controllers/transformers/buysAndActions";
+import { connect } from "http2";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -64,6 +65,7 @@ export function createWebsocketServer(port: number): void {
       }
 
       ws.send(JSON.stringify(newGameState));
+
       roomConnections?.forEach((connection) => {
         // only broadcast to sessions with same room
         // todo: narrow to session and cleanup dead connections
