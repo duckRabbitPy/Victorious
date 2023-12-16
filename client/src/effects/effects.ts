@@ -121,15 +121,6 @@ export const buyCard = ({
     setErrorMessage("Auth token is null");
     return;
   }
-  console.log(cardName);
-  console.log(
-    prepareMessage({
-      effect: SupportedEffects.buyCard,
-      authToken,
-      room: roomNumber,
-      cardName,
-    })
-  );
   socket.send(
     prepareMessage({
       effect: SupportedEffects.buyCard,

@@ -31,6 +31,7 @@ const parseClientMessage = Schema.parse(ClientPayloadStruct);
 type RoomConnections = {
   socket: WebSocket;
   room: number;
+  userId: string;
 }[];
 
 export function createWebsocketServer(port: number): void {
@@ -56,28 +57,37 @@ export function createWebsocketServer(port: number): void {
 
     const currentGameState = getLatestLiveGameSnapshot({ room });
 
-    const broacastNewGameState = (newGameState: GameState) => {
-      if (
-        roomConnections.map((connection) => connection.room).includes(room) ===
-        false
-      ) {
-        roomConnections.push({ socket: ws, room });
-      }
-
-      ws.send(JSON.stringify(newGameState));
-
-      roomConnections?.forEach((connection) => {
-        // only broadcast to sessions with same room
-        // todo: narrow to session and cleanup dead connections
-        if (
-          connection.socket !== ws &&
-          connection.socket.readyState === ws.OPEN &&
-          connection.room === room &&
-          connection.socket !== ws
-        ) {
-          connection.socket.send(JSON.stringify(newGameState));
-        }
+    if (
+      !roomConnections.some((connection) => {
+        // todo use userid instead of auth token
+        connection.room === room && connection.userId === authToken;
+      })
+    ) {
+      roomConnections.push({
+        socket: ws,
+        room,
+        userId: authToken,
       });
+    }
+
+    const broadcastToRoom = (gameState: GameState) => {
+      roomConnections.forEach((connection) => {
+        if (connection.room !== room) return;
+
+        connection.socket.send(JSON.stringify(gameState));
+
+        connection.socket.onerror = (error) => {
+          console.error(`WebSocket error in room ${connection.room}:`, error);
+        };
+
+        connection.socket.onclose = (event) => {
+          console.log(
+            `WebSocket connection closed in room ${connection.room}:`,
+            event.reason
+          );
+        };
+      });
+
       return Effect.unit;
     };
 
@@ -87,7 +97,7 @@ export function createWebsocketServer(port: number): void {
         pipe(
           userDetailsOrError,
           Effect.flatMap(() => getLatestLiveGameSnapshot({ room })),
-          Effect.flatMap(broacastNewGameState),
+          Effect.flatMap(broadcastToRoom),
           Effect.runPromise
         );
         break;
@@ -103,7 +113,7 @@ export function createWebsocketServer(port: number): void {
               currentGameState,
             })
           ),
-          Effect.flatMap(broacastNewGameState),
+          Effect.flatMap(broadcastToRoom),
           Effect.runPromise
         );
         break;
@@ -118,7 +128,7 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(resetBuysAndActions),
           Effect.flatMap(incrementTurnQuery),
           Effect.flatMap(safeParseGameState),
-          Effect.flatMap(broacastNewGameState),
+          Effect.flatMap(broadcastToRoom),
           Effect.runPromise
         );
         break;
@@ -131,7 +141,7 @@ export function createWebsocketServer(port: number): void {
             incrementTurnQuery(currentGameState)
           ),
           Effect.flatMap(safeParseGameState),
-          Effect.flatMap(broacastNewGameState),
+          Effect.flatMap(broadcastToRoom),
           Effect.runPromise
         );
         break;
@@ -147,9 +157,8 @@ export function createWebsocketServer(port: number): void {
               cardName: msg.cardName,
             })
           ),
-          tapPipeLine,
           Effect.flatMap(safeParseGameState),
-          Effect.flatMap(broacastNewGameState),
+          Effect.flatMap(broadcastToRoom),
           Effect.runPromise
         );
         break;
