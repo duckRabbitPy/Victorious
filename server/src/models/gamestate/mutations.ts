@@ -198,7 +198,7 @@ export const addLivePlayerQuery = ({
 };
 
 // @mutation
-export const incrementTurnQuery = (currentGameState: GameState) => {
+export const updateGameState = (newGameState: GameState) => {
   const {
     room,
     turn,
@@ -207,11 +207,11 @@ export const incrementTurnQuery = (currentGameState: GameState) => {
     game_over,
     mutation_index,
     session_id,
-  } = currentGameState;
-  const newTurn = turn + 1;
+  } = newGameState;
+
   const newMutationIndex = mutation_index + 1;
 
-  const increment = async () => {
+  const update = async () => {
     try {
       const result = await pool.query(
         `
@@ -227,7 +227,7 @@ export const incrementTurnQuery = (currentGameState: GameState) => {
         `,
         [
           room,
-          newTurn,
+          turn,
           JSON.stringify(actor_state),
           JSON.stringify(global_state),
           newMutationIndex,
@@ -242,7 +242,7 @@ export const incrementTurnQuery = (currentGameState: GameState) => {
   };
 
   return Effect.tryPromise({
-    try: () => increment(),
+    try: () => update(),
     catch: () => new PostgresError({ message: "postgres query error" }),
   }).pipe(Effect.retryN(1));
 };

@@ -14,7 +14,7 @@ export const resetBuysAndActions = (gameState: GameState) => {
   });
 };
 
-export const buyCardTransform = ({
+export const buyCard = ({
   gameState,
   userId,
   cardName,
@@ -36,12 +36,17 @@ export const buyCardTransform = ({
     return actor;
   });
 
+  const lastestTransaction = `${
+    gameState.actor_state.filter((a) => a.id === userId)[0].name
+  } purchased ${cardName}`;
+
   const newGlobalState = {
     ...gameState.global_state,
     supply: {
       ...gameState.global_state.supply,
       [cardName]: gameState.global_state.supply[cardName] - 1,
     },
+    history: [...gameState.global_state.history, lastestTransaction],
   };
 
   return Effect.succeed({

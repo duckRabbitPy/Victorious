@@ -247,10 +247,14 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
         )}
 
         <div>
-          <h3>Hand</h3>
-          {!isUsersTurn(gameState, loggedInUsername)
-            ? "Waiting for your turn..."
-            : "Click on a card to play it."}
+          {gameState.turn > 0 && (
+            <>
+              <h3>Hand</h3>
+              {!isUsersTurn(gameState, loggedInUsername)
+                ? "Waiting for your turn..."
+                : "Click on a card to play it."}
+            </>
+          )}
 
           {Object.entries(visibleHand).map(([cardName, count]) => (
             <div key={cardName}>

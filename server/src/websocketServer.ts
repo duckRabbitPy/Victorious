@@ -2,7 +2,7 @@ import * as Effect from "@effect/io/Effect";
 import WebSocket from "ws";
 import {
   addLivePlayerQuery,
-  incrementTurnQuery,
+  updateGameState,
 } from "./models/gamestate/mutations";
 import * as Schema from "@effect/schema/Schema";
 import { pipe } from "effect";
@@ -21,10 +21,10 @@ import {
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
 import { dealHandsTransform } from "./controllers/transformers/hand";
 import {
-  buyCardTransform,
+  buyCard as buyCard,
   resetBuysAndActions,
 } from "./controllers/transformers/buysAndActions";
-import { connect } from "http2";
+import { incrementTurn } from "./controllers/transformers/turn";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -38,6 +38,8 @@ export function createWebsocketServer(port: number): void {
   const roomConnections: RoomConnections = [];
 
   const wss = new WebSocket.Server({ port });
+
+  const andThen = Effect.flatMap;
 
   const handleMessage = (msg: ClientPayload, ws: WebSocket) => {
     const room = Number(msg.room);
@@ -126,8 +128,9 @@ export function createWebsocketServer(port: number): void {
             dealHandsTransform(currentGameState)
           ),
           Effect.flatMap(resetBuysAndActions),
-          Effect.flatMap(incrementTurnQuery),
+          Effect.flatMap(incrementTurn),
           Effect.flatMap(safeParseGameState),
+          Effect.flatMap(updateGameState),
           Effect.flatMap(broadcastToRoom),
           Effect.runPromise
         );
@@ -138,9 +141,11 @@ export function createWebsocketServer(port: number): void {
         pipe(
           Effect.all({ userInfo: userDetailsOrError, currentGameState }),
           Effect.flatMap(({ currentGameState }) =>
-            incrementTurnQuery(currentGameState)
+            incrementTurn(currentGameState)
           ),
+          Effect.flatMap(resetBuysAndActions),
           Effect.flatMap(safeParseGameState),
+          Effect.flatMap(updateGameState),
           Effect.flatMap(broadcastToRoom),
           Effect.runPromise
         );
@@ -151,13 +156,14 @@ export function createWebsocketServer(port: number): void {
         pipe(
           Effect.all({ userInfo: userDetailsOrError, currentGameState }),
           Effect.flatMap(({ userInfo, currentGameState }) =>
-            buyCardTransform({
+            buyCard({
               gameState: currentGameState,
               userId: userInfo.userId,
               cardName: msg.cardName,
             })
           ),
           Effect.flatMap(safeParseGameState),
+          Effect.flatMap(updateGameState),
           Effect.flatMap(broadcastToRoom),
           Effect.runPromise
         );
