@@ -1,5 +1,6 @@
 import * as Effect from "@effect/io/Effect";
 import { CardCount, CardName, GameState } from "../../../../shared/common";
+import { indefiniteArticle } from "../../../../shared/utils";
 
 export const resetBuysAndActions = (gameState: GameState) => {
   return Effect.succeed({
@@ -38,7 +39,7 @@ export const buyCard = ({
 
   const lastestTransaction = `${
     gameState.actor_state.filter((a) => a.id === userId)[0].name
-  } purchased ${cardName}`;
+  } purchased ${indefiniteArticle(cardName)} ${cardName}`;
 
   const newGlobalState = {
     ...gameState.global_state,

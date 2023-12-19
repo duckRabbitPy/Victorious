@@ -12,14 +12,9 @@ import {
   ClientPayloadStruct,
   GameState,
 } from "../../shared/common";
-import {
-  safeParseGameState,
-  safeParseJWT,
-  tapPipeLine,
-  verifyJwt,
-} from "./utils";
+import { safeParseGameState, safeParseJWT, verifyJwt } from "./utils";
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
-import { dealHandsTransform } from "./controllers/transformers/hand";
+import { cleanUp, dealToAllActors } from "./controllers/transformers/hand";
 import {
   buyCard as buyCard,
   resetBuysAndActions,
@@ -38,8 +33,6 @@ export function createWebsocketServer(port: number): void {
   const roomConnections: RoomConnections = [];
 
   const wss = new WebSocket.Server({ port });
-
-  const andThen = Effect.flatMap;
 
   const handleMessage = (msg: ClientPayload, ws: WebSocket) => {
     const room = Number(msg.room);
@@ -125,7 +118,7 @@ export function createWebsocketServer(port: number): void {
         pipe(
           Effect.all({ userInfo: userDetailsOrError, currentGameState }),
           Effect.flatMap(({ currentGameState }) =>
-            dealHandsTransform(currentGameState)
+            dealToAllActors(currentGameState)
           ),
           Effect.flatMap(resetBuysAndActions),
           Effect.flatMap(incrementTurn),
@@ -140,9 +133,8 @@ export function createWebsocketServer(port: number): void {
       case "incrementTurn": {
         pipe(
           Effect.all({ userInfo: userDetailsOrError, currentGameState }),
-          Effect.flatMap(({ currentGameState }) =>
-            incrementTurn(currentGameState)
-          ),
+          Effect.flatMap(({ currentGameState }) => cleanUp(currentGameState)),
+          Effect.flatMap(incrementTurn),
           Effect.flatMap(resetBuysAndActions),
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),

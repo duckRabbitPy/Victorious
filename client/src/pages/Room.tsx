@@ -16,12 +16,13 @@ import {
   incrementTurn,
   startGame,
 } from "../effects/effects";
-import { canBuyCard, isUsersTurn } from "../effects/clientValidation";
+import { canBuyCard } from "../effects/clientValidation";
 import {
   diffCardCounts,
   initialCardsInPlay,
   updateCardsInPlay,
 } from "../utils";
+import { isUsersTurn } from "../../../shared/utils";
 
 const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -32,7 +33,6 @@ const useGameState = () => {
     const newSocket = new WebSocket("ws://localhost:8080");
 
     newSocket.addEventListener("message", (event) => {
-      console.log("Received message:", event.data);
       setGameState(JSON.parse(event.data));
     });
 
@@ -83,7 +83,7 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
   const visibleHand = currentHand
     ? diffCardCounts(currentHand, cardsInPlay)
     : {};
-
+  console.log(visibleHand);
   return (
     <>
       {errorMessage && (
@@ -165,7 +165,7 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
                     setErrorMessage,
                   });
                 }
-
+                setCardsInPlay(initialCardsInPlay);
                 incrementTurn({
                   socket,
                   authToken,
@@ -264,13 +264,16 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
                     <button
                       key={i}
                       style={{
-                        cursor: !isUsersTurn(gameState, loggedInUsername)
-                          ? "not-allowed"
-                          : "pointer",
+                        cursor:
+                          !isUsersTurn(gameState, loggedInUsername) ||
+                          !currentUserState?.buys
+                            ? "not-allowed"
+                            : "pointer",
                       }}
                       disabled={
                         // todo fix typing
                         !isUsersTurn(gameState, loggedInUsername) ||
+                        !currentUserState?.buys ||
                         cardNameToCard(cardName as CardName).type === "victory"
                       }
                       onClick={() => {
@@ -294,6 +297,7 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
               <button
                 onClick={() => {
                   setSelectedTreasureValue(0);
+                  setCardsInPlay(initialCardsInPlay);
                 }}
               >
                 reset played treasures
@@ -301,9 +305,8 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
             )}
           </div>
         </div>
-        <div id="game-state">
+        <div id="game-state" style={{ border: "1px black solid" }}>
           <h2>Game state</h2>
-          <button onClick={() => window.location.reload()}>reconnect</button>
           <pre>{JSON.stringify(gameState, null, 2)}</pre>
         </div>
       </div>

@@ -4,20 +4,7 @@ import {
   cardNameToCard,
   getHandTreasureValue,
 } from "../../../shared/common";
-
-export const isUsersTurn = (gameState: GameState, userName: string) => {
-  if (gameState.turn === 0) {
-    return false;
-  }
-
-  const numberOfActors = gameState.actor_state.length;
-
-  const turn = gameState.turn;
-
-  const currentActivePlayer = gameState.actor_state[turn % numberOfActors];
-
-  return !!currentActivePlayer.name && currentActivePlayer.name === userName;
-};
+import { isUsersTurn } from "../../../shared/utils";
 
 const getActorFromGameState = (gameState: GameState, userName: string) => {
   const actor = gameState.actor_state.find((actor) => actor.name === userName);
