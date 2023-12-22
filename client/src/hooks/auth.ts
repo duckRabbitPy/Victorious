@@ -8,7 +8,7 @@ const getLoggedInUserName = async () => {
   }
 
   try {
-    const response = await fetch(`http://localhost:3000/auth`, {
+    const response = await fetch(`http://localhost:3000/api/auth`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

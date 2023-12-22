@@ -181,7 +181,7 @@ export const sendConfirmationEmail = ({
           from: process.env.SENDER_EMAIL,
           to: email,
           subject: "Confirm your email",
-          text: `Click the link to confirm your email: http://localhost:3000/register/confirm/${confirmation_token}`,
+          text: `Click the link to confirm your email: http://localhost:3000/api/register/confirm/${confirmation_token}`,
         };
 
         transporter.sendMail(mailOptions, (error, info) => {

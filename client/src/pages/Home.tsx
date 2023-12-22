@@ -17,7 +17,7 @@ export const Home = () => {
       room: Number(room),
     };
     // fetch from backend running on port 3000
-    fetch(`http://localhost:3000/game-sessions`, {
+    fetch(`http://localhost:3000/api/game-sessions`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -41,7 +41,7 @@ export const Home = () => {
 
   const getOpenRooms = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    fetch(`http://localhost:3000/game-sessions`, {
+    fetch(`http://localhost:3000/api/game-sessions`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
