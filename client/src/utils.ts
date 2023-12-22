@@ -1,16 +1,23 @@
 import React from "react";
-import { CardCount, CardName } from "../../shared/common";
+import { CardCount, CardName, getAllCardNames } from "../../shared/common";
 
 export const diffCardCounts = (a: CardCount, b: CardCount): CardCount => {
-  const diff = Object.entries(a).reduce((acc, [cardName, count]) => {
-    const diff = count - b[cardName as CardName];
-    if (diff > 0) {
-      acc[cardName] = diff;
-    }
-    return acc;
-  }, {} as Record<string, number>);
+  const diffBetweenAandB = Array.from(getAllCardNames()).reduce(
+    (acc, cardName) => {
+      const countA = a[cardName as keyof CardCount] || 0;
+      const countB = b[cardName as keyof CardCount] || 0;
+      const cardDiff = Math.max(0, countA - countB);
 
-  return diff as CardCount;
+      if (cardDiff > 0) {
+        acc[cardName as keyof CardCount] = cardDiff;
+      }
+
+      return acc;
+    },
+    {} as Record<CardName, number>
+  );
+
+  return { ...a, ...diffBetweenAandB };
 };
 
 export const initialCardsInPlay: CardCount = {
