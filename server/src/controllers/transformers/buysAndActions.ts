@@ -22,8 +22,7 @@ export const buyCard = ({
 }: {
   gameState: GameState;
   userId: string;
-  //   todo validate card name
-  cardName: CardName | undefined;
+  cardName: CardName;
 }) => {
   if (!cardName) return Effect.succeed(gameState);
   const newActorState = gameState.actor_state.map((actor) => {

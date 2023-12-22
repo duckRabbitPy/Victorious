@@ -11,6 +11,7 @@ import {
   ClientPayload,
   ClientPayloadStruct,
   GameState,
+  safeParseCardNames,
 } from "../../shared/common";
 import { safeParseGameState, safeParseJWT, verifyJwt } from "./utils";
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
@@ -51,6 +52,8 @@ export function createWebsocketServer(port: number): void {
     );
 
     const currentGameState = getLatestLiveGameSnapshot({ room });
+
+    const cardName = pipe(safeParseCardNames(msg.cardName));
 
     if (
       !roomConnections.some((connection) => {
@@ -146,12 +149,16 @@ export function createWebsocketServer(port: number): void {
 
       case "buyCard": {
         pipe(
-          Effect.all({ userInfo: userDetailsOrError, currentGameState }),
-          Effect.flatMap(({ userInfo, currentGameState }) =>
+          Effect.all({
+            userInfo: userDetailsOrError,
+            currentGameState,
+            cardName,
+          }),
+          Effect.flatMap(({ userInfo, currentGameState, cardName }) =>
             buyCard({
               gameState: currentGameState,
               userId: userInfo.userId,
-              cardName: msg.cardName,
+              cardName,
             })
           ),
           Effect.flatMap(safeParseGameState),
