@@ -156,6 +156,14 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
           {gameState.turn > 0 && isUsersTurn(gameState, loggedInUsername) && (
             <button
               id="start-game"
+              style={
+                currentUserState?.buys === 0
+                  ? {
+                      border: "1px solid green",
+                      animation: "pulse 1.2s infinite",
+                    }
+                  : {}
+              }
               onClick={() => {
                 if (gameState.turn === 0) {
                   startGame({
@@ -292,7 +300,7 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
             </div>
           ))}
           <div>
-            <h4>Coins: {selectedTreasureValue}</h4>
+            <h4>Hand value: {selectedTreasureValue}</h4>
             {selectedTreasureValue > 0 && (
               <button
                 onClick={() => {
