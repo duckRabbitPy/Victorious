@@ -9,6 +9,7 @@ import {
   cardNameToCard,
   countToCardNamesArray,
   getAllCardNames,
+  getCardTypeByName,
   getCardValueByName,
   subtractCardCount,
   zeroCardCount,
@@ -18,6 +19,7 @@ import {
   buyCard,
   getInititalGameState,
   incrementTurn,
+  playAction,
   startGame,
 } from "../effects/effects";
 import { canBuyCard } from "../effects/clientValidation";
@@ -273,6 +275,8 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
             </>
           )}
 
+          {/* hand */}
+          {/* todo abstract into component and tidy up stateful logic */}
           {Object.entries(visibleHand).map(([cardName, count]) => (
             <div key={cardName}>
               {
@@ -281,6 +285,16 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
                     <button
                       key={i}
                       style={{
+                        margin: "0.2rem",
+                        border:
+                          currentUserState?.phase === Phases.Action &&
+                          getCardTypeByName(cardName as CardName) === "action"
+                            ? "2px solid green"
+                            : currentUserState?.phase === Phases.Buy &&
+                              getCardTypeByName(cardName as CardName) ===
+                                "treasure"
+                            ? "2px solid green"
+                            : "2px solid black",
                         cursor:
                           !isUsersTurn(gameState, loggedInUsername) ||
                           !currentUserState?.buys
@@ -290,15 +304,41 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
                       disabled={
                         // todo fix typing
                         !isUsersTurn(gameState, loggedInUsername) ||
+                        (currentUserState?.phase === Phases.Action &&
+                          getCardTypeByName(cardName as CardName) !==
+                            "action") ||
+                        (currentUserState?.phase === Phases.Buy &&
+                          getCardTypeByName(cardName as CardName) !==
+                            "treasure") ||
                         !currentUserState?.buys ||
                         cardNameToCard(cardName as CardName).type === "victory"
                       }
                       onClick={() => {
-                        setSelectedTreasureValue(
-                          (currValue) =>
-                            currValue + getCardValueByName(cardName as CardName)
-                        );
-                        updateCardsInPlay(cardName as CardName, setCardsInPlay);
+                        if (
+                          currentUserState?.phase === Phases.Buy &&
+                          getCardTypeByName(cardName as CardName) === "treasure"
+                        ) {
+                          setSelectedTreasureValue(
+                            (currValue) =>
+                              currValue +
+                              getCardValueByName(cardName as CardName)
+                          );
+                          updateCardsInPlay(
+                            cardName as CardName,
+                            setCardsInPlay
+                          );
+                        } else if (
+                          currentUserState?.phase === Phases.Action &&
+                          getCardTypeByName(cardName as CardName) === "action"
+                        ) {
+                          playAction({
+                            socket,
+                            authToken,
+                            roomNumber,
+                            cardName: cardName as CardName,
+                            setErrorMessage,
+                          });
+                        }
                       }}
                     >
                       {cardName}

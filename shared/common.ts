@@ -362,3 +362,18 @@ export const subtractCardCount = (a: CardCount, b: CardCount): CardCount => {
   }
   return result;
 };
+
+export const sumCardCounts = (a: CardCount, b: CardCount): CardCount => {
+  const result: Record<CardName, number> = {} as Record<CardName, number>;
+
+  for (const cardName of Object.keys(a) as Array<CardName>) {
+    const countA = a[cardName];
+    const countB = b[cardName];
+
+    if (typeof countB === "number") {
+      const cardSum = countA + countB;
+      result[cardName as keyof CardCount] = cardSum;
+    }
+  }
+  return result;
+};

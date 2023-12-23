@@ -6,6 +6,7 @@ import {
   cardNamesToCount,
   hasActionCard,
   subtractCardCount,
+  sumCardCounts,
 } from "../../../../shared/common";
 import { indefiniteArticle } from "../../../../shared/utils";
 import { dealCards } from "./hand";
@@ -97,12 +98,11 @@ export const applyAction = (
     }
     case "smithy": {
       const newActorState = gameState.actor_state.map((actor) => {
-        // add 3 cards to hand
         const { newCards, remainingDeck } = dealCards(actor.deck, 3);
         if (actor.id === userId) {
           return {
             ...actor,
-            hand: cardNamesToCount(newCards),
+            hand: sumCardCounts(actor.hand, cardNamesToCount(newCards)),
             deck: remainingDeck,
           };
         }
