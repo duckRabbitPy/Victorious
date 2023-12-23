@@ -78,6 +78,7 @@ const generatateGlobalState = () => {
       market: 10,
       councilRoom: 10,
       mine: 10,
+      curse: 30,
       festival: 10,
       laboratory: 10,
     },

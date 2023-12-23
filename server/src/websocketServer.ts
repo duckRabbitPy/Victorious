@@ -22,7 +22,8 @@ import {
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
 import { cleanUp, dealToAllActors } from "./controllers/transformers/hand";
 import {
-  buyCard as buyCard,
+  buyCard,
+  playAction,
   resetBuysAndActions,
 } from "./controllers/transformers/buysAndActions";
 import { incrementTurn } from "./controllers/transformers/turn";
@@ -167,7 +168,6 @@ export function createWebsocketServer(port: number): void {
               toDiscardFromHand,
             })
           ),
-          tapPipeLine,
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
           Effect.flatMap(broadcastToRoom),
@@ -177,6 +177,25 @@ export function createWebsocketServer(port: number): void {
       }
 
       case "playAction": {
+        pipe(
+          Effect.all({
+            userInfo: userDetailsOrError,
+            currentGameState,
+            cardName,
+          }),
+          Effect.flatMap(({ userInfo, currentGameState, cardName }) =>
+            playAction({
+              gameState: currentGameState,
+              userId: userInfo.userId,
+              cardName,
+              toDiscardFromHand,
+            })
+          ),
+          Effect.flatMap(safeParseGameState),
+          Effect.flatMap(updateGameState),
+          Effect.flatMap(broadcastToRoom),
+          Effect.runPromise
+        );
         break;
       }
     }
