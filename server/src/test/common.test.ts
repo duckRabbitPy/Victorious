@@ -17,6 +17,7 @@ describe("common util testing", () => {
       laboratory: 0,
       festival: 0,
       councilRoom: 0,
+      curse: 0,
     };
 
     const cardCountB = {
@@ -33,6 +34,7 @@ describe("common util testing", () => {
       laboratory: 0,
       festival: 0,
       councilRoom: 0,
+      curse: 0,
     };
 
     expect(subtractCardCount(cardCountA, cardCountB)).toEqual({
@@ -49,6 +51,7 @@ describe("common util testing", () => {
       laboratory: 0,
       festival: 0,
       councilRoom: 0,
+      curse: 0,
     });
   });
 
@@ -67,6 +70,7 @@ describe("common util testing", () => {
       laboratory: 0,
       festival: 0,
       councilRoom: 0,
+      curse: 0,
     };
 
     const cardCountB = {
@@ -83,6 +87,7 @@ describe("common util testing", () => {
       laboratory: 0,
       festival: 0,
       councilRoom: 0,
+      curse: 0,
     };
 
     expect(subtractCardCount(cardCountA, cardCountB)).toEqual({
@@ -99,6 +104,7 @@ describe("common util testing", () => {
       laboratory: 0,
       festival: 0,
       councilRoom: 0,
+      curse: 0,
     });
   });
 });

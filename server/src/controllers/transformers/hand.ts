@@ -2,17 +2,20 @@ import * as Effect from "@effect/io/Effect";
 import {
   CardName,
   GameState,
+  Phases,
   cardNamesToCount,
   discardHand,
+  hasActionCard,
 } from "../../../../shared/common";
 import { isUsersTurn } from "../../../../shared/utils";
 
-const dealFiveCards = (
-  deck: readonly CardName[]
+export const dealCards = (
+  deck: readonly CardName[],
+  number: number
 ): { newCards: readonly CardName[]; remainingDeck: readonly CardName[] } => {
   return {
-    newCards: deck.slice(0, 5),
-    remainingDeck: deck.slice(5),
+    newCards: deck.slice(0, number),
+    remainingDeck: deck.slice(number),
   };
 };
 
@@ -33,12 +36,14 @@ export const dealToAllActors = (gameState: GameState) => {
   return Effect.succeed({
     ...gameState,
     actor_state: gameState.actor_state.map((actor, index) => {
-      const { newCards, remainingDeck } = dealFiveCards(shuffledDecks[index]);
+      const { newCards, remainingDeck } = dealCards(shuffledDecks[index], 5);
+      const newHand = cardNamesToCount(newCards);
       return {
         ...actor,
-        hand: cardNamesToCount(newCards),
+        hand: newHand,
         deck: remainingDeck,
         discardPile: discardHand(actor.hand, actor.discardPile),
+        phase: hasActionCard(newHand) ? Phases.Action : Phases.Buy,
       };
     }),
   });
@@ -57,7 +62,7 @@ export const cleanUp = (gameState: GameState) => {
     actor_state: gameState.actor_state.map((actor, index) => {
       if (isUsersTurn(gameState, actor.name)) {
         if (actor.deck.length >= 5) {
-          const { newCards, remainingDeck } = dealFiveCards(actor.deck);
+          const { newCards, remainingDeck } = dealCards(actor.deck, 5);
           return {
             ...actor,
             hand: cardNamesToCount(newCards),
@@ -66,7 +71,7 @@ export const cleanUp = (gameState: GameState) => {
           };
         } else {
           const newDeck = reshuffleDeck(actor.deck, actor.discardPile);
-          const { newCards, remainingDeck } = dealFiveCards(newDeck);
+          const { newCards, remainingDeck } = dealCards(newDeck, 5);
           return {
             ...actor,
             hand: cardNamesToCount(newCards),

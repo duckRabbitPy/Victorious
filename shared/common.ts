@@ -117,7 +117,8 @@ export const ActionNames = Schema.union(
   Schema.literal("councilRoom"),
   Schema.literal("laboratory"),
   Schema.literal("festival"),
-  Schema.literal("mine")
+  Schema.literal("mine"),
+  Schema.literal("curse")
 );
 
 const CardStruct = Schema.struct({
@@ -198,8 +199,17 @@ export const discardHand = (
   return currentDiscardPile.concat(countToCardNamesArray(currentHand));
 };
 
-const getCardTypeByName = (cardName: CardName): string => {
+export const getCardTypeByName = (cardName: CardName): string => {
   return cardNameToCard(cardName).type;
+};
+
+export const hasActionCard = (hand: CardCount): boolean => {
+  for (const cardName of Object.keys(hand) as Array<CardName>) {
+    if (getCardTypeByName(cardName) === "action" && hand[cardName] > 0) {
+      return true;
+    }
+  }
+  return false;
 };
 
 export const getHandTreasureValue = (hand: CardCount): number => {
@@ -246,6 +256,8 @@ export const cardNameToCard = (cardName: CardName): Card => {
       return festival;
     case "mine":
       return Mine;
+    case "curse":
+      return curse;
   }
 };
 
@@ -260,7 +272,6 @@ export const CardCountStruct = Schema.record(
 export enum Phases {
   Action = "action",
   Buy = "buy",
-  Cleanup = "cleanup",
 }
 
 const ActorStateStruct = Schema.struct({
@@ -334,6 +345,7 @@ export const zeroCardCount: CardCount = {
   laboratory: 0,
   festival: 0,
   councilRoom: 0,
+  curse: 0,
 };
 
 export const subtractCardCount = (a: CardCount, b: CardCount): CardCount => {

@@ -5,6 +5,7 @@ import {
   CardCount,
   CardName,
   GameState,
+  Phases,
   cardNameToCard,
   countToCardNamesArray,
   getAllCardNames,
@@ -81,10 +82,8 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
 
   const visibleHand = currentHand
     ? subtractCardCount(currentHand, cardsInPlay)
-    : {};
-  console.log("currentHand", currentHand);
-  console.log("cardsInPlay", cardsInPlay);
-  console.log("visibleHand", visibleHand);
+    : zeroCardCount;
+
   return (
     <>
       {errorMessage && (
@@ -190,9 +189,16 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
 
         {(gameState.turn || 0) > 0 && (
           <div>
+            <h3>Phase: {currentUserState?.phase}</h3>
             {isUsersTurn(gameState, loggedInUsername) && (
               <>
-                <h2>Buy card</h2>
+                <h2>
+                  {currentUserState?.phase === Phases.Buy
+                    ? "Buy card"
+                    : "Play Action"}
+                </h2>
+
+                <p>{`actions remaining ${currentUserState?.actions}`}</p>
                 <p>{`buys remaining ${currentUserState?.buys}`}</p>
               </>
             )}
