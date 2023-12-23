@@ -6,8 +6,11 @@ import {
   CardName,
   GameState,
   cardNameToCard,
+  countToCardNamesArray,
   getAllCardNames,
   getCardValueByName,
+  subtractCardCount,
+  zeroCardCount,
 } from "../../../shared/common";
 import {
   addNewPlayer,
@@ -17,11 +20,7 @@ import {
   startGame,
 } from "../effects/effects";
 import { canBuyCard } from "../effects/clientValidation";
-import {
-  diffCardCounts,
-  initialCardsInPlay,
-  updateCardsInPlay,
-} from "../utils";
+import { updateCardsInPlay } from "../utils";
 import { isUsersTurn } from "../../../shared/utils";
 
 const useGameState = () => {
@@ -69,7 +68,7 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
   const authToken = localStorage.getItem("dominion_auth_token");
 
   const [selectedTreasureValue, setSelectedTreasureValue] = useState(0);
-  const [cardsInPlay, setCardsInPlay] = useState<CardCount>(initialCardsInPlay);
+  const [cardsInPlay, setCardsInPlay] = useState<CardCount>(zeroCardCount);
   const currentUserState = gameState?.actor_state.find(
     (a) => a.name === localStorage.getItem("dominion_user_name")
   );
@@ -81,9 +80,11 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
   const currentHand = currentUserState?.hand;
 
   const visibleHand = currentHand
-    ? diffCardCounts(currentHand, cardsInPlay)
+    ? subtractCardCount(currentHand, cardsInPlay)
     : {};
-  console.log(visibleHand);
+  console.log("currentHand", currentHand);
+  console.log("cardsInPlay", cardsInPlay);
+  console.log("visibleHand", visibleHand);
   return (
     <>
       {errorMessage && (
@@ -173,7 +174,7 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
                     setErrorMessage,
                   });
                 }
-                setCardsInPlay(initialCardsInPlay);
+                setCardsInPlay(zeroCardCount);
                 incrementTurn({
                   socket,
                   authToken,
@@ -243,7 +244,9 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
                       roomNumber,
                       cardName,
                       setErrorMessage,
+                      toDiscardFromHand: countToCardNamesArray(cardsInPlay),
                     });
+                    setCardsInPlay(zeroCardCount);
                     setSelectedTreasureValue(0);
                   }}
                 >
@@ -305,7 +308,7 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
               <button
                 onClick={() => {
                   setSelectedTreasureValue(0);
-                  setCardsInPlay(initialCardsInPlay);
+                  setCardsInPlay(zeroCardCount);
                 }}
               >
                 reset played treasures

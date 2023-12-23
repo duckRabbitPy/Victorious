@@ -1,5 +1,10 @@
 import * as Effect from "@effect/io/Effect";
-import { CardCount, CardName, GameState } from "../../../../shared/common";
+import {
+  CardName,
+  GameState,
+  cardNamesToCount,
+  subtractCardCount,
+} from "../../../../shared/common";
 import { indefiniteArticle } from "../../../../shared/utils";
 
 export const resetBuysAndActions = (gameState: GameState) => {
@@ -19,10 +24,12 @@ export const buyCard = ({
   gameState,
   userId,
   cardName,
+  toDiscardFromHand,
 }: {
   gameState: GameState;
   userId: string;
   cardName: CardName;
+  toDiscardFromHand: readonly CardName[];
 }) => {
   if (!cardName) return Effect.succeed(gameState);
   const newActorState = gameState.actor_state.map((actor) => {
@@ -31,6 +38,11 @@ export const buyCard = ({
         ...actor,
         deck: [...actor.deck, cardName],
         buys: actor.buys - 1,
+        hand: subtractCardCount(
+          actor.hand,
+          cardNamesToCount(toDiscardFromHand)
+        ),
+        discardPile: [...actor.discardPile, ...toDiscardFromHand],
       };
     }
     return actor;

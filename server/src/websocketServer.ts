@@ -11,9 +11,14 @@ import {
   ClientPayload,
   ClientPayloadStruct,
   GameState,
-  safeParseCardNames,
+  safeParseCardName,
 } from "../../shared/common";
-import { safeParseGameState, safeParseJWT, verifyJwt } from "./utils";
+import {
+  safeParseGameState,
+  safeParseJWT,
+  tapPipeLine,
+  verifyJwt,
+} from "./utils";
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
 import { cleanUp, dealToAllActors } from "./controllers/transformers/hand";
 import {
@@ -52,8 +57,8 @@ export function createWebsocketServer(port: number): void {
     );
 
     const currentGameState = getLatestLiveGameSnapshot({ room });
-
-    const cardName = pipe(safeParseCardNames(msg.cardName));
+    const cardName = pipe(safeParseCardName(msg.cardName));
+    const toDiscardFromHand = msg.toDiscardFromHand;
 
     if (
       !roomConnections.some((connection) => {
@@ -159,13 +164,19 @@ export function createWebsocketServer(port: number): void {
               gameState: currentGameState,
               userId: userInfo.userId,
               cardName,
+              toDiscardFromHand,
             })
           ),
+          tapPipeLine,
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
           Effect.flatMap(broadcastToRoom),
           Effect.runPromise
         );
+        break;
+      }
+
+      case "playAction": {
         break;
       }
     }
