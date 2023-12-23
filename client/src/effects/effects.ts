@@ -9,12 +9,14 @@ const prepareMessage = ({
   authToken,
   room,
   cardName,
+  toDiscardFromHand,
 }: ClientPayload) => {
   return JSON.stringify({
     effect,
     authToken,
     room,
     cardName,
+    toDiscardFromHand,
   });
 };
 
@@ -38,6 +40,7 @@ export const getInititalGameState = ({
       effect: SupportedEffects.getCurrentGameState,
       room: roomNumber,
       authToken,
+      toDiscardFromHand: [],
     })
   );
 };
@@ -67,6 +70,7 @@ export const addNewPlayer = ({
       effect: SupportedEffects.addLivePlayer,
       authToken,
       room: roomNumber,
+      toDiscardFromHand: [],
     })
   );
 };
@@ -96,11 +100,47 @@ export const incrementTurn = ({
       effect: SupportedEffects.incrementTurn,
       authToken,
       room: roomNumber,
+      // todo: discard all
+      toDiscardFromHand: [],
     })
   );
 };
 
 export const buyCard = ({
+  socket,
+  authToken,
+  roomNumber,
+  cardName,
+  toDiscardFromHand,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  cardName: CardName;
+  toDiscardFromHand: CardName[];
+  setErrorMessage: (message: string | null) => void;
+}) => {
+  if (!socket) {
+    setErrorMessage("Socket is null");
+    return;
+  }
+  if (!authToken) {
+    setErrorMessage("Auth token is null");
+    return;
+  }
+  socket.send(
+    prepareMessage({
+      effect: SupportedEffects.buyCard,
+      authToken,
+      room: roomNumber,
+      cardName,
+      toDiscardFromHand,
+    })
+  );
+};
+
+export const playAction = ({
   socket,
   authToken,
   roomNumber,
@@ -121,12 +161,14 @@ export const buyCard = ({
     setErrorMessage("Auth token is null");
     return;
   }
+
   socket.send(
     prepareMessage({
-      effect: SupportedEffects.buyCard,
+      effect: SupportedEffects.playAction,
       authToken,
       room: roomNumber,
       cardName,
+      toDiscardFromHand: [cardName],
     })
   );
 };
@@ -156,6 +198,7 @@ export const startGame = ({
       effect: SupportedEffects.startGame,
       authToken,
       room: roomNumber,
+      toDiscardFromHand: [],
     })
   );
 };

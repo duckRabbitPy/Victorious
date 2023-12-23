@@ -128,7 +128,7 @@ const CardStruct = Schema.struct({
 });
 
 const CardNames = Schema.union(TreasureNames, VictoryNames, ActionNames);
-export const safeParseCardNames = Schema.parse(CardNames);
+export const safeParseCardName = Schema.parse(CardNames);
 
 export const getAllCardNames = (): CardName[] => {
   return [
@@ -156,8 +156,7 @@ export const getCardValueByName = (cardName: CardName): number => {
   return cardNameToCard(cardName).value;
 };
 
-// do these need to be shuffled before being added to the discard pile?
-const countToCardNamesArray = (cardCount: CardCount): CardName[] => {
+export const countToCardNamesArray = (cardCount: CardCount): CardName[] => {
   const cardNames: CardName[] = [];
   for (const cardName of getAllCardNames()) {
     for (let i = 0; i < cardCount[cardName]; i++) {
@@ -305,6 +304,7 @@ export enum SupportedEffects {
   getCurrentGameState = "getCurrentGameState",
   addLivePlayer = "addLivePlayer",
   buyCard = "buyCard",
+  playAction = "playAction",
   incrementTurn = "incrementTurn",
 }
 
@@ -313,6 +313,40 @@ export const ClientPayloadStruct = Schema.struct({
   cardName: Schema.union(TreasureNames, VictoryNames, ActionNames).pipe(
     Schema.optional
   ),
+  toDiscardFromHand: Schema.array(
+    Schema.union(TreasureNames, VictoryNames, ActionNames)
+  ),
   room: Schema.number,
   authToken: Schema.string,
 });
+
+export const zeroCardCount: CardCount = {
+  copper: 0,
+  silver: 0,
+  gold: 0,
+  estate: 0,
+  duchy: 0,
+  province: 0,
+  village: 0,
+  smithy: 0,
+  market: 0,
+  mine: 0,
+  laboratory: 0,
+  festival: 0,
+  councilRoom: 0,
+};
+
+export const subtractCardCount = (a: CardCount, b: CardCount): CardCount => {
+  const result: Record<CardName, number> = {} as Record<CardName, number>;
+
+  for (const cardName of Object.keys(a) as Array<CardName>) {
+    const countA = a[cardName];
+    const countB = b[cardName];
+
+    if (typeof countB === "number") {
+      const cardDiff = countA - countB;
+      result[cardName as keyof CardCount] = cardDiff;
+    }
+  }
+  return result;
+};
