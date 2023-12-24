@@ -121,6 +121,7 @@ export const applyAction = (
   }
 };
 
+// todo refactor with reusable helper functions
 export const playAction = ({
   gameState,
   userId,
@@ -143,7 +144,6 @@ export const playAction = ({
         ),
         discardPile: [...actor.discardPile, ...toDiscardFromHand],
         actions: remainingActions,
-        phase: remainingActions < 1 ? Phases.Buy : Phases.Action,
       };
     }
     return actor;
@@ -158,11 +158,31 @@ export const playAction = ({
     history: [...gameState.global_state.history, latestTransaction],
   };
 
-  const updatedGameState = {
-    ...gameState,
-    global_state: newGlobalState,
-    actor_state: newActorState,
+  const updatedGameState = applyAction(
+    {
+      ...gameState,
+      global_state: newGlobalState,
+      actor_state: newActorState,
+    },
+    userId,
+    cardName
+  );
+
+  const GameStateWithLatestPhase = {
+    ...updatedGameState,
+    actor_state: updatedGameState.actor_state.map((actor) => {
+      if (actor.id === userId) {
+        return {
+          ...actor,
+          phase:
+            actor.actions < 1 || !hasActionCard(actor.hand)
+              ? Phases.Buy
+              : Phases.Action,
+        };
+      }
+      return actor;
+    }),
   };
 
-  return Effect.succeed(applyAction(updatedGameState, userId, cardName));
+  return Effect.succeed(GameStateWithLatestPhase);
 };

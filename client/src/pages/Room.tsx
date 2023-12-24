@@ -348,19 +348,21 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
               }
             </div>
           ))}
-          <div>
-            <h4>Hand value: {selectedTreasureValue}</h4>
-            {selectedTreasureValue > 0 && (
-              <button
-                onClick={() => {
-                  setSelectedTreasureValue(0);
-                  setCardsInPlay(zeroCardCount);
-                }}
-              >
-                reset played treasures
-              </button>
-            )}
-          </div>
+          {gameState.turn > 0 && (
+            <div>
+              <h4>Hand value: {selectedTreasureValue}</h4>
+              {selectedTreasureValue > 0 && (
+                <button
+                  onClick={() => {
+                    setSelectedTreasureValue(0);
+                    setCardsInPlay(zeroCardCount);
+                  }}
+                >
+                  reset played treasures
+                </button>
+              )}
+            </div>
+          )}
         </div>
         <div id="game-state" style={{ border: "1px black solid" }}>
           <h2>Game state</h2>
