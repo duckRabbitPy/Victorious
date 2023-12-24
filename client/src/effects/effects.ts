@@ -151,7 +151,7 @@ export const playAction = ({
   authToken: string | null;
   roomNumber: number;
   cardName: CardName;
-  setErrorMessage: (message: string | null) => void;
+  setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
   if (!socket) {
     setErrorMessage("Socket is null");
