@@ -12,6 +12,7 @@ import EndTurnButton from "../components/EndTurnButton";
 import StartGameButton from "../components/StartGameButton";
 import ActivePlayerInfo from "../components/ActivePlayerInfo";
 import GameStateDebugDisplay from "../components/GameStateDebug";
+import ChatLog from "../components/ChatLog";
 
 const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -120,6 +121,7 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
           gameState={gameState}
         />
 
+        <ChatLog />
         <GameStateDebugDisplay gameState={gameState} />
       </div>
     </>

@@ -265,3 +265,36 @@ export const startGame = ({
     })
   );
 };
+
+export const sendChatMessage = ({
+  socket,
+  authToken,
+  roomNumber,
+  chatMessage,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  chatMessage: string;
+  setErrorMessage: (message: string | null) => void;
+}) => {
+  if (!socket) {
+    setErrorMessage("Socket is null");
+    return;
+  }
+  if (!authToken) {
+    setErrorMessage("Auth token is null");
+    return;
+  }
+
+  socket.send(
+    prepareMessage({
+      effect: SupportedEffects.sendChatMessage,
+      authToken,
+      room: roomNumber,
+      chatMessage,
+      toDiscardFromHand: [],
+    })
+  );
+};

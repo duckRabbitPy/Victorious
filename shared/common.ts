@@ -307,10 +307,16 @@ export const GameStateStruct = Schema.struct({
   game_over: Schema.boolean,
 });
 
+export const ChatMessageStruct = Schema.struct({
+  name: Schema.string,
+  message: Schema.string,
+});
+
 export type ActorState = Schema.To<typeof ActorStateStruct>;
 export type GlobalState = Schema.To<typeof GlobalStateStruct>;
 export type GameState = Schema.To<typeof GameStateStruct>;
 export type ClientPayload = Schema.To<typeof ClientPayloadStruct>;
+export type ChatMessage = Schema.To<typeof ChatMessageStruct>;
 
 export enum SupportedEffects {
   startGame = "startGame",
@@ -321,6 +327,7 @@ export enum SupportedEffects {
   resetPlayedTreasures = "resetPlayedTreasures",
   playAction = "playAction",
   incrementTurn = "incrementTurn",
+  sendChatMessage = "sendChatMessage",
 }
 
 export const ClientPayloadStruct = Schema.struct({
@@ -333,6 +340,7 @@ export const ClientPayloadStruct = Schema.struct({
   ),
   room: Schema.number,
   authToken: Schema.string,
+  chatMessage: Schema.string.pipe(Schema.optional),
 });
 
 export const zeroCardCount: CardCount = {
