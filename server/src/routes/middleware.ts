@@ -30,7 +30,6 @@ export const tokenMiddleware = (
             new AuthorisationError({ message: "Invalid Auth Token" })
           );
         }
-        console.log(decoded);
       });
 
       return Effect.succeed(next());

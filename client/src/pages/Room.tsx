@@ -1,92 +1,17 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import {
-  ClientPayload,
-  GameState,
-  SupportedEffects,
-} from "../../../shared/commonTypes";
+import { useParams } from "react-router-dom";
 
-const getInititalGameState = ({
-  socket,
-  authToken,
-  roomNumber,
-  setErrorMessage,
-}: {
-  socket: WebSocket | null;
-  authToken: string | null;
-  roomNumber: number;
-  setErrorMessage?: (message: string | null) => void;
-}) => {
-  if (!socket || !authToken) {
-    setErrorMessage?.("Socket or auth token is null");
-    return;
-  }
-  socket?.send(
-    prepareMessage({
-      effect: SupportedEffects.getCurrentGameState,
-      room: roomNumber,
-      authToken,
-    })
-  );
-};
+import { CardCount, GameState, zeroCardCount } from "../../../shared/common";
+import { getInititalGameState } from "../effects/effects";
 
-const addNewPlayer = ({
-  socket,
-  authToken,
-  roomNumber,
-  setErrorMessage,
-}: {
-  socket: WebSocket | null;
-  authToken: string | null;
-  roomNumber: number;
-  setErrorMessage: (message: string | null) => void;
-}) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
-    return;
-  }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
-    return;
-  }
-
-  socket.send(
-    prepareMessage({
-      effect: SupportedEffects.addLivePlayer,
-      authToken,
-      room: roomNumber,
-    })
-  );
-};
-
-const incrementTurn = ({
-  socket,
-  authToken,
-  roomNumber,
-  setErrorMessage,
-}: {
-  socket: WebSocket | null;
-  authToken: string | null;
-  roomNumber: number;
-  setErrorMessage: (message: string | null) => void;
-}) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
-    return;
-  }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
-    return;
-  }
-
-  socket.send(
-    prepareMessage({
-      effect: SupportedEffects.incrementTurn,
-      authToken,
-      room: roomNumber,
-    })
-  );
-};
+import { isUsersTurn } from "../../../shared/utils";
+import PlayerHand from "../components/PlayerHand";
+import Supply from "../components/Supply";
+import TurnInfo from "../components/TurnInfo";
+import EndTurnButton from "../components/EndTurnButton";
+import StartGameButton from "../components/StartGameButton";
+import ActivePlayerInfo from "../components/ActivePlayerInfo";
+import GameStateDebugDisplay from "../components/GameStateDebug";
 
 const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -95,6 +20,10 @@ const useGameState = () => {
 
   useEffect(() => {
     const newSocket = new WebSocket("ws://localhost:8080");
+
+    newSocket.addEventListener("message", (event) => {
+      setGameState(JSON.parse(event.data));
+    });
 
     newSocket.addEventListener("open", (event) => {
       console.log("WebSocket connection opened:", event);
@@ -109,40 +38,40 @@ const useGameState = () => {
       }
     });
 
-    newSocket.addEventListener("message", (event) => {
-      console.log("Received message:", event.data);
-      setGameState(JSON.parse(event.data));
-    });
-
     newSocket.addEventListener("close", (event) => {
       console.log("WebSocket connection closed:", event);
     });
 
     setSocket(newSocket);
 
-    return () => {
-      newSocket.close();
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { gameState, socket };
 };
 
-const prepareMessage = ({ effect, authToken, room }: ClientPayload) => {
-  return JSON.stringify({
-    effect,
-    authToken,
-    room,
-  });
-};
-
-const Room = () => {
+const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
   const { gameState, socket } = useGameState();
   const { "*": roomParam } = useParams();
   const roomNumber = Number(roomParam);
   const authToken = localStorage.getItem("dominion_auth_token");
+
+  const [selectedTreasureValue, setSelectedTreasureValue] = useState(0);
+  const [cardsInPlay, setCardsInPlay] = useState<CardCount>(zeroCardCount);
+
+  const coreRoomInfo = { socket, authToken, roomNumber };
+  const coreUserInfo = {
+    loggedInUsername,
+    currentUserState: gameState?.actor_state.find(
+      (a) => a.name === localStorage.getItem("dominion_user_name")
+    ),
+    cardsInPlay,
+    selectedTreasureValue,
+  };
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  if (!gameState) return <div>Error fetching game state from server...</div>;
 
   return (
     <>
@@ -152,62 +81,56 @@ const Room = () => {
           <button onClick={() => setErrorMessage(null)}>clear</button>
         </>
       )}
-      <h1>Room {roomNumber}</h1>
-      <p>Players ready: {gameState?.actor_state.length}</p>
-      {
-        <ol style={{ listStyle: "none" }}>
-          {gameState?.actor_state?.map((actor) => (
-            <li key={actor.id}>{`✅ ${actor.name}`}</li>
-          ))}
-        </ol>
-      }
       <div>
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <Link to="/">Back to home</Link>
-          {
-            <button
-              id="player-ready"
-              onClick={() =>
-                addNewPlayer({
-                  socket,
-                  authToken,
-                  roomNumber,
-                  setErrorMessage,
-                })
-              }
-            >
-              Ready
-            </button>
-          }
-        </div>
+        <ActivePlayerInfo
+          coreUserInfo={coreUserInfo}
+          gameState={gameState}
+          coreRoomInfo={coreRoomInfo}
+          setErrorMessage={setErrorMessage}
+        />
         <div>
-          {gameState?.actor_state && gameState.actor_state.length > 1 && (
-            <button
-              id="start-game"
-              onClick={() =>
-                incrementTurn({
-                  socket,
-                  authToken,
-                  roomNumber,
-                  setErrorMessage,
-                })
-              }
-            >
-              {gameState?.turn === 0 ? "Start game" : "Next turn"}
-            </button>
+          {gameState.actor_state.length > 1 && gameState.turn < 1 && (
+            <StartGameButton
+              coreRoomInfo={coreRoomInfo}
+              setErrorMessage={setErrorMessage}
+            />
+          )}
+
+          {gameState.turn > 0 && isUsersTurn(gameState, loggedInUsername) && (
+            <EndTurnButton
+              coreRoomInfo={coreRoomInfo}
+              coreUserInfo={coreUserInfo}
+              gameState={gameState}
+              setErrorMessage={setErrorMessage}
+              setCardsInPlay={setCardsInPlay}
+            />
           )}
         </div>
-        <div id="game-state">
-          <h2>Game state</h2>
-          <button
-            onClick={() =>
-              getInititalGameState({ socket, authToken, roomNumber })
-            }
-          >
-            refresh
-          </button>
-          <pre>{JSON.stringify(gameState, null, 2)}</pre>
-        </div>
+
+        {(gameState.turn || 0) > 0 && (
+          <>
+            <TurnInfo coreUserInfo={coreUserInfo} gameState={gameState} />
+            <Supply
+              coreRoomInfo={coreRoomInfo}
+              coreUserInfo={coreUserInfo}
+              gameState={gameState}
+              setCardsInPlay={setCardsInPlay}
+              setSelectedTreasureValue={setSelectedTreasureValue}
+              setErrorMessage={setErrorMessage}
+            />
+          </>
+        )}
+
+        <PlayerHand
+          coreRoomInfo={coreRoomInfo}
+          setCardsInPlay={setCardsInPlay}
+          coreUserInfo={coreUserInfo}
+          setSelectedTreasureValue={setSelectedTreasureValue}
+          setErrorMessage={setErrorMessage}
+          gameState={gameState}
+        />
+
+        <GameStateDebugDisplay gameState={gameState} />
       </div>
     </>
   );

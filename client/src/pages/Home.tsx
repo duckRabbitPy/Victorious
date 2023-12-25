@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { useGetLoggedInUsername } from "../hooks/auth";
 
 export const Home = () => {
   const [room, setRoom] = useState<number | null>(null);
   const [openRooms, setOpenRooms] = useState<number[] | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const hasAuthToken = !!localStorage.getItem("dominion_auth_token");
+
+  const { loggedInUsername } = useGetLoggedInUsername();
 
   const openRoom = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -15,7 +17,7 @@ export const Home = () => {
       room: Number(room),
     };
     // fetch from backend running on port 3000
-    fetch(`http://localhost:3000/game-sessions`, {
+    fetch(`http://localhost:3000/api/game-sessions`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -39,7 +41,7 @@ export const Home = () => {
 
   const getOpenRooms = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    fetch(`http://localhost:3000/game-sessions`, {
+    fetch(`http://localhost:3000/api/game-sessions`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -75,8 +77,9 @@ export const Home = () => {
         </Link>
       </div>
       <h1>Welcome to Dominion!</h1>
-      {hasAuthToken ? (
+      {loggedInUsername ? (
         <div>
+          <p style={{ color: "green" }}>Logged in as: {loggedInUsername}</p>
           <div>
             {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
           </div>

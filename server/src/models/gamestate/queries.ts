@@ -6,7 +6,6 @@ export const getLatestGameSnapshotQuery = (room: number) => {
         "SELECT * FROM game_snapshots WHERE room = $1 AND game_over = false ORDER BY mutation_index DESC LIMIT 1;",
         [room]
       );
-
       return result.rows[0];
     } catch (error) {
       logAndThrowError(error);

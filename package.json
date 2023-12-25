@@ -28,14 +28,14 @@
   "description": "dominion game server",
   "main": "app.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/server.js",
+    "build": "yarn build:client && yarn build:server",
+    "build:server": "cd ./server && npx tsc",
+    "build:client": "cd ./client && yarn && npx vite build",
+    "start": "node server/dist/server/src/server.js",
+    "regen": "rm -rf ./client/node_modules && cd ./client && yarn && npx vite",
     "dev:client": "npx vite",
     "dev:server": "NODE_ENV=development nodemon --exec ts-node ./server/src/server.ts",
-    "dev": "NODE_ENV=development nodemon --exec ts-node ./server/src/server.ts",
-    "lint": "eslint --ext .ts src",
-    "test": "vitest run",
-    "db:test": "start-server-and-test dev http://localhost:3000 test"
+    "test": "vitest run"
   },
   "author": "",
   "license": "ISC",

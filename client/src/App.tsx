@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Home from "./pages/Home";
-import Room from "./pages/Room";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AuthWrappedRoom from "./components/AuthWrappedRoom.tsx";
 
 function App() {
   return (
@@ -12,7 +12,7 @@ function App() {
         <Route path="/" Component={Home} />
         <Route path="/login" Component={Login} />
         <Route path="/register" Component={Register} />
-        <Route path="/room/*" Component={Room} />
+        <Route path="/room/*" Component={AuthWrappedRoom} />
       </Routes>
     </Router>
   );

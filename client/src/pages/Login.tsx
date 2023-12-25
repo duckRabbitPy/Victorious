@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useGetLoggedInUsername } from "../hooks/auth";
 
 export const Login = () => {
-  const hasAuthToken = !!localStorage.getItem("dominion_auth_token");
-  const [loginStatus, setLoginStatus] = useState(hasAuthToken);
+  const { loggedInUsername, refetchLoginStatus } = useGetLoggedInUsername();
+
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const login = (e: React.FormEvent<HTMLFormElement>) => {
@@ -16,7 +17,7 @@ export const Login = () => {
       password,
     };
     // fetch from backend running on port 3000
-    fetch(`http://localhost:3000/login`, {
+    fetch(`http://localhost:3000/api/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -26,10 +27,12 @@ export const Login = () => {
       .then((res) => res.json())
       .then((data) => {
         if (data.authToken) {
-          setLoginStatus(true);
           setErrorMessage(null);
           localStorage.removeItem("dominion_auth_token");
+          localStorage.removeItem("dominion_user_name");
           localStorage.setItem("dominion_auth_token", data.authToken);
+          localStorage.setItem("dominion_user_name", username);
+          refetchLoginStatus();
         } else {
           setErrorMessage(
             "A login error occurred, are you sure you entered the correct username and password?"
@@ -54,7 +57,8 @@ export const Login = () => {
         <button
           onClick={() => {
             localStorage.removeItem("dominion_auth_token");
-            setLoginStatus(false);
+            localStorage.removeItem("dominion_user_name");
+            refetchLoginStatus();
             setErrorMessage(null);
           }}
         >
@@ -84,8 +88,10 @@ export const Login = () => {
           <input type="password" id="password" placeholder="Enter password" />
           <button type="submit">Login</button>
         </form>
-        {loginStatus ? (
-          <div style={{ color: "green" }}>You're logged in!</div>
+        {loggedInUsername ? (
+          <div style={{ color: "green" }}>
+            {loggedInUsername}: You're logged in!
+          </div>
         ) : (
           <div style={{ color: "red" }}>Logged out</div>
         )}

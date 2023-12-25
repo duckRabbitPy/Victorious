@@ -3,9 +3,11 @@ import { pool } from "../../db/connection";
 import { PostgresError } from "../../controllers/customErrors";
 import {
   ActorState,
+  CardCount,
   GameState,
   GlobalState,
-} from "../../../../shared/commonTypes";
+  Phases,
+} from "../../../../shared/common";
 import { logAndThrowError } from "../../utils";
 import { getLatestGameSnapshotQuery } from "./queries";
 
@@ -24,16 +26,38 @@ const setUpActorsForGame = ({
       id: newUserId,
       name: newUserName,
       hand: {
-        copper: 7,
+        copper: 0,
         silver: 0,
         gold: 0,
-        estate: 3,
+        estate: 0,
         duchy: 0,
         province: 0,
-      },
+        curse: 0,
+        village: 0,
+        smithy: 0,
+        market: 0,
+        councilRoom: 0,
+        mine: 0,
+        festival: 0,
+        laboratory: 0,
+      } as CardCount,
       actions: 0,
       buys: 0,
       victoryPoints: 0,
+      deck: [
+        "copper",
+        "copper",
+        "copper",
+        "copper",
+        "copper",
+        "copper",
+        "copper",
+        "estate",
+        "estate",
+        "estate",
+      ],
+      discardPile: [],
+      phase: Phases.Action,
     },
   ];
 
@@ -42,10 +66,24 @@ const setUpActorsForGame = ({
 
 const generatateGlobalState = () => {
   const startingState: GlobalState = {
-    board: [],
-    deck: [],
+    supply: {
+      copper: 60,
+      silver: 40,
+      gold: 30,
+      estate: 24,
+      duchy: 12,
+      province: 12,
+      village: 10,
+      smithy: 10,
+      market: 10,
+      councilRoom: 10,
+      mine: 10,
+      curse: 30,
+      festival: 10,
+      laboratory: 10,
+    },
     history: [],
-    liveActors: [],
+    playerUserIds: [],
   };
 
   return JSON.stringify(startingState);
@@ -107,7 +145,7 @@ export const addLivePlayerQuery = ({
       } = currentGameState;
       const newMutationIndex = mutation_index + 1;
 
-      if (global_state.liveActors?.includes(userId)) {
+      if (global_state.playerUserIds?.includes(userId)) {
         // no change in state if player already in game
         const currState = await Effect.runPromise(
           getLatestGameSnapshotQuery(room)
@@ -117,7 +155,7 @@ export const addLivePlayerQuery = ({
 
       const newGlobalState = JSON.stringify({
         ...global_state,
-        liveActors: [...global_state.liveActors, userId],
+        playerUserIds: [...global_state.playerUserIds, userId],
       });
 
       const newActorState = setUpActorsForGame({
@@ -161,7 +199,7 @@ export const addLivePlayerQuery = ({
 };
 
 // @mutation
-export const incrementTurnQuery = (currentGameState: GameState) => {
+export const updateGameState = (newGameState: GameState) => {
   const {
     room,
     turn,
@@ -170,11 +208,11 @@ export const incrementTurnQuery = (currentGameState: GameState) => {
     game_over,
     mutation_index,
     session_id,
-  } = currentGameState;
-  const newTurn = turn + 1;
+  } = newGameState;
+
   const newMutationIndex = mutation_index + 1;
 
-  const increment = async () => {
+  const update = async () => {
     try {
       const result = await pool.query(
         `
@@ -190,7 +228,7 @@ export const incrementTurnQuery = (currentGameState: GameState) => {
         `,
         [
           room,
-          newTurn,
+          turn,
           JSON.stringify(actor_state),
           JSON.stringify(global_state),
           newMutationIndex,
@@ -205,7 +243,7 @@ export const incrementTurnQuery = (currentGameState: GameState) => {
   };
 
   return Effect.tryPromise({
-    try: () => increment(),
+    try: () => update(),
     catch: () => new PostgresError({ message: "postgres query error" }),
   }).pipe(Effect.retryN(1));
 };

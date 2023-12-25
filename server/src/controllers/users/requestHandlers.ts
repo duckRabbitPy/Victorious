@@ -10,11 +10,12 @@ import {
   verifyUserQuery,
 } from "../../models/users";
 
-import { safeParseNonEmptyString } from "../../utils";
+import { safeParseJWT, safeParseNonEmptyString, verifyJwt } from "../../utils";
 import { RequestHandler } from "express";
 import nodemailer from "nodemailer";
 import {
   sendConfirmUserResponse,
+  sendAuthenticatedUserResponse,
   sendLoginResponse,
   sendRegisterResponse,
 } from "../responseHandlers";
@@ -180,7 +181,7 @@ export const sendConfirmationEmail = ({
           from: process.env.SENDER_EMAIL,
           to: email,
           subject: "Confirm your email",
-          text: `Click the link to confirm your email: http://localhost:3000/register/confirm/${confirmation_token}`,
+          text: `Click the link to confirm your email: http://localhost:3000/api/register/confirm/${confirmation_token}`,
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -198,3 +199,26 @@ export const sendConfirmationEmail = ({
     },
     catch: () => new Error("Error sending confirmation email"),
   });
+
+export const auth: RequestHandler = (req, res) => {
+  // split on Bearer
+  const authToken = safeParseNonEmptyString(
+    req.headers.authorization?.split(" ")[1]
+  );
+
+  const userNameOrError = pipe(
+    authToken,
+    Effect.flatMap((authToken) =>
+      verifyJwt(authToken, process.env.JWT_SECRET_KEY)
+    ),
+    Effect.flatMap((decoded) => safeParseJWT(decoded)),
+    Effect.flatMap((decoded) => Effect.succeed(decoded.username))
+  );
+
+  return sendAuthenticatedUserResponse({
+    dataOrError: userNameOrError,
+    res,
+    successStatus: 200,
+    label: "username",
+  });
+};

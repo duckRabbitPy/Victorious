@@ -5,7 +5,7 @@ import { ParseError } from "@effect/schema/ParseResult";
 import { AuthenticationError, PostgresError } from "./customErrors";
 import { Response } from "express";
 import { pipe } from "effect";
-import { GameState } from "../../../shared/commonTypes";
+import { GameState } from "../../../shared/common";
 
 type DataOrError<T> = Effect.Effect<
   never,
@@ -70,6 +70,10 @@ export const sendOpenRoomsResponse = createResponseHandler<readonly number[]>(
   (openRooms) => ({
     openRooms,
   })
+);
+
+export const sendAuthenticatedUserResponse = createResponseHandler<string>(
+  (username) => username
 );
 
 const respondWithError = (

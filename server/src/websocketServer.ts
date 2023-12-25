@@ -2,24 +2,38 @@ import * as Effect from "@effect/io/Effect";
 import WebSocket from "ws";
 import {
   addLivePlayerQuery,
-  incrementTurnQuery,
+  updateGameState,
 } from "./models/gamestate/mutations";
 import * as Schema from "@effect/schema/Schema";
 import { pipe } from "effect";
 import { JSONParseError } from "./controllers/customErrors";
 import {
-  ClientPayloadStruct,
   ClientPayload,
+  ClientPayloadStruct,
   GameState,
-} from "../../shared/commonTypes";
-import { safeParseGameState, safeParseJWT, verifyJwt } from "./utils";
+  safeParseCardName,
+} from "../../shared/common";
+import {
+  safeParseGameState,
+  safeParseJWT,
+  tapPipeLine,
+  verifyJwt,
+} from "./utils";
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
+import { cleanUp, dealToAllActors } from "./controllers/transformers/hand";
+import {
+  buyCard,
+  playAction,
+  resetBuysAndActions,
+} from "./controllers/transformers/buysAndActions";
+import { incrementTurn } from "./controllers/transformers/turn";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
 type RoomConnections = {
   socket: WebSocket;
   room: number;
+  userId: string;
 }[];
 
 export function createWebsocketServer(port: number): void {
@@ -44,28 +58,40 @@ export function createWebsocketServer(port: number): void {
     );
 
     const currentGameState = getLatestLiveGameSnapshot({ room });
+    const cardName = pipe(safeParseCardName(msg.cardName));
+    const toDiscardFromHand = msg.toDiscardFromHand;
 
-    const broacastNewGameState = (newGameState: GameState) => {
-      if (
-        roomConnections.map((connection) => connection.room).includes(room) ===
-        false
-      ) {
-        roomConnections.push({ socket: ws, room });
-      }
-
-      ws.send(JSON.stringify(newGameState));
-      roomConnections?.forEach((connection) => {
-        // only broadcast to sessions with same room
-        // todo: narrow to session and cleanup dead connections
-        if (
-          connection.socket !== ws &&
-          connection.socket.readyState === ws.OPEN &&
-          connection.room === room &&
-          connection.socket !== ws
-        ) {
-          connection.socket.send(JSON.stringify(newGameState));
-        }
+    if (
+      !roomConnections.some((connection) => {
+        // todo use userid instead of auth token
+        connection.room === room && connection.userId === authToken;
+      })
+    ) {
+      roomConnections.push({
+        socket: ws,
+        room,
+        userId: authToken,
       });
+    }
+
+    const broadcastToRoom = (gameState: GameState) => {
+      roomConnections.forEach((connection) => {
+        if (connection.room !== room) return;
+
+        connection.socket.send(JSON.stringify(gameState));
+
+        connection.socket.onerror = (error) => {
+          console.error(`WebSocket error in room ${connection.room}:`, error);
+        };
+
+        connection.socket.onclose = (event) => {
+          console.log(
+            `WebSocket connection closed in room ${connection.room}:`,
+            event.reason
+          );
+        };
+      });
+
       return Effect.unit;
     };
 
@@ -75,7 +101,7 @@ export function createWebsocketServer(port: number): void {
         pipe(
           userDetailsOrError,
           Effect.flatMap(() => getLatestLiveGameSnapshot({ room })),
-          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
+          Effect.flatMap(broadcastToRoom),
           Effect.runPromise
         );
         break;
@@ -91,7 +117,23 @@ export function createWebsocketServer(port: number): void {
               currentGameState,
             })
           ),
-          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
+          Effect.flatMap(broadcastToRoom),
+          Effect.runPromise
+        );
+        break;
+      }
+
+      case "startGame": {
+        pipe(
+          Effect.all({ userInfo: userDetailsOrError, currentGameState }),
+          Effect.flatMap(({ currentGameState }) =>
+            dealToAllActors(currentGameState)
+          ),
+          Effect.flatMap(resetBuysAndActions),
+          Effect.flatMap(incrementTurn),
+          Effect.flatMap(safeParseGameState),
+          Effect.flatMap(updateGameState),
+          Effect.flatMap(broadcastToRoom),
           Effect.runPromise
         );
         break;
@@ -99,12 +141,59 @@ export function createWebsocketServer(port: number): void {
 
       case "incrementTurn": {
         pipe(
-          Effect.all({ userId: userDetailsOrError, currentGameState }),
-          Effect.flatMap(({ currentGameState }) =>
-            incrementTurnQuery(currentGameState)
+          Effect.all({ userInfo: userDetailsOrError, currentGameState }),
+          Effect.flatMap(({ currentGameState }) => cleanUp(currentGameState)),
+          Effect.flatMap(incrementTurn),
+          Effect.flatMap(resetBuysAndActions),
+          Effect.flatMap(safeParseGameState),
+          Effect.flatMap(updateGameState),
+          Effect.flatMap(broadcastToRoom),
+          Effect.runPromise
+        );
+        break;
+      }
+
+      case "buyCard": {
+        pipe(
+          Effect.all({
+            userInfo: userDetailsOrError,
+            currentGameState,
+            cardName,
+          }),
+          Effect.flatMap(({ userInfo, currentGameState, cardName }) =>
+            buyCard({
+              gameState: currentGameState,
+              userId: userInfo.userId,
+              cardName,
+              toDiscardFromHand,
+            })
           ),
-          Effect.flatMap((gameState) => safeParseGameState(gameState)),
-          Effect.flatMap((newGameState) => broacastNewGameState(newGameState)),
+          Effect.flatMap(safeParseGameState),
+          Effect.flatMap(updateGameState),
+          Effect.flatMap(broadcastToRoom),
+          Effect.runPromise
+        );
+        break;
+      }
+
+      case "playAction": {
+        pipe(
+          Effect.all({
+            userInfo: userDetailsOrError,
+            currentGameState,
+            cardName,
+          }),
+          Effect.flatMap(({ userInfo, currentGameState, cardName }) =>
+            playAction({
+              gameState: currentGameState,
+              userId: userInfo.userId,
+              cardName,
+              toDiscardFromHand,
+            })
+          ),
+          Effect.flatMap(safeParseGameState),
+          Effect.flatMap(updateGameState),
+          Effect.flatMap(broadcastToRoom),
           Effect.runPromise
         );
         break;

@@ -1,5 +1,9 @@
 import * as Schema from "@effect/schema/Schema";
-import { ClientPayloadStruct, GameStateStruct } from "../../shared/commonTypes";
+import {
+  GameStateStruct,
+  ClientPayloadStruct,
+  GameState,
+} from "../../shared/common";
 import * as Effect from "@effect/io/Effect";
 import { pipe } from "effect";
 import { AuthenticationError } from "./controllers/customErrors";
@@ -58,11 +62,6 @@ export const parseClientMessage = Schema.parse(ClientPayloadStruct);
 export const verifyJwt = (token: string, secret: string | undefined) => {
   return pipe(
     safeParseNonEmptyString(secret),
-    Effect.orElseFail(() =>
-      Effect.succeed(
-        new AuthenticationError({ message: "server secret key not found" })
-      )
-    ),
     Effect.flatMap((secret) => {
       return Effect.tryPromise({
         try: () =>
