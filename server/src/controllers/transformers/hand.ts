@@ -13,8 +13,18 @@ import { isUsersTurn } from "../../../../shared/utils";
 
 export const dealCards = (
   deck: readonly CardName[],
-  number: number
+  number: number,
+  discardPile: readonly CardName[]
 ): { newCards: readonly CardName[]; remainingDeck: readonly CardName[] } => {
+  if (deck.length < number) {
+    const lastCards = deck.slice(0, deck.length);
+    const newDeck = reshuffleDeck(deck.slice(deck.length), discardPile);
+
+    return {
+      newCards: lastCards.concat(newDeck.slice(0, number - lastCards.length)),
+      remainingDeck: newDeck.slice(number - lastCards.length),
+    };
+  }
   return {
     newCards: deck.slice(0, number),
     remainingDeck: deck.slice(number),
@@ -38,7 +48,11 @@ export const dealToAllActors = (gameState: GameState) => {
   return Effect.succeed({
     ...gameState,
     actor_state: gameState.actor_state.map((actor, index) => {
-      const { newCards, remainingDeck } = dealCards(shuffledDecks[index], 5);
+      const { newCards, remainingDeck } = dealCards(
+        shuffledDecks[index],
+        5,
+        actor.discardPile
+      );
       const newHand = cardNamesToCount(newCards);
       return {
         ...actor,
@@ -51,7 +65,7 @@ export const dealToAllActors = (gameState: GameState) => {
   });
 };
 
-const reshuffleDeck = (
+export const reshuffleDeck = (
   deck: readonly CardName[],
   discardPile: readonly CardName[]
 ) => {
@@ -104,24 +118,18 @@ export const cleanUp = (gameState: GameState) => {
     ...gameState,
     actor_state: gameState.actor_state.map((actor, index) => {
       if (isUsersTurn(gameState, actor.name)) {
-        if (actor.deck.length >= 5) {
-          const { newCards, remainingDeck } = dealCards(actor.deck, 5);
-          return {
-            ...actor,
-            hand: cardNamesToCount(newCards),
-            deck: remainingDeck,
-            discardPile: discardHand(actor.hand, actor.discardPile),
-          };
-        } else {
-          const newDeck = reshuffleDeck(actor.deck, actor.discardPile);
-          const { newCards, remainingDeck } = dealCards(newDeck, 5);
-          return {
-            ...actor,
-            hand: cardNamesToCount(newCards),
-            deck: remainingDeck,
-            discardPile: [],
-          };
-        }
+        const newDeck = reshuffleDeck(actor.deck, actor.discardPile);
+        const { newCards, remainingDeck } = dealCards(
+          newDeck,
+          5,
+          actor.discardPile
+        );
+        return {
+          ...actor,
+          hand: cardNamesToCount(newCards),
+          deck: remainingDeck,
+          discardPile: [],
+        };
       } else return gameState.actor_state[index];
     }),
   });

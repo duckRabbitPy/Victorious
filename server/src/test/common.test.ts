@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { subtractCardCount } from "../../../shared/common";
+import { dealCards } from "../controllers/transformers/hand";
 
 describe("common util testing", () => {
   it("subtract card count", () => {
@@ -106,5 +107,16 @@ describe("common util testing", () => {
       councilRoom: 0,
       curse: 0,
     });
+  });
+
+  it("deal more cards than in deck", () => {
+    const deck = ["smithy", "silver"] as const;
+
+    const discardPile = ["copper", "copper", "copper"] as const;
+
+    const { newCards, remainingDeck } = dealCards(deck, 3, discardPile);
+
+    expect(newCards).toEqual(["smithy", "silver", "copper"]);
+    expect(remainingDeck).toEqual(["copper", "copper"]);
   });
 });
