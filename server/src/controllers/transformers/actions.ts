@@ -36,7 +36,7 @@ export const applyAction = (
     case "smithy": {
       const newActorState = gameState.actor_state.map((actor) => {
         if (actor.id === userId) {
-          const { newCards, remainingDeck } = dealCards(
+          const { newCards, remainingDeck, discardPile } = dealCards(
             actor.deck,
             3,
             actor.discardPile
@@ -46,6 +46,7 @@ export const applyAction = (
             ...actor,
             hand: sumCardCounts(actor.hand, cardNamesToCount(newCards)),
             deck: remainingDeck,
+            discardPile,
           };
         }
         return actor;
@@ -59,7 +60,7 @@ export const applyAction = (
 
     case "market": {
       const newActorState = gameState.actor_state.map((actor) => {
-        const { newCards, remainingDeck } = dealCards(
+        const { newCards, remainingDeck, discardPile } = dealCards(
           actor.deck,
           1,
           actor.discardPile
@@ -71,6 +72,7 @@ export const applyAction = (
             deck: remainingDeck,
             actions: actor.actions + 1,
             buys: actor.buys + 1,
+            discardPile,
             bonusTreasureValue: actor.bonusTreasureValue + 1,
           };
         }
@@ -85,7 +87,7 @@ export const applyAction = (
 
     case "laboratory": {
       const newActorState = gameState.actor_state.map((actor) => {
-        const { newCards, remainingDeck } = dealCards(
+        const { newCards, remainingDeck, discardPile } = dealCards(
           actor.deck,
           2,
           actor.discardPile
@@ -96,6 +98,7 @@ export const applyAction = (
             hand: sumCardCounts(actor.hand, cardNamesToCount(newCards)),
             deck: remainingDeck,
             actions: actor.actions + 1,
+            discardPile,
           };
         }
         return actor;
@@ -132,7 +135,7 @@ export const applyAction = (
 
     case "councilRoom": {
       const newActorState = gameState.actor_state.map((actor) => {
-        const { newCards, remainingDeck } = dealCards(
+        const { newCards, remainingDeck, discardPile } = dealCards(
           actor.deck,
           4,
           actor.discardPile
@@ -143,6 +146,7 @@ export const applyAction = (
             hand: sumCardCounts(actor.hand, cardNamesToCount(newCards)),
             deck: remainingDeck,
             buys: actor.buys + 1,
+            discardPile,
           };
         }
         return actor;

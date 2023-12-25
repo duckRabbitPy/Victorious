@@ -114,9 +114,14 @@ describe("common util testing", () => {
 
     const discardPile = ["copper", "copper", "copper"] as const;
 
-    const { newCards, remainingDeck } = dealCards(deck, 3, discardPile);
+    const {
+      newCards,
+      remainingDeck,
+      discardPile: newDiscardPile,
+    } = dealCards(deck, 3, discardPile);
 
     expect(newCards).toEqual(["smithy", "silver", "copper"]);
     expect(remainingDeck).toEqual(["copper", "copper"]);
+    expect(newDiscardPile).toEqual([]);
   });
 });

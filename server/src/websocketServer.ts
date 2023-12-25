@@ -147,7 +147,6 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(({ currentGameState }) => cleanUp(currentGameState)),
           Effect.flatMap(incrementTurn),
           Effect.flatMap(resetBuysAndActions),
-          Effect.flatMap(resetPlayedTreasures),
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
           Effect.flatMap(broadcastToRoom),

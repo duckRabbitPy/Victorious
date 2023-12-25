@@ -6,6 +6,7 @@ import {
   cardNamesToCount,
   hasActionCard,
   subtractCardCount,
+  zeroCardCount,
 } from "../../../../shared/common";
 import { indefiniteArticle } from "../../../../shared/utils";
 
@@ -17,6 +18,7 @@ export const resetBuysAndActions = (gameState: GameState) => {
         ...actor,
         buys: 1,
         actions: 1,
+        cardsInPlay: zeroCardCount,
         phase: hasActionCard(actor.hand) ? Phases.Action : Phases.Buy,
       };
     }),
@@ -45,6 +47,8 @@ export const buyCard = ({
           actor.hand,
           cardNamesToCount(toDiscardFromHand)
         ),
+        // todo: prevent 'overpaying' if more cards in play than needed
+        cardsInPlay: zeroCardCount,
         phase: remainingBuys < 1 ? Phases.Buy : Phases.Action,
         discardPile: [...actor.discardPile, ...toDiscardFromHand],
       };
