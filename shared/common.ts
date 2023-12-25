@@ -212,7 +212,7 @@ export const hasActionCard = (hand: CardCount): boolean => {
   return false;
 };
 
-export const getHandTreasureValue = (hand: CardCount): number => {
+export const getTreasureValue = (hand: CardCount): number => {
   return (
     hand.copper * getCardValueByName("copper") +
     hand.silver * getCardValueByName("silver") +
@@ -278,6 +278,8 @@ const ActorStateStruct = Schema.struct({
   id: Schema.UUID,
   name: Schema.string,
   hand: CardCountStruct,
+  cardsInPlay: CardCountStruct,
+  bonusTreasureValue: Schema.number,
   actions: Schema.number,
   buys: Schema.number,
   victoryPoints: Schema.number,
@@ -315,6 +317,8 @@ export enum SupportedEffects {
   getCurrentGameState = "getCurrentGameState",
   addLivePlayer = "addLivePlayer",
   buyCard = "buyCard",
+  playTreasure = "playTreasure",
+  resetPlayedTreasures = "resetPlayedTreasures",
   playAction = "playAction",
   incrementTurn = "incrementTurn",
 }

@@ -24,6 +24,7 @@ export const initialCardsInPlay: CardCount = {
   smithy: 0,
   market: 0,
   mine: 0,
+  curse: 0,
   laboratory: 0,
   festival: 0,
   councilRoom: 0,

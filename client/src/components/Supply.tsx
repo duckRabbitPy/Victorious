@@ -1,9 +1,8 @@
 import {
   getAllCardNames,
   countToCardNamesArray,
-  zeroCardCount,
-  CardName,
   GameState,
+  getTreasureValue,
 } from "../../../shared/common";
 import { isUsersTurn } from "../../../shared/utils";
 import { CoreRoomInfo, CoreUserInfo } from "../client-types";
@@ -14,21 +13,21 @@ type Props = {
   gameState: GameState;
   coreRoomInfo: CoreRoomInfo;
   coreUserInfo: CoreUserInfo;
-  setCardsInPlay: React.Dispatch<
-    React.SetStateAction<Record<CardName, number>>
-  >;
-  setSelectedTreasureValue: React.Dispatch<React.SetStateAction<number>>;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 };
 
 const Supply = ({
   gameState,
   coreRoomInfo: { socket, authToken, roomNumber },
-  coreUserInfo: { loggedInUsername, cardsInPlay, selectedTreasureValue },
-  setCardsInPlay,
-  setSelectedTreasureValue,
+  coreUserInfo: { loggedInUsername, currentUserState },
   setErrorMessage,
 }: Props) => {
+  if (!currentUserState) return null;
+
+  const totalTreasureValue =
+    getTreasureValue(currentUserState.cardsInPlay) +
+    currentUserState.bonusTreasureValue;
+
   return (
     <div
       style={{
@@ -46,7 +45,7 @@ const Supply = ({
               gameState,
               loggedInUsername,
               cardName,
-              selectedTreasureValue,
+              totalTreasureValue,
             })
           }
           style={{
@@ -54,7 +53,7 @@ const Supply = ({
               gameState,
               loggedInUsername,
               cardName,
-              selectedTreasureValue,
+              totalTreasureValue,
             })
               ? "pointer"
               : "not-allowed",
@@ -65,7 +64,7 @@ const Supply = ({
                     gameState,
                     loggedInUsername,
                     cardName,
-                    selectedTreasureValue,
+                    totalTreasureValue,
                   })
                 ? "green"
                 : "red"
@@ -78,10 +77,8 @@ const Supply = ({
               roomNumber,
               cardName,
               setErrorMessage,
-              toDiscardFromHand: countToCardNamesArray(cardsInPlay),
+              toDiscardFromHand: countToCardNamesArray(currentUserState.hand),
             });
-            setCardsInPlay(zeroCardCount);
-            setSelectedTreasureValue(0);
           }}
         >
           {cardName}

@@ -20,13 +20,15 @@ import {
   verifyJwt,
 } from "./utils";
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
-import { cleanUp, dealToAllActors } from "./controllers/transformers/hand";
 import {
-  buyCard,
-  playAction,
-  resetBuysAndActions,
-} from "./controllers/transformers/buysAndActions";
+  cleanUp,
+  dealToAllActors,
+  playTreasure,
+  resetPlayedTreasures,
+} from "./controllers/transformers/hand";
+import { buyCard, resetBuysAndActions } from "./controllers/transformers/buys";
 import { incrementTurn } from "./controllers/transformers/turn";
+import { playAction } from "./controllers/transformers/actions";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -145,6 +147,7 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(({ currentGameState }) => cleanUp(currentGameState)),
           Effect.flatMap(incrementTurn),
           Effect.flatMap(resetBuysAndActions),
+          Effect.flatMap(resetPlayedTreasures),
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
           Effect.flatMap(broadcastToRoom),
@@ -167,6 +170,42 @@ export function createWebsocketServer(port: number): void {
               cardName,
               toDiscardFromHand,
             })
+          ),
+          Effect.flatMap(safeParseGameState),
+          Effect.flatMap(updateGameState),
+          Effect.flatMap(broadcastToRoom),
+          Effect.runPromise
+        );
+        break;
+      }
+
+      case "playTreasure": {
+        pipe(
+          Effect.all({
+            userInfo: userDetailsOrError,
+            currentGameState,
+            cardName,
+          }),
+          Effect.flatMap(({ userInfo, currentGameState, cardName }) =>
+            playTreasure({
+              gameState: currentGameState,
+              userId: userInfo.userId,
+              cardName,
+            })
+          ),
+          Effect.flatMap(safeParseGameState),
+          Effect.flatMap(updateGameState),
+          Effect.flatMap(broadcastToRoom),
+          Effect.runPromise
+        );
+        break;
+      }
+
+      case "resetPlayedTreasures": {
+        pipe(
+          Effect.all({ userInfo: userDetailsOrError, currentGameState }),
+          Effect.flatMap(({ currentGameState }) =>
+            resetPlayedTreasures(currentGameState)
           ),
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),

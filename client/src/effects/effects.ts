@@ -140,6 +140,69 @@ export const buyCard = ({
   );
 };
 
+export const playTreasure = ({
+  socket,
+  authToken,
+  roomNumber,
+  cardName,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  cardName: CardName;
+  setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
+}) => {
+  if (!socket) {
+    setErrorMessage("Socket is null");
+    return;
+  }
+  if (!authToken) {
+    setErrorMessage("Auth token is null");
+    return;
+  }
+
+  socket.send(
+    prepareMessage({
+      effect: SupportedEffects.playTreasure,
+      authToken,
+      room: roomNumber,
+      cardName,
+      toDiscardFromHand: [],
+    })
+  );
+};
+
+export const resetPlayedTreasures = ({
+  socket,
+  authToken,
+  roomNumber,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
+}) => {
+  if (!socket) {
+    setErrorMessage("Socket is null");
+    return;
+  }
+  if (!authToken) {
+    setErrorMessage("Auth token is null");
+    return;
+  }
+
+  socket.send(
+    prepareMessage({
+      effect: SupportedEffects.resetPlayedTreasures,
+      authToken,
+      room: roomNumber,
+      toDiscardFromHand: [],
+    })
+  );
+};
+
 export const playAction = ({
   socket,
   authToken,

@@ -1,9 +1,4 @@
-import {
-  CardName,
-  GameState,
-  cardNameToCard,
-  getHandTreasureValue,
-} from "../../../shared/common";
+import { CardName, GameState, cardNameToCard } from "../../../shared/common";
 import { isUsersTurn } from "../../../shared/utils";
 
 const getActorFromGameState = (gameState: GameState, userName: string) => {
@@ -18,22 +13,20 @@ export const canBuyCard = ({
   gameState,
   loggedInUsername,
   cardName,
-  selectedTreasureValue,
+  totalTreasureValue,
 }: {
   gameState: GameState;
   loggedInUsername: string;
   cardName: CardName;
-  selectedTreasureValue: number;
+  totalTreasureValue: number;
 }) => {
   const actor = getActorFromGameState(gameState, loggedInUsername);
   const cardCost = cardNameToCard(cardName).cost;
-  const handValue = getHandTreasureValue(actor.hand);
   const buysRemaining = actor.buys;
 
   return (
     buysRemaining > 0 &&
-    handValue >= cardCost &&
-    selectedTreasureValue >= cardCost &&
+    totalTreasureValue >= cardCost &&
     isUsersTurn(gameState, loggedInUsername)
   );
 };

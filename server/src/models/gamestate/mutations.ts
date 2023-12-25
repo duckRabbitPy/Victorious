@@ -7,6 +7,7 @@ import {
   GameState,
   GlobalState,
   Phases,
+  zeroCardCount,
 } from "../../../../shared/common";
 import { logAndThrowError } from "../../utils";
 import { getLatestGameSnapshotQuery } from "./queries";
@@ -43,6 +44,8 @@ const setUpActorsForGame = ({
       } as CardCount,
       actions: 0,
       buys: 0,
+      bonusTreasureValue: 0,
+      cardsInPlay: zeroCardCount,
       victoryPoints: 0,
       deck: [
         "copper",

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import { CardCount, GameState, zeroCardCount } from "../../../shared/common";
+import { GameState } from "../../../shared/common";
 import { getInititalGameState } from "../effects/effects";
 
 import { isUsersTurn } from "../../../shared/utils";
@@ -56,17 +56,12 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
   const roomNumber = Number(roomParam);
   const authToken = localStorage.getItem("dominion_auth_token");
 
-  const [selectedTreasureValue, setSelectedTreasureValue] = useState(0);
-  const [cardsInPlay, setCardsInPlay] = useState<CardCount>(zeroCardCount);
-
   const coreRoomInfo = { socket, authToken, roomNumber };
   const coreUserInfo = {
     loggedInUsername,
     currentUserState: gameState?.actor_state.find(
       (a) => a.name === localStorage.getItem("dominion_user_name")
     ),
-    cardsInPlay,
-    selectedTreasureValue,
   };
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -102,7 +97,6 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
               coreUserInfo={coreUserInfo}
               gameState={gameState}
               setErrorMessage={setErrorMessage}
-              setCardsInPlay={setCardsInPlay}
             />
           )}
         </div>
@@ -114,8 +108,6 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
               coreRoomInfo={coreRoomInfo}
               coreUserInfo={coreUserInfo}
               gameState={gameState}
-              setCardsInPlay={setCardsInPlay}
-              setSelectedTreasureValue={setSelectedTreasureValue}
               setErrorMessage={setErrorMessage}
             />
           </>
@@ -123,9 +115,7 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
 
         <PlayerHand
           coreRoomInfo={coreRoomInfo}
-          setCardsInPlay={setCardsInPlay}
           coreUserInfo={coreUserInfo}
-          setSelectedTreasureValue={setSelectedTreasureValue}
           setErrorMessage={setErrorMessage}
           gameState={gameState}
         />

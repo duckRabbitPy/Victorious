@@ -6,6 +6,8 @@ import {
   cardNamesToCount,
   discardHand,
   hasActionCard,
+  subtractCardCount,
+  zeroCardCount,
 } from "../../../../shared/common";
 import { isUsersTurn } from "../../../../shared/utils";
 
@@ -54,6 +56,47 @@ const reshuffleDeck = (
   discardPile: readonly CardName[]
 ) => {
   return shuffleDeck(deck.concat(discardPile));
+};
+
+export const playTreasure = ({
+  gameState,
+  userId,
+  cardName,
+}: {
+  gameState: GameState;
+  userId: string;
+  cardName: CardName;
+}) => {
+  const newActorState = gameState.actor_state.map((actor) => {
+    if (actor.id === userId) {
+      return {
+        ...actor,
+        hand: subtractCardCount(actor.hand, cardNamesToCount([cardName])),
+        cardsInPlay: {
+          ...actor.cardsInPlay,
+          [cardName]: actor.cardsInPlay[cardName] + 1,
+        },
+      };
+    }
+    return actor;
+  });
+
+  return Effect.succeed({
+    ...gameState,
+    actor_state: newActorState,
+  });
+};
+
+export const resetPlayedTreasures = (gameState: GameState) => {
+  return Effect.succeed({
+    ...gameState,
+    actor_state: gameState.actor_state.map((actor) => {
+      return {
+        ...actor,
+        cardsInPlay: zeroCardCount,
+      };
+    }),
+  });
 };
 
 export const cleanUp = (gameState: GameState) => {

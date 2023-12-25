@@ -3,47 +3,39 @@ import {
   getCardTypeByName,
   CardName,
   cardNameToCard,
-  getCardValueByName,
-  zeroCardCount,
   GameState,
-  subtractCardCount,
+  getTreasureValue,
 } from "../../../shared/common";
 import { isUsersTurn } from "../../../shared/utils";
-import { playAction } from "../effects/effects";
+import {
+  playAction,
+  playTreasure,
+  resetPlayedTreasures,
+} from "../effects/effects";
 import { CoreRoomInfo, CoreUserInfo } from "../client-types";
-import { updateCardsInPlay } from "../utils";
 
 type Props = {
   gameState: GameState;
   coreRoomInfo: CoreRoomInfo;
   coreUserInfo: CoreUserInfo;
-  setCardsInPlay: React.Dispatch<
-    React.SetStateAction<Record<CardName, number>>
-  >;
-  setSelectedTreasureValue: React.Dispatch<React.SetStateAction<number>>;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 };
 
 const PlayerHand = ({
   gameState,
   coreRoomInfo: { socket, authToken, roomNumber },
-  coreUserInfo: {
-    loggedInUsername,
-    currentUserState,
-    cardsInPlay,
-    selectedTreasureValue,
-  },
-  setCardsInPlay,
-  setSelectedTreasureValue,
+  coreUserInfo: { loggedInUsername, currentUserState },
   setErrorMessage,
 }: Props) => {
   if (gameState.turn < 1 || !socket || !currentUserState) return null;
 
   const currentHand = currentUserState.hand;
+  const cardsInPlay = currentUserState.cardsInPlay;
 
-  const visibleHand = currentHand
-    ? subtractCardCount(currentHand, cardsInPlay)
-    : zeroCardCount;
+  const visibleHandCountKVP = Object.entries(currentHand).filter(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    ([_, count]) => count > 0
+  );
 
   return (
     <div>
@@ -54,7 +46,7 @@ const PlayerHand = ({
           : "Click on a card to play it."}
       </>
 
-      {Object.entries(visibleHand).map(([cardName, count]) => (
+      {visibleHandCountKVP.map(([cardName, count]) => (
         <div key={cardName}>
           {
             <>
@@ -92,11 +84,13 @@ const PlayerHand = ({
                       currentUserState?.phase === Phases.Buy &&
                       getCardTypeByName(cardName as CardName) === "treasure"
                     ) {
-                      setSelectedTreasureValue(
-                        (currValue) =>
-                          currValue + getCardValueByName(cardName as CardName)
-                      );
-                      updateCardsInPlay(cardName as CardName, setCardsInPlay);
+                      playTreasure({
+                        socket,
+                        authToken,
+                        roomNumber,
+                        cardName: cardName as CardName,
+                        setErrorMessage,
+                      });
                     } else if (
                       currentUserState?.phase === Phases.Action &&
                       getCardTypeByName(cardName as CardName) === "action"
@@ -120,12 +114,19 @@ const PlayerHand = ({
       ))}
 
       <div>
-        <h4>Hand value: {selectedTreasureValue}</h4>
-        {selectedTreasureValue > 0 && (
+        <h4>
+          Treasure{" "}
+          {getTreasureValue(cardsInPlay) + currentUserState.bonusTreasureValue}
+        </h4>
+        {getTreasureValue(cardsInPlay) > 0 && (
           <button
             onClick={() => {
-              setSelectedTreasureValue(0);
-              setCardsInPlay(zeroCardCount);
+              resetPlayedTreasures({
+                socket,
+                authToken,
+                roomNumber,
+                setErrorMessage,
+              });
             }}
           >
             reset played treasures

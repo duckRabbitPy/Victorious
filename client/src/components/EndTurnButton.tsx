@@ -1,5 +1,5 @@
 import React from "react";
-import { CardName, GameState, zeroCardCount } from "../../../shared/common";
+import { GameState } from "../../../shared/common";
 import { CoreRoomInfo, CoreUserInfo } from "../client-types";
 import { incrementTurn, startGame } from "../effects/effects";
 
@@ -8,9 +8,6 @@ type Props = {
   gameState: GameState;
   coreRoomInfo: CoreRoomInfo;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
-  setCardsInPlay: React.Dispatch<
-    React.SetStateAction<Record<CardName, number>>
-  >;
 };
 
 const EndTurnButton = ({
@@ -18,7 +15,6 @@ const EndTurnButton = ({
   gameState,
   coreRoomInfo: { socket, authToken, roomNumber },
   setErrorMessage,
-  setCardsInPlay,
 }: Props) => {
   return (
     <button
@@ -39,14 +35,14 @@ const EndTurnButton = ({
             roomNumber,
             setErrorMessage,
           });
+        } else {
+          incrementTurn({
+            socket,
+            authToken,
+            roomNumber,
+            setErrorMessage,
+          });
         }
-        setCardsInPlay(zeroCardCount);
-        incrementTurn({
-          socket,
-          authToken,
-          roomNumber,
-          setErrorMessage,
-        });
       }}
     >
       End turn

@@ -1,4 +1,4 @@
-import { ActorState, CardName } from "../../shared/common";
+import { ActorState } from "../../shared/common";
 
 export type CoreRoomInfo = {
   socket: WebSocket | null;
@@ -9,6 +9,4 @@ export type CoreRoomInfo = {
 export type CoreUserInfo = {
   loggedInUsername: string;
   currentUserState: ActorState | undefined;
-  cardsInPlay: Record<CardName, number>;
-  selectedTreasureValue: number;
 };
