@@ -212,7 +212,7 @@ export const hasActionCard = (hand: CardCount): boolean => {
   return false;
 };
 
-export const getHandTreasureValue = (hand: CardCount): number => {
+export const getTreasureValue = (hand: CardCount): number => {
   return (
     hand.copper * getCardValueByName("copper") +
     hand.silver * getCardValueByName("silver") +
@@ -278,6 +278,8 @@ const ActorStateStruct = Schema.struct({
   id: Schema.UUID,
   name: Schema.string,
   hand: CardCountStruct,
+  cardsInPlay: CardCountStruct,
+  bonusTreasureValue: Schema.number,
   actions: Schema.number,
   buys: Schema.number,
   victoryPoints: Schema.number,
@@ -305,18 +307,28 @@ export const GameStateStruct = Schema.struct({
   game_over: Schema.boolean,
 });
 
+export const ChatMessageStruct = Schema.struct({
+  username: Schema.string,
+  message: Schema.string,
+});
+
 export type ActorState = Schema.To<typeof ActorStateStruct>;
 export type GlobalState = Schema.To<typeof GlobalStateStruct>;
 export type GameState = Schema.To<typeof GameStateStruct>;
 export type ClientPayload = Schema.To<typeof ClientPayloadStruct>;
+export type ChatMessage = Schema.To<typeof ChatMessageStruct>;
 
 export enum SupportedEffects {
   startGame = "startGame",
   getCurrentGameState = "getCurrentGameState",
   addLivePlayer = "addLivePlayer",
   buyCard = "buyCard",
+  playTreasure = "playTreasure",
+  resetPlayedTreasures = "resetPlayedTreasures",
   playAction = "playAction",
   incrementTurn = "incrementTurn",
+  getCurrentChatLog = "getCurrentChatLog",
+  sendChatMessage = "sendChatMessage",
 }
 
 export const ClientPayloadStruct = Schema.struct({
@@ -329,6 +341,7 @@ export const ClientPayloadStruct = Schema.struct({
   ),
   room: Schema.number,
   authToken: Schema.string,
+  chatMessage: Schema.string.pipe(Schema.optional),
 });
 
 export const zeroCardCount: CardCount = {

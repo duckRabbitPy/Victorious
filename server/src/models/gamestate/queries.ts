@@ -2,6 +2,7 @@
 export const getLatestGameSnapshotQuery = (room: number) => {
   const get = async () => {
     try {
+      // todo ensure is refering to correct game e.g. in a bas state with an old game
       const result = await pool.query(
         "SELECT * FROM game_snapshots WHERE room = $1 AND game_over = false ORDER BY mutation_index DESC LIMIT 1;",
         [room]

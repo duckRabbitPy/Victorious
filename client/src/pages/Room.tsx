@@ -1,9 +1,4 @@
-import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
-import { CardCount, GameState, zeroCardCount } from "../../../shared/common";
-import { getInititalGameState } from "../effects/effects";
-
 import { isUsersTurn } from "../../../shared/utils";
 import PlayerHand from "../components/PlayerHand";
 import Supply from "../components/Supply";
@@ -12,52 +7,15 @@ import EndTurnButton from "../components/EndTurnButton";
 import StartGameButton from "../components/StartGameButton";
 import ActivePlayerInfo from "../components/ActivePlayerInfo";
 import GameStateDebugDisplay from "../components/GameStateDebug";
-
-const useGameState = () => {
-  const [gameState, setGameState] = useState<GameState | null>(null);
-  const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [initialGameStateFetched, setInitialGameStateFetched] = useState(false);
-
-  useEffect(() => {
-    const newSocket = new WebSocket("ws://localhost:8080");
-
-    newSocket.addEventListener("message", (event) => {
-      setGameState(JSON.parse(event.data));
-    });
-
-    newSocket.addEventListener("open", (event) => {
-      console.log("WebSocket connection opened:", event);
-
-      if (!initialGameStateFetched) {
-        getInititalGameState({
-          socket: newSocket,
-          authToken: localStorage.getItem("dominion_auth_token"),
-          roomNumber: Number(window.location.pathname.split("/").pop()),
-        });
-        setInitialGameStateFetched(true);
-      }
-    });
-
-    newSocket.addEventListener("close", (event) => {
-      console.log("WebSocket connection closed:", event);
-    });
-
-    setSocket(newSocket);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return { gameState, socket };
-};
+import ChatLog from "../components/ChatLog";
+import { useGameState } from "../hooks/useGamestate";
 
 const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
-  const { gameState, socket } = useGameState();
+  const { gameState, socket, chatLog, errorMessage, setErrorMessage } =
+    useGameState();
   const { "*": roomParam } = useParams();
   const roomNumber = Number(roomParam);
   const authToken = localStorage.getItem("dominion_auth_token");
-
-  const [selectedTreasureValue, setSelectedTreasureValue] = useState(0);
-  const [cardsInPlay, setCardsInPlay] = useState<CardCount>(zeroCardCount);
 
   const coreRoomInfo = { socket, authToken, roomNumber };
   const coreUserInfo = {
@@ -65,13 +23,10 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
     currentUserState: gameState?.actor_state.find(
       (a) => a.name === localStorage.getItem("dominion_user_name")
     ),
-    cardsInPlay,
-    selectedTreasureValue,
   };
 
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  if (!gameState) return <div>Error fetching game state from server...</div>;
+  if (!gameState || !socket)
+    return <div>Error fetching game state from server...</div>;
 
   return (
     <>
@@ -102,7 +57,6 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
               coreUserInfo={coreUserInfo}
               gameState={gameState}
               setErrorMessage={setErrorMessage}
-              setCardsInPlay={setCardsInPlay}
             />
           )}
         </div>
@@ -114,8 +68,6 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
               coreRoomInfo={coreRoomInfo}
               coreUserInfo={coreUserInfo}
               gameState={gameState}
-              setCardsInPlay={setCardsInPlay}
-              setSelectedTreasureValue={setSelectedTreasureValue}
               setErrorMessage={setErrorMessage}
             />
           </>
@@ -123,12 +75,18 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
 
         <PlayerHand
           coreRoomInfo={coreRoomInfo}
-          setCardsInPlay={setCardsInPlay}
           coreUserInfo={coreUserInfo}
-          setSelectedTreasureValue={setSelectedTreasureValue}
           setErrorMessage={setErrorMessage}
           gameState={gameState}
         />
+
+        {
+          <ChatLog
+            chatLog={chatLog}
+            setErrorMessage={setErrorMessage}
+            socket={socket}
+          />
+        }
 
         <GameStateDebugDisplay gameState={gameState} />
       </div>

@@ -11,69 +11,6 @@ import {
 import { indefiniteArticle } from "../../../../shared/utils";
 import { dealCards } from "./hand";
 
-export const resetBuysAndActions = (gameState: GameState) => {
-  return Effect.succeed({
-    ...gameState,
-    actor_state: gameState.actor_state.map((actor) => {
-      return {
-        ...actor,
-        buys: 1,
-        actions: 1,
-        phase: hasActionCard(actor.hand) ? Phases.Action : Phases.Buy,
-      };
-    }),
-  });
-};
-
-export const buyCard = ({
-  gameState,
-  userId,
-  cardName,
-  toDiscardFromHand,
-}: {
-  gameState: GameState;
-  userId: string;
-  cardName: CardName;
-  toDiscardFromHand: readonly CardName[];
-}) => {
-  const newActorState = gameState.actor_state.map((actor) => {
-    const remainingBuys = actor.buys - 1;
-    if (actor.id === userId) {
-      return {
-        ...actor,
-        deck: [...actor.deck, cardName],
-        buys: remainingBuys,
-        hand: subtractCardCount(
-          actor.hand,
-          cardNamesToCount(toDiscardFromHand)
-        ),
-        phase: remainingBuys < 1 ? Phases.Buy : Phases.Action,
-        discardPile: [...actor.discardPile, ...toDiscardFromHand],
-      };
-    }
-    return actor;
-  });
-
-  const latestTransaction = `${
-    gameState.actor_state.filter((a) => a.id === userId)[0].name
-  } purchased ${indefiniteArticle(cardName)} ${cardName}`;
-
-  const newGlobalState = {
-    ...gameState.global_state,
-    supply: {
-      ...gameState.global_state.supply,
-      [cardName]: gameState.global_state.supply[cardName] - 1,
-    },
-    history: [...gameState.global_state.history, latestTransaction],
-  };
-
-  return Effect.succeed({
-    ...gameState,
-    global_state: newGlobalState,
-    actor_state: newActorState,
-  });
-};
-
 export const applyAction = (
   gameState: GameState,
   userId: string,
@@ -98,12 +35,89 @@ export const applyAction = (
     }
     case "smithy": {
       const newActorState = gameState.actor_state.map((actor) => {
-        const { newCards, remainingDeck } = dealCards(actor.deck, 3);
+        if (actor.id === userId) {
+          const { newCards, remainingDeck, discardPile } = dealCards(
+            actor.deck,
+            3,
+            actor.discardPile
+          );
+
+          return {
+            ...actor,
+            hand: sumCardCounts(actor.hand, cardNamesToCount(newCards)),
+            deck: remainingDeck,
+            discardPile,
+          };
+        }
+        return actor;
+      });
+
+      return {
+        ...gameState,
+        actor_state: newActorState,
+      };
+    }
+
+    case "market": {
+      const newActorState = gameState.actor_state.map((actor) => {
+        const { newCards, remainingDeck, discardPile } = dealCards(
+          actor.deck,
+          1,
+          actor.discardPile
+        );
         if (actor.id === userId) {
           return {
             ...actor,
             hand: sumCardCounts(actor.hand, cardNamesToCount(newCards)),
             deck: remainingDeck,
+            actions: actor.actions + 1,
+            buys: actor.buys + 1,
+            discardPile,
+            bonusTreasureValue: actor.bonusTreasureValue + 1,
+          };
+        }
+        return actor;
+      });
+
+      return {
+        ...gameState,
+        actor_state: newActorState,
+      };
+    }
+
+    case "laboratory": {
+      const newActorState = gameState.actor_state.map((actor) => {
+        const { newCards, remainingDeck, discardPile } = dealCards(
+          actor.deck,
+          2,
+          actor.discardPile
+        );
+        if (actor.id === userId) {
+          return {
+            ...actor,
+            hand: sumCardCounts(actor.hand, cardNamesToCount(newCards)),
+            deck: remainingDeck,
+            actions: actor.actions + 1,
+            discardPile,
+          };
+        }
+        return actor;
+      });
+
+      return {
+        ...gameState,
+        actor_state: newActorState,
+      };
+    }
+
+    case "festival": {
+      const newActorState = gameState.actor_state.map((actor) => {
+        if (actor.id === userId) {
+          return {
+            ...actor,
+            actions: actor.actions + 2,
+            buys: actor.buys + 1,
+            bonusTreasureValue: actor.bonusTreasureValue + 2,
           };
         }
         return actor;
@@ -117,6 +131,31 @@ export const applyAction = (
 
     default: {
       return gameState;
+    }
+
+    case "councilRoom": {
+      const newActorState = gameState.actor_state.map((actor) => {
+        const { newCards, remainingDeck, discardPile } = dealCards(
+          actor.deck,
+          4,
+          actor.discardPile
+        );
+        if (actor.id === userId) {
+          return {
+            ...actor,
+            hand: sumCardCounts(actor.hand, cardNamesToCount(newCards)),
+            deck: remainingDeck,
+            buys: actor.buys + 1,
+            discardPile,
+          };
+        }
+        return actor;
+      });
+
+      return {
+        ...gameState,
+        actor_state: newActorState,
+      };
     }
   }
 };

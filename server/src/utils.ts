@@ -2,7 +2,7 @@ import * as Schema from "@effect/schema/Schema";
 import {
   GameStateStruct,
   ClientPayloadStruct,
-  GameState,
+  ChatMessageStruct,
 } from "../../shared/common";
 import * as Effect from "@effect/io/Effect";
 import { pipe } from "effect";
@@ -56,6 +56,8 @@ export const safeParseNumberArray = Schema.parse(
     Schema.number.pipe(Schema.positive(), Schema.int(), Schema.nonNaN())
   )
 );
+
+export const safeParseChatLog = Schema.parse(Schema.array(ChatMessageStruct));
 
 export const parseClientMessage = Schema.parse(ClientPayloadStruct);
 

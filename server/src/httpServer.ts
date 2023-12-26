@@ -20,7 +20,7 @@ export function createHttpServer(port: number): Express {
   server.use(
     cors({
       // Vite app running on port 5173 in development
-      origin: isDev ? "http://localhost:5173" : "",
+      origin: isDev ? process.env.VITE_DEV_CLIENT_URL : "",
       optionsSuccessStatus: 200,
     })
   );

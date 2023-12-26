@@ -51,6 +51,23 @@ export const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
           ],
           discardPile: [],
           phase: Phases.Action,
+          cardsInPlay: {
+            copper: 0,
+            silver: 0,
+            gold: 0,
+            estate: 0,
+            duchy: 0,
+            province: 0,
+            curse: 0,
+            village: 0,
+            smithy: 0,
+            market: 0,
+            councilRoom: 0,
+            mine: 0,
+            festival: 0,
+            laboratory: 0,
+          },
+          bonusTreasureValue: 0,
         },
         {
           id: "l8sw0l89-39j4-4j3k-9j3k-3j4k3j4k3j4k",
@@ -88,6 +105,23 @@ export const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
           ],
           discardPile: [],
           phase: Phases.Action,
+          cardsInPlay: {
+            copper: 0,
+            silver: 0,
+            gold: 0,
+            estate: 0,
+            duchy: 0,
+            province: 0,
+            curse: 0,
+            village: 0,
+            smithy: 0,
+            market: 0,
+            councilRoom: 0,
+            mine: 0,
+            festival: 0,
+            laboratory: 0,
+          },
+          bonusTreasureValue: 0,
         },
       ],
       global_state: {
@@ -122,6 +156,8 @@ export const resetAndSeedDatabase = async () => {
 
     await client.query("DROP TABLE IF EXISTS users");
 
+    await client.query("DROP TABLE IF EXISTS chat_log");
+
     await client.query(`
         CREATE TABLE IF NOT EXISTS users (
           user_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -133,7 +169,17 @@ export const resetAndSeedDatabase = async () => {
         )
       `);
 
-    // there should never be collisions on mutation_index for the same room and session_id
+    await client.query(`
+        CREATE TABLE IF NOT EXISTS chat_log (
+          id serial PRIMARY KEY,
+          session_id UUID NOT NULL,
+          user_id uuid NOT NULL,
+          username varchar(255) NOT NULL,
+          message varchar(255) NOT NULL,
+          created_at timestamp NOT NULL DEFAULT NOW(),
+          FOREIGN KEY (user_id) REFERENCES users(user_id)
+        )`);
+
     await client.query(`
         CREATE TABLE IF NOT EXISTS game_snapshots (
             id serial PRIMARY KEY,
@@ -152,8 +198,12 @@ export const resetAndSeedDatabase = async () => {
     await client.query(
       `INSERT INTO game_snapshots (id,room, turn, actor_state, global_state) VALUES
         ('b3da0a35-13e4-44fe-ba4f-bb229b658aa9', 8393, 0, 
-         '[{"name": "Player 1", "coins": 0, "hand": [], "actions": 0, "buys": 0, "victoryPoints": 0}, {"name": "Player 2", "coins": 0, "hand": [], "actions": 0, "buys": 0, "victoryPoints": 0}]',
-         '{"board": [], "deck": [], "history": []}');
+         ${JSON.stringify(
+           GAME_SNAPSHOT_SEED_VALUES.game_snapshots[0].actor_state
+         )},
+          ${JSON.stringify(
+            GAME_SNAPSHOT_SEED_VALUES.game_snapshots[0].global_state
+          )}
       `
     );
   } catch (error) {
