@@ -16,7 +16,6 @@ export const updateChatLogQuery = ({
     userInfo: { userId: string; username: string },
     chatMessage: string
   ) => {
-    console.log("updateChatLog");
     try {
       const insertQuery = `
       INSERT INTO chat_log (session_id, user_id, username, message)

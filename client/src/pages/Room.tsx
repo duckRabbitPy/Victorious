@@ -8,7 +8,7 @@ import StartGameButton from "../components/StartGameButton";
 import ActivePlayerInfo from "../components/ActivePlayerInfo";
 import GameStateDebugDisplay from "../components/GameStateDebug";
 import ChatLog from "../components/ChatLog";
-import { useGameState } from "../hooks/useGamestate";
+import { useGameState } from "../hooks/useGameState";
 
 const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
   const { gameState, socket, chatLog, errorMessage, setErrorMessage } =

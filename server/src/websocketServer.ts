@@ -8,10 +8,8 @@ import * as Schema from "@effect/schema/Schema";
 import { pipe } from "effect";
 import { JSONParseError } from "./controllers/customErrors";
 import {
-  ChatMessage,
   ClientPayload,
   ClientPayloadStruct,
-  GameState,
   safeParseCardName,
   SupportedEffects,
 } from "../../shared/common";
@@ -20,7 +18,6 @@ import {
   safeParseGameState,
   safeParseJWT,
   safeParseNonEmptyString,
-  tapPipeLine,
   verifyJwt,
 } from "./utils";
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
@@ -36,16 +33,15 @@ import { incrementTurn } from "./controllers/transformers/turn";
 import { playAction } from "./controllers/transformers/actions";
 import { updateChatLogQuery } from "./models/chatlog/mutations";
 import { getLatestChatLogQuery } from "./models/chatlog/queries";
+import { broadcastToRoom } from "./broadcast";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
-type RoomConnections = {
+export type RoomConnections = {
   socket: WebSocket;
   room: number;
-  userId: string;
+  uniqueUserAuthToken: string;
 }[];
-
-type BroadCastType = "gameState" | "chatLog";
 
 export function createWebsocketServer(port: number): void {
   const roomConnections: RoomConnections = [];
@@ -73,55 +69,27 @@ export function createWebsocketServer(port: number): void {
     const toDiscardFromHand = msg.toDiscardFromHand;
 
     if (
+      // only push to roomConnections if currently authed user in room is not already in roomConnections
       !roomConnections.some((connection) => {
-        // todo use userid instead of auth token
-        connection.room === room && connection.userId === authToken;
+        connection.room === room &&
+          connection.uniqueUserAuthToken === authToken;
       })
     ) {
       roomConnections.push({
         socket: ws,
         room,
-        userId: authToken,
+        uniqueUserAuthToken: authToken,
       });
     }
 
-    const broadcastToRoom = <T extends GameState | readonly ChatMessage[]>(
-      broadcastType: BroadCastType,
-      payload: T
-    ) => {
-      roomConnections.forEach((connection) => {
-        if (connection.room !== room) return;
-
-        connection.socket.send(
-          JSON.stringify({
-            broadcastType,
-            [broadcastType]: payload,
-          })
-        );
-
-        connection.socket.onerror = (error) => {
-          console.error(`WebSocket error in room ${connection.room}:`, error);
-        };
-
-        connection.socket.onclose = (event) => {
-          console.log(
-            `WebSocket connection closed in room ${connection.room}:`,
-            event.reason
-          );
-        };
-      });
-
-      return Effect.unit;
-    };
-
     switch (msg.effect) {
-      // read only operation
+      // read only operations
       case SupportedEffects.getCurrentGameState: {
         pipe(
           userDetailsOrError,
           Effect.flatMap(() => getLatestLiveGameSnapshot({ room })),
           Effect.flatMap((gameState) =>
-            broadcastToRoom("gameState", gameState)
+            broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
           Effect.runPromise
         );
@@ -135,7 +103,9 @@ export function createWebsocketServer(port: number): void {
             getLatestChatLogQuery(currentGameState.session_id)
           ),
           Effect.flatMap(safeParseChatLog),
-          Effect.flatMap((chatLog) => broadcastToRoom("chatLog", chatLog)),
+          Effect.flatMap((chatLog) =>
+            broadcastToRoom("chatLog", chatLog, room, roomConnections)
+          ),
           Effect.runPromise
         );
         break;
@@ -153,7 +123,7 @@ export function createWebsocketServer(port: number): void {
             })
           ),
           Effect.flatMap((gameState) =>
-            broadcastToRoom("gameState", gameState)
+            broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
           Effect.runPromise
         );
@@ -171,7 +141,7 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
           Effect.flatMap((gameState) =>
-            broadcastToRoom("gameState", gameState)
+            broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
           Effect.runPromise
         );
@@ -187,7 +157,7 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
           Effect.flatMap((gameState) =>
-            broadcastToRoom("gameState", gameState)
+            broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
           Effect.runPromise
         );
@@ -212,7 +182,7 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
           Effect.flatMap((gameState) =>
-            broadcastToRoom("gameState", gameState)
+            broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
           Effect.runPromise
         );
@@ -236,7 +206,7 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
           Effect.flatMap((gameState) =>
-            broadcastToRoom("gameState", gameState)
+            broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
           Effect.runPromise
         );
@@ -252,7 +222,7 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
           Effect.flatMap((gameState) =>
-            broadcastToRoom("gameState", gameState)
+            broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
           Effect.runPromise
         );
@@ -277,7 +247,7 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
           Effect.flatMap((gameState) =>
-            broadcastToRoom("gameState", gameState)
+            broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
           Effect.runPromise
         );
@@ -300,7 +270,9 @@ export function createWebsocketServer(port: number): void {
             })
           ),
           Effect.flatMap(safeParseChatLog),
-          Effect.flatMap((chatLog) => broadcastToRoom("chatLog", chatLog)),
+          Effect.flatMap((chatLog) =>
+            broadcastToRoom("chatLog", chatLog, room, roomConnections)
+          ),
           Effect.runPromise
         );
         break;
