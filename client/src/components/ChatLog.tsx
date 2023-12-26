@@ -1,63 +1,68 @@
-import { useEffect, useState } from "react";
-import { ChatMessage } from "../../../shared/common";
+import { useState } from "react";
 import { sendChatMessage } from "../effects/effects";
-
-const useChatLog = () => {
-  const [chatLog, setChatLog] = useState<ChatMessage[] | null>([]);
-  const [socket, setSocket] = useState<WebSocket | null>(null);
-
-  useEffect(() => {
-    const newSocket = new WebSocket("ws://localhost:8080");
-
-    newSocket.addEventListener("message", (event) => {
-      setChatLog(JSON.parse(event.data));
-    });
-
-    newSocket.addEventListener("open", (event) => {
-      console.log("WebSocket connection opened:", event);
-    });
-
-    newSocket.addEventListener("close", (event) => {
-      console.log("WebSocket connection closed:", event);
-    });
-
-    setSocket(newSocket);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  return { chatLog, socket };
-};
+import { useChatLog } from "../hooks/useChatLog";
+interface UserNameColors {
+  [username: string]: string;
+}
 
 const ChatLog = () => {
-  const { chatLog, socket } = useChatLog();
+  const { chatLog, socket, errorMessage, setErrorMessage } = useChatLog();
+  const [inputValue, setInputValue] = useState<string | null>("");
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    sendChatMessage({
+      socket,
+      authToken: localStorage.getItem("dominion_auth_token"),
+      roomNumber: Number(window.location.pathname.split("/").pop()),
+      chatMessage: inputValue,
+      setInputValue,
+      setErrorMessage,
+    });
+  };
+
+  const colours = ["blue", "red", "green", "orange", "purple"];
+
+  const userNameColours: UserNameColors = Array.from(
+    new Set(chatLog?.map((c) => c.username))
+  ).reduce((acc, curr, i) => {
+    acc[curr] = colours[i];
+    return acc;
+  }, {} as UserNameColors);
 
   return (
     <div>
-      <h1>ChatLog</h1>
+      <h3>ChatLog</h3>
       <div>
         {chatLog &&
           chatLog.map((c) => (
             <div key={c.message}>
-              <span>{c.name}</span>
+              <span style={{ color: userNameColours[c.username] }}>
+                {c.username}:{" "}
+              </span>
               <span>{c.message}</span>
             </div>
           ))}
       </div>
-      <input type="text" placeholder="Type your message here" />
-      <button
-        onClick={() =>
-          sendChatMessage({
-            socket,
-            authToken: localStorage.getItem("dominion_auth_token"),
-            roomNumber: Number(window.location.pathname.split("/").pop()),
-            chatMessage: "test",
-            setErrorMessage: () => {},
-          })
-        }
-      >
-        Send
-      </button>
+      <form onSubmit={handleSubmit}>
+        <input
+          style={{ width: "200px" }}
+          type="text"
+          placeholder="Type your message here"
+          value={inputValue ?? ""}
+          onChange={handleInputChange}
+        />
+        <button type="submit">Send</button>
+      </form>
+      {errorMessage && (
+        <>
+          <div style={{ color: "red" }}>{`Error: ${errorMessage}`}</div>
+          <button onClick={() => setErrorMessage(null)}>clear</button>
+        </>
+      )}
     </div>
   );
 };

@@ -35,6 +35,8 @@ import { buyCard, resetBuysAndActions } from "./controllers/transformers/buys";
 import { incrementTurn } from "./controllers/transformers/turn";
 import { playAction } from "./controllers/transformers/actions";
 import { updateChatLogQuery } from "./models/chatlog/mutations";
+import { getLatestChatLogQuery } from "./models/chatlog/queries";
+import { tap } from "node:test/reporters";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -43,6 +45,8 @@ type RoomConnections = {
   room: number;
   userId: string;
 }[];
+
+type BroadCastType = "gameState" | "chatLog";
 
 export function createWebsocketServer(port: number): void {
   const roomConnections: RoomConnections = [];
@@ -86,7 +90,12 @@ export function createWebsocketServer(port: number): void {
       roomConnections.forEach((connection) => {
         if (connection.room !== room) return;
 
-        connection.socket.send(JSON.stringify(gameState));
+        connection.socket.send(
+          JSON.stringify({
+            broadcastType: "gameState",
+            gameState,
+          })
+        );
 
         connection.socket.onerror = (error) => {
           console.error(`WebSocket error in room ${connection.room}:`, error);
@@ -107,7 +116,12 @@ export function createWebsocketServer(port: number): void {
       roomConnections.forEach((connection) => {
         if (connection.room !== room) return;
 
-        connection.socket.send(JSON.stringify(chatLog));
+        connection.socket.send(
+          JSON.stringify({
+            broadcastType: "chatLog",
+            chatLog,
+          })
+        );
 
         connection.socket.onerror = (error) => {
           console.error(`WebSocket error in room ${connection.room}:`, error);
@@ -264,6 +278,20 @@ export function createWebsocketServer(port: number): void {
         break;
       }
 
+      case SupportedEffects.getCurrentChatLog: {
+        pipe(
+          Effect.all({ userInfo: userDetailsOrError, currentGameState }),
+          Effect.flatMap(({ currentGameState }) =>
+            getLatestChatLogQuery(currentGameState.id)
+          ),
+          Effect.flatMap(safeParseChatLog),
+          tapPipeLine,
+          Effect.flatMap(broadCastChatLog),
+          Effect.runPromise
+        );
+        break;
+      }
+
       case SupportedEffects.sendChatMessage: {
         const chatMessage = safeParseNonEmptyString(msg.chatMessage);
         pipe(
@@ -279,6 +307,7 @@ export function createWebsocketServer(port: number): void {
               chatMessage,
             })
           ),
+
           Effect.flatMap(safeParseChatLog),
           Effect.flatMap(broadCastChatLog),
           Effect.runPromise

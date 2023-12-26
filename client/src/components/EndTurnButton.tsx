@@ -1,4 +1,3 @@
-import React from "react";
 import { GameState } from "../../../shared/common";
 import { CoreRoomInfo, CoreUserInfo } from "../client-types";
 import { incrementTurn, startGame } from "../effects/effects";

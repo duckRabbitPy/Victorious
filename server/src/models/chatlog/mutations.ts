@@ -1,5 +1,6 @@
 import * as Effect from "@effect/io/Effect";
 import { pool } from "../../db/connection";
+import { logAndThrowError } from "../../utils";
 
 export const updateChatLogQuery = ({
   gameId,
@@ -15,15 +16,38 @@ export const updateChatLogQuery = ({
     chatMessage: string
   ) => {
     try {
-      await pool.query(
-        `INSERT INTO chat_log WHERE game_id = $1 VALUES ($1, $2, $3, $4)`,
-        [gameId, userInfo.userId, userInfo.username, chatMessage]
-      );
-    } catch (e) {}
+      const insertQuery = `
+      INSERT INTO chat_log (game_id, user_id, username, message)
+      VALUES ($1, $2, $3, $4)
+      RETURNING username, message;
+    `;
+
+      const selectQuery = `
+      SELECT username, message
+      FROM chat_log
+      WHERE game_id = $1
+      ORDER BY created_at ASC;
+    `;
+
+      const insertValues = [
+        gameId,
+        userInfo.userId,
+        userInfo.username,
+        chatMessage,
+      ];
+
+      await pool.query(insertQuery, insertValues);
+
+      const result = await pool.query(selectQuery, [gameId]);
+
+      return result.rows;
+    } catch (error) {
+      logAndThrowError(error);
+    }
   };
 
-  return Effect.try({
+  return Effect.tryPromise({
     try: () => updateChatLog(userInfo, chatMessage),
     catch: (e) => new Error(`error updating chat log: ${e}`),
-  });
+  }).pipe(Effect.retryN(1));
 };

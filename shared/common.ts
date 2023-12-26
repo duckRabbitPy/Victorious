@@ -308,7 +308,7 @@ export const GameStateStruct = Schema.struct({
 });
 
 export const ChatMessageStruct = Schema.struct({
-  name: Schema.string,
+  username: Schema.string,
   message: Schema.string,
 });
 
@@ -327,6 +327,7 @@ export enum SupportedEffects {
   resetPlayedTreasures = "resetPlayedTreasures",
   playAction = "playAction",
   incrementTurn = "incrementTurn",
+  getCurrentChatLog = "getCurrentChatLog",
   sendChatMessage = "sendChatMessage",
 }
 

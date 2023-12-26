@@ -10,6 +10,7 @@ const prepareMessage = ({
   room,
   cardName,
   toDiscardFromHand,
+  chatMessage,
 }: ClientPayload) => {
   return JSON.stringify({
     effect,
@@ -17,10 +18,11 @@ const prepareMessage = ({
     room,
     cardName,
     toDiscardFromHand,
+    chatMessage,
   });
 };
 
-export const getInititalGameState = ({
+export const getInitialGameState = ({
   socket,
   authToken,
   roomNumber,
@@ -35,7 +37,7 @@ export const getInititalGameState = ({
     setErrorMessage?.("Socket or auth token is null");
     return;
   }
-  socket?.send(
+  socket.send(
     prepareMessage({
       effect: SupportedEffects.getCurrentGameState,
       room: roomNumber,
@@ -266,18 +268,46 @@ export const startGame = ({
   );
 };
 
-export const sendChatMessage = ({
+export const getInititalChatLog = ({
   socket,
   authToken,
   roomNumber,
-  chatMessage,
   setErrorMessage,
 }: {
   socket: WebSocket | null;
   authToken: string | null;
   roomNumber: number;
-  chatMessage: string;
   setErrorMessage: (message: string | null) => void;
+}) => {
+  if (!socket || !authToken) {
+    setErrorMessage("Socket or auth token is null");
+    return;
+  }
+
+  socket.send(
+    prepareMessage({
+      effect: SupportedEffects.getCurrentChatLog,
+      room: roomNumber,
+      authToken,
+      toDiscardFromHand: [],
+    })
+  );
+};
+
+export const sendChatMessage = ({
+  socket,
+  authToken,
+  roomNumber,
+  chatMessage,
+  setInputValue,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  chatMessage: string | null;
+  setInputValue: React.Dispatch<React.SetStateAction<string | null>>;
+  setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
   if (!socket) {
     setErrorMessage("Socket is null");
@@ -285,6 +315,10 @@ export const sendChatMessage = ({
   }
   if (!authToken) {
     setErrorMessage("Auth token is null");
+    return;
+  }
+  if (!chatMessage) {
+    setErrorMessage("Chat message is empty");
     return;
   }
 
@@ -297,4 +331,6 @@ export const sendChatMessage = ({
       toDiscardFromHand: [],
     })
   );
+
+  setInputValue("");
 };
