@@ -2,12 +2,13 @@ import * as Effect from "@effect/io/Effect";
 import { pool } from "../../db/connection";
 import { logAndThrowError } from "../../utils";
 
+// @mutation
 export const updateChatLogQuery = ({
-  gameId,
+  sessionId,
   userInfo,
   chatMessage,
 }: {
-  gameId: number;
+  sessionId: string;
   userInfo: { userId: string; username: string };
   chatMessage: string;
 }) => {
@@ -15,31 +16,31 @@ export const updateChatLogQuery = ({
     userInfo: { userId: string; username: string },
     chatMessage: string
   ) => {
+    console.log("updateChatLog");
     try {
       const insertQuery = `
-      INSERT INTO chat_log (game_id, user_id, username, message)
+      INSERT INTO chat_log (session_id, user_id, username, message)
       VALUES ($1, $2, $3, $4)
       RETURNING username, message;
     `;
-
       const selectQuery = `
       SELECT username, message
       FROM chat_log
-      WHERE game_id = $1
+      WHERE session_id = $1
       ORDER BY created_at ASC;
     `;
 
       const insertValues = [
-        gameId,
+        sessionId,
         userInfo.userId,
         userInfo.username,
         chatMessage,
       ];
-
+      console.log(sessionId);
       await pool.query(insertQuery, insertValues);
 
-      const result = await pool.query(selectQuery, [gameId]);
-
+      const result = await pool.query(selectQuery, [sessionId]);
+      console.log("result", result.rows);
       return result.rows;
     } catch (error) {
       logAndThrowError(error);

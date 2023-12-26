@@ -36,7 +36,6 @@ import { incrementTurn } from "./controllers/transformers/turn";
 import { playAction } from "./controllers/transformers/actions";
 import { updateChatLogQuery } from "./models/chatlog/mutations";
 import { getLatestChatLogQuery } from "./models/chatlog/queries";
-import { tap } from "node:test/reporters";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -115,7 +114,7 @@ export function createWebsocketServer(port: number): void {
     const broadCastChatLog = (chatLog: readonly ChatMessage[]) => {
       roomConnections.forEach((connection) => {
         if (connection.room !== room) return;
-
+        console.log("broadcasting", chatLog);
         connection.socket.send(
           JSON.stringify({
             broadcastType: "chatLog",
@@ -282,10 +281,9 @@ export function createWebsocketServer(port: number): void {
         pipe(
           Effect.all({ userInfo: userDetailsOrError, currentGameState }),
           Effect.flatMap(({ currentGameState }) =>
-            getLatestChatLogQuery(currentGameState.id)
+            getLatestChatLogQuery(currentGameState.session_id)
           ),
           Effect.flatMap(safeParseChatLog),
-          tapPipeLine,
           Effect.flatMap(broadCastChatLog),
           Effect.runPromise
         );
@@ -302,12 +300,11 @@ export function createWebsocketServer(port: number): void {
           }),
           Effect.flatMap(({ userInfo, chatMessage, currentGameState }) =>
             updateChatLogQuery({
-              gameId: currentGameState.id,
+              sessionId: currentGameState.session_id,
               userInfo,
               chatMessage,
             })
           ),
-
           Effect.flatMap(safeParseChatLog),
           Effect.flatMap(broadCastChatLog),
           Effect.runPromise

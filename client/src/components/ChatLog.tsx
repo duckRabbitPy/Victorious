@@ -1,12 +1,20 @@
 import { useState } from "react";
 import { sendChatMessage } from "../effects/effects";
-import { useChatLog } from "../hooks/useChatLog";
+import { ChatMessage } from "../../../shared/common";
+
 interface UserNameColors {
   [username: string]: string;
 }
 
-const ChatLog = () => {
-  const { chatLog, socket, errorMessage, setErrorMessage } = useChatLog();
+const ChatLog = ({
+  chatLog,
+  socket,
+  setErrorMessage,
+}: {
+  chatLog: ChatMessage[] | null;
+  socket: WebSocket;
+  setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
+}) => {
   const [inputValue, setInputValue] = useState<string | null>("");
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
@@ -57,12 +65,6 @@ const ChatLog = () => {
         />
         <button type="submit">Send</button>
       </form>
-      {errorMessage && (
-        <>
-          <div style={{ color: "red" }}>{`Error: ${errorMessage}`}</div>
-          <button onClick={() => setErrorMessage(null)}>clear</button>
-        </>
-      )}
     </div>
   );
 };

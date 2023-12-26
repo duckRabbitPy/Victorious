@@ -156,6 +156,8 @@ export const resetAndSeedDatabase = async () => {
 
     await client.query("DROP TABLE IF EXISTS users");
 
+    await client.query("DROP TABLE IF EXISTS chat_log");
+
     await client.query(`
         CREATE TABLE IF NOT EXISTS users (
           user_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -170,7 +172,7 @@ export const resetAndSeedDatabase = async () => {
     await client.query(`
         CREATE TABLE IF NOT EXISTS chat_log (
           id serial PRIMARY KEY,
-          game_id integer NOT NULL,
+          session_id UUID NOT NULL,
           user_id uuid NOT NULL,
           username varchar(255) NOT NULL,
           message varchar(255) NOT NULL,

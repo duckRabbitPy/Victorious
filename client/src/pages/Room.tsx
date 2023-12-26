@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { isUsersTurn } from "../../../shared/utils";
 import PlayerHand from "../components/PlayerHand";
@@ -12,7 +11,8 @@ import ChatLog from "../components/ChatLog";
 import { useGameState } from "../hooks/useGamestate";
 
 const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
-  const { gameState, socket } = useGameState();
+  const { gameState, socket, chatLog, errorMessage, setErrorMessage } =
+    useGameState();
   const { "*": roomParam } = useParams();
   const roomNumber = Number(roomParam);
   const authToken = localStorage.getItem("dominion_auth_token");
@@ -25,9 +25,8 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
     ),
   };
 
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  if (!gameState) return <div>Error fetching game state from server...</div>;
+  if (!gameState || !socket)
+    return <div>Error fetching game state from server...</div>;
 
   return (
     <>
@@ -81,7 +80,14 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
           gameState={gameState}
         />
 
-        <ChatLog />
+        {
+          <ChatLog
+            chatLog={chatLog}
+            setErrorMessage={setErrorMessage}
+            socket={socket}
+          />
+        }
+
         <GameStateDebugDisplay gameState={gameState} />
       </div>
     </>

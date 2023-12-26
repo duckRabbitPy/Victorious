@@ -2,17 +2,18 @@ import { logAndThrowError } from "../../utils";
 import * as Effect from "@effect/io/Effect";
 import { pool } from "../../db/connection";
 
-export const getLatestChatLogQuery = (gameId: number) => {
-  const getLatestChatLog = async (gameId: number) => {
+export const getLatestChatLogQuery = (sessionId: string) => {
+  const getLatestChatLog = async (sessionId: string) => {
+    console.log("getLatestChatLog");
     try {
       const result = await pool.query(
         `
         SELECT username, message
         FROM chat_log
-        WHERE game_id = $1
+        WHERE session_id = $1
         ORDER BY created_at ASC;
         `,
-        [gameId]
+        [sessionId]
       );
       return result.rows;
     } catch (error) {
@@ -21,7 +22,7 @@ export const getLatestChatLogQuery = (gameId: number) => {
   };
 
   return Effect.tryPromise({
-    try: () => getLatestChatLog(gameId),
+    try: () => getLatestChatLog(sessionId),
     catch: (e) => new Error(`error getting latest chat log: ${e}`),
   }).pipe(Effect.retryN(1));
 };
