@@ -85,40 +85,17 @@ export function createWebsocketServer(port: number): void {
       });
     }
 
-    const broadcastToRoom = (gameState: GameState) => {
+    const broadcastToRoom = <T extends GameState | readonly ChatMessage[]>(
+      broadcastType: BroadCastType,
+      payload: T
+    ) => {
       roomConnections.forEach((connection) => {
         if (connection.room !== room) return;
 
         connection.socket.send(
           JSON.stringify({
-            broadcastType: "gameState",
-            gameState,
-          })
-        );
-
-        connection.socket.onerror = (error) => {
-          console.error(`WebSocket error in room ${connection.room}:`, error);
-        };
-
-        connection.socket.onclose = (event) => {
-          console.log(
-            `WebSocket connection closed in room ${connection.room}:`,
-            event.reason
-          );
-        };
-      });
-
-      return Effect.unit;
-    };
-
-    const broadCastChatLog = (chatLog: readonly ChatMessage[]) => {
-      roomConnections.forEach((connection) => {
-        if (connection.room !== room) return;
-        console.log("broadcasting", chatLog);
-        connection.socket.send(
-          JSON.stringify({
-            broadcastType: "chatLog",
-            chatLog,
+            broadcastType,
+            [broadcastType]: payload,
           })
         );
 
@@ -143,11 +120,27 @@ export function createWebsocketServer(port: number): void {
         pipe(
           userDetailsOrError,
           Effect.flatMap(() => getLatestLiveGameSnapshot({ room })),
-          Effect.flatMap(broadcastToRoom),
+          Effect.flatMap((gameState) =>
+            broadcastToRoom("gameState", gameState)
+          ),
           Effect.runPromise
         );
         break;
       }
+
+      case SupportedEffects.getCurrentChatLog: {
+        pipe(
+          Effect.all({ userInfo: userDetailsOrError, currentGameState }),
+          Effect.flatMap(({ currentGameState }) =>
+            getLatestChatLogQuery(currentGameState.session_id)
+          ),
+          Effect.flatMap(safeParseChatLog),
+          Effect.flatMap((chatLog) => broadcastToRoom("chatLog", chatLog)),
+          Effect.runPromise
+        );
+        break;
+      }
+
       // mutation operations
       case SupportedEffects.addLivePlayer: {
         pipe(
@@ -159,7 +152,9 @@ export function createWebsocketServer(port: number): void {
               currentGameState,
             })
           ),
-          Effect.flatMap(broadcastToRoom),
+          Effect.flatMap((gameState) =>
+            broadcastToRoom("gameState", gameState)
+          ),
           Effect.runPromise
         );
         break;
@@ -175,7 +170,9 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(incrementTurn),
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
-          Effect.flatMap(broadcastToRoom),
+          Effect.flatMap((gameState) =>
+            broadcastToRoom("gameState", gameState)
+          ),
           Effect.runPromise
         );
         break;
@@ -189,7 +186,9 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(resetBuysAndActions),
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
-          Effect.flatMap(broadcastToRoom),
+          Effect.flatMap((gameState) =>
+            broadcastToRoom("gameState", gameState)
+          ),
           Effect.runPromise
         );
         break;
@@ -212,7 +211,9 @@ export function createWebsocketServer(port: number): void {
           ),
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
-          Effect.flatMap(broadcastToRoom),
+          Effect.flatMap((gameState) =>
+            broadcastToRoom("gameState", gameState)
+          ),
           Effect.runPromise
         );
         break;
@@ -234,7 +235,9 @@ export function createWebsocketServer(port: number): void {
           ),
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
-          Effect.flatMap(broadcastToRoom),
+          Effect.flatMap((gameState) =>
+            broadcastToRoom("gameState", gameState)
+          ),
           Effect.runPromise
         );
         break;
@@ -248,7 +251,9 @@ export function createWebsocketServer(port: number): void {
           ),
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
-          Effect.flatMap(broadcastToRoom),
+          Effect.flatMap((gameState) =>
+            broadcastToRoom("gameState", gameState)
+          ),
           Effect.runPromise
         );
         break;
@@ -271,20 +276,9 @@ export function createWebsocketServer(port: number): void {
           ),
           Effect.flatMap(safeParseGameState),
           Effect.flatMap(updateGameState),
-          Effect.flatMap(broadcastToRoom),
-          Effect.runPromise
-        );
-        break;
-      }
-
-      case SupportedEffects.getCurrentChatLog: {
-        pipe(
-          Effect.all({ userInfo: userDetailsOrError, currentGameState }),
-          Effect.flatMap(({ currentGameState }) =>
-            getLatestChatLogQuery(currentGameState.session_id)
+          Effect.flatMap((gameState) =>
+            broadcastToRoom("gameState", gameState)
           ),
-          Effect.flatMap(safeParseChatLog),
-          Effect.flatMap(broadCastChatLog),
           Effect.runPromise
         );
         break;
@@ -306,7 +300,7 @@ export function createWebsocketServer(port: number): void {
             })
           ),
           Effect.flatMap(safeParseChatLog),
-          Effect.flatMap(broadCastChatLog),
+          Effect.flatMap((chatLog) => broadcastToRoom("chatLog", chatLog)),
           Effect.runPromise
         );
         break;

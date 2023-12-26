@@ -36,11 +36,10 @@ export const updateChatLogQuery = ({
         userInfo.username,
         chatMessage,
       ];
-      console.log(sessionId);
-      await pool.query(insertQuery, insertValues);
 
+      await pool.query(insertQuery, insertValues);
       const result = await pool.query(selectQuery, [sessionId]);
-      console.log("result", result.rows);
+
       return result.rows;
     } catch (error) {
       logAndThrowError(error);
