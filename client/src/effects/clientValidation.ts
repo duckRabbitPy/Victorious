@@ -26,6 +26,7 @@ export const canBuyCard = ({
 
   return (
     buysRemaining > 0 &&
+    gameState.global_state.supply[cardName] > 0 &&
     totalTreasureValue >= cardCost &&
     isUsersTurn(gameState, loggedInUsername)
   );

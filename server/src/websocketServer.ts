@@ -3,6 +3,7 @@ import WebSocket from "ws";
 import {
   addLivePlayerQuery,
   updateGameState,
+  writeNewGameStateToDB,
 } from "./models/gamestate/mutations";
 import * as Schema from "@effect/schema/Schema";
 import { pipe } from "effect";
@@ -10,6 +11,7 @@ import { JSONParseError } from "./controllers/customErrors";
 import {
   ClientPayload,
   ClientPayloadStruct,
+  GameState,
   safeParseCardName,
   SupportedEffects,
 } from "../../shared/common";
@@ -34,6 +36,7 @@ import { playAction } from "./controllers/transformers/actions";
 import { updateChatLogQuery } from "./models/chatlog/mutations";
 import { getLatestChatLogQuery } from "./models/chatlog/queries";
 import { broadcastToRoom } from "./broadcast";
+import { deduceVictoryPoints } from "./controllers/transformers/victory";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -138,8 +141,7 @@ export function createWebsocketServer(port: number): void {
           ),
           Effect.flatMap(resetBuysAndActions),
           Effect.flatMap(incrementTurn),
-          Effect.flatMap(safeParseGameState),
-          Effect.flatMap(updateGameState),
+          Effect.flatMap(writeNewGameStateToDB),
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
@@ -154,8 +156,7 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(({ currentGameState }) => cleanUp(currentGameState)),
           Effect.flatMap(incrementTurn),
           Effect.flatMap(resetBuysAndActions),
-          Effect.flatMap(safeParseGameState),
-          Effect.flatMap(updateGameState),
+          Effect.flatMap(writeNewGameStateToDB),
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
@@ -179,8 +180,8 @@ export function createWebsocketServer(port: number): void {
               toDiscardFromHand,
             })
           ),
-          Effect.flatMap(safeParseGameState),
-          Effect.flatMap(updateGameState),
+          Effect.flatMap(deduceVictoryPoints),
+          Effect.flatMap(writeNewGameStateToDB),
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
@@ -203,8 +204,8 @@ export function createWebsocketServer(port: number): void {
               cardName,
             })
           ),
-          Effect.flatMap(safeParseGameState),
-          Effect.flatMap(updateGameState),
+          Effect.flatMap(deduceVictoryPoints),
+          Effect.flatMap(writeNewGameStateToDB),
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
@@ -219,8 +220,8 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(({ currentGameState }) =>
             resetPlayedTreasures(currentGameState)
           ),
-          Effect.flatMap(safeParseGameState),
-          Effect.flatMap(updateGameState),
+          Effect.flatMap(deduceVictoryPoints),
+          Effect.flatMap(writeNewGameStateToDB),
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
@@ -244,8 +245,8 @@ export function createWebsocketServer(port: number): void {
               toDiscardFromHand,
             })
           ),
-          Effect.flatMap(safeParseGameState),
-          Effect.flatMap(updateGameState),
+          Effect.flatMap(deduceVictoryPoints),
+          Effect.flatMap(writeNewGameStateToDB),
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
           ),

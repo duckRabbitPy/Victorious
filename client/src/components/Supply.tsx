@@ -81,7 +81,7 @@ const Supply = ({
             });
           }}
         >
-          {cardName}
+          {cardName + " " + `(${gameState.global_state.supply[cardName]})`}
         </button>
       ))}
     </div>

@@ -21,7 +21,7 @@ const TurnInfo = ({
               ? "Buy card"
               : "Play Action"}
           </h2>
-
+          <p>{`victory points: ${currentUserState?.victoryPoints}`}</p>
           <p>{`actions remaining ${currentUserState?.actions}`}</p>
           <p>{`buys remaining ${currentUserState?.buys}`}</p>
         </>

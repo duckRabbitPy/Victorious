@@ -220,12 +220,11 @@ export const getTreasureValue = (hand: CardCount): number => {
   );
 };
 
-const getPlayerVictoryPoints = (deck: CardCount): number => {
-  return (
-    deck.estate * getCardValueByName("estate") +
-    deck.duchy * getCardValueByName("duchy") +
-    deck.province * getCardValueByName("province")
-  );
+export const cardNameToVictoryPoints = (cardName: CardName): number => {
+  if (getCardTypeByName(cardName) !== "victory") {
+    return 0;
+  }
+  return cardNameToCard(cardName).value;
 };
 
 export const cardNameToCard = (cardName: CardName): Card => {

@@ -1,4 +1,6 @@
 import * as Effect from "@effect/io/Effect";
+import { pipe } from "effect";
+
 import { pool } from "../../db/connection";
 import { PostgresError } from "../../controllers/customErrors";
 import {
@@ -9,7 +11,7 @@ import {
   Phases,
   zeroCardCount,
 } from "../../../../shared/common";
-import { logAndThrowError } from "../../utils";
+import { logAndThrowError, safeParseGameState, tapPipeLine } from "../../utils";
 import { getLatestGameSnapshotQuery } from "./queries";
 
 const setUpActorsForGame = ({
@@ -70,7 +72,7 @@ const setUpActorsForGame = ({
 const generatateGlobalState = () => {
   const startingState: GlobalState = {
     supply: {
-      copper: 60,
+      copper: 2,
       silver: 40,
       gold: 30,
       estate: 24,
@@ -250,3 +252,10 @@ export const updateGameState = (newGameState: GameState) => {
     catch: () => new PostgresError({ message: "postgres query error" }),
   }).pipe(Effect.retryN(1));
 };
+
+export const writeNewGameStateToDB = (maybeValidGameState: unknown) =>
+  pipe(
+    safeParseGameState(maybeValidGameState),
+    Effect.flatMap(updateGameState),
+    Effect.flatMap(safeParseGameState)
+  );

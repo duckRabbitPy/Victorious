@@ -27,6 +27,7 @@ const getPoolOrThrow = (pool: Pool | null) => {
   if (pool) {
     return Effect.succeed(pool);
   }
+
   return Effect.fail(new PostgresError({ message: "No pool" }));
 };
 
