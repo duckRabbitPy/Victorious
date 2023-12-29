@@ -1,4 +1,4 @@
-import { CoreRoomInfo } from "../client-types";
+import { CoreRoomInfo } from "../types";
 import { startGame } from "../effects/effects";
 
 type Props = {

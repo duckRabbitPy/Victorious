@@ -38,10 +38,12 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
       )}
       <div>
         <ActivePlayerInfo
-          coreUserInfo={coreUserInfo}
-          coreRoomInfo={coreRoomInfo}
-          gameState={gameState}
-          setErrorMessage={setErrorMessage}
+          props={{
+            gameState,
+            coreRoomInfo,
+            coreUserInfo,
+            setErrorMessage,
+          }}
         />
         <div>
           {gameState.actor_state.length > 1 && gameState.turn < 1 && (
@@ -53,10 +55,12 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
 
           {gameState.turn > 0 && isUsersTurn(gameState, loggedInUsername) && (
             <EndTurnButton
-              coreRoomInfo={coreRoomInfo}
-              coreUserInfo={coreUserInfo}
-              gameState={gameState}
-              setErrorMessage={setErrorMessage}
+              props={{
+                gameState,
+                coreRoomInfo,
+                coreUserInfo,
+                setErrorMessage,
+              }}
             />
           )}
         </div>
@@ -65,10 +69,12 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
           <>
             <TurnInfo coreUserInfo={coreUserInfo} gameState={gameState} />
             <Supply
-              coreRoomInfo={coreRoomInfo}
-              coreUserInfo={coreUserInfo}
-              gameState={gameState}
-              setErrorMessage={setErrorMessage}
+              props={{
+                gameState,
+                coreRoomInfo,
+                coreUserInfo,
+                setErrorMessage,
+              }}
             />
           </>
         )}

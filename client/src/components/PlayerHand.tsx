@@ -12,7 +12,7 @@ import {
   playTreasure,
   resetPlayedTreasures,
 } from "../effects/effects";
-import { CoreRoomInfo, CoreUserInfo } from "../client-types";
+import { CoreRoomInfo, CoreUserInfo } from "../types";
 
 type Props = {
   gameState: GameState;

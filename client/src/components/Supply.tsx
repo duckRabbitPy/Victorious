@@ -1,34 +1,18 @@
-import {
-  getAllCardNames,
-  countToCardNamesArray,
-  GameState,
-  getTreasureValue,
-  getCardTypeByName,
-} from "../../../shared/common";
-import { groupBy, isUsersTurn } from "../../../shared/utils";
-import { CoreRoomInfo, CoreUserInfo } from "../client-types";
-import { canBuyCard } from "../effects/clientValidation";
-import { buyCard } from "../effects/effects";
+import { getAllCardNames, getCardTypeByName } from "../../../shared/common";
+import { groupBy } from "../../../shared/utils";
+
+import { CoreProps } from "../types";
 import { SupplyCard } from "./SupplyCard";
 
-type Props = {
-  gameState: GameState;
-  coreRoomInfo: CoreRoomInfo;
-  coreUserInfo: CoreUserInfo;
-  setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
-};
+const Supply = ({ props }: { props: CoreProps }) => {
+  const {
+    gameState,
+    coreRoomInfo: { socket, authToken, roomNumber },
+    coreUserInfo: { loggedInUsername, currentUserState },
+    setErrorMessage,
+  } = props;
 
-const Supply = ({
-  gameState,
-  coreRoomInfo: { socket, authToken, roomNumber },
-  coreUserInfo: { loggedInUsername, currentUserState },
-  setErrorMessage,
-}: Props) => {
   if (!currentUserState) return null;
-
-  const totalTreasureValue =
-    getTreasureValue(currentUserState.cardsInPlay) +
-    currentUserState.bonusTreasureValue;
 
   const cardTypeGroups = groupBy(getAllCardNames(), (cardName) =>
     getCardTypeByName(cardName)
@@ -59,54 +43,28 @@ const Supply = ({
           {treasureCards.map((cardName) => (
             <SupplyCard
               key={cardName}
-              onClick={() => {
-                buyCard({
-                  socket,
-                  authToken,
-                  roomNumber,
-                  cardName,
-                  setErrorMessage,
-                  toDiscardFromHand: countToCardNamesArray(
-                    currentUserState.hand
-                  ),
-                });
-              }}
-              canBuyCard={canBuyCard({
+              props={{
                 gameState,
-                loggedInUsername,
-                cardName,
-                totalTreasureValue,
-              })}
-              isUsersTurn={isUsersTurn(gameState, loggedInUsername)}
+                coreRoomInfo: { socket, authToken, roomNumber },
+                coreUserInfo: { loggedInUsername, currentUserState },
+                setErrorMessage,
+              }}
             >
-              {cardName + " " + `(${gameState.global_state.supply[cardName]})`}
+              {cardName}
             </SupplyCard>
           ))}
 
           {victoryCards.map((cardName) => (
             <SupplyCard
               key={cardName}
-              onClick={() => {
-                buyCard({
-                  socket,
-                  authToken,
-                  roomNumber,
-                  cardName,
-                  setErrorMessage,
-                  toDiscardFromHand: countToCardNamesArray(
-                    currentUserState.hand
-                  ),
-                });
-              }}
-              canBuyCard={canBuyCard({
+              props={{
                 gameState,
-                loggedInUsername,
-                cardName,
-                totalTreasureValue,
-              })}
-              isUsersTurn={isUsersTurn(gameState, loggedInUsername)}
+                coreRoomInfo: { socket, authToken, roomNumber },
+                coreUserInfo: { loggedInUsername, currentUserState },
+                setErrorMessage,
+              }}
             >
-              {cardName + " " + `(${gameState.global_state.supply[cardName]})`}
+              {cardName}
             </SupplyCard>
           ))}
         </div>
@@ -121,25 +79,14 @@ const Supply = ({
         {actionCards.map((cardName) => (
           <SupplyCard
             key={cardName}
-            onClick={() => {
-              buyCard({
-                socket,
-                authToken,
-                roomNumber,
-                cardName,
-                setErrorMessage,
-                toDiscardFromHand: countToCardNamesArray(currentUserState.hand),
-              });
-            }}
-            canBuyCard={canBuyCard({
+            props={{
               gameState,
-              loggedInUsername,
-              cardName,
-              totalTreasureValue,
-            })}
-            isUsersTurn={isUsersTurn(gameState, loggedInUsername)}
+              coreRoomInfo: { socket, authToken, roomNumber },
+              coreUserInfo: { loggedInUsername, currentUserState },
+              setErrorMessage,
+            }}
           >
-            {cardName + " " + `(${gameState.global_state.supply[cardName]})`}
+            {cardName}
           </SupplyCard>
         ))}
       </div>

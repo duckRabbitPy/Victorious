@@ -1,22 +1,15 @@
 import { Link } from "react-router-dom";
-import { GameState } from "../../../shared/common";
-import { CoreRoomInfo, CoreUserInfo } from "../client-types";
+import { CoreProps } from "../types";
 import { isUsersTurn } from "../../../shared/utils";
 import { addNewPlayer } from "../effects/effects";
 
-type Props = {
-  gameState: GameState;
-  coreUserInfo: CoreUserInfo;
-  coreRoomInfo: CoreRoomInfo;
-  setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
-};
-
-const ActivePlayerInfo = ({
-  coreUserInfo: { loggedInUsername },
-  gameState,
-  coreRoomInfo: { socket, authToken, roomNumber },
-  setErrorMessage,
-}: Props) => {
+const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
+  const {
+    gameState,
+    coreRoomInfo: { socket, authToken, roomNumber },
+    coreUserInfo: { loggedInUsername },
+    setErrorMessage,
+  } = props;
   return (
     <>
       <div>

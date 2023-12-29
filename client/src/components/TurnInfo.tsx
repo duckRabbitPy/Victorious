@@ -1,6 +1,6 @@
 import { GameState, Phases } from "../../../shared/common";
 import { isUsersTurn } from "../../../shared/utils";
-import { CoreUserInfo } from "../client-types";
+import { CoreUserInfo } from "../types";
 
 type Props = {
   coreUserInfo: CoreUserInfo;
