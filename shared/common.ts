@@ -129,7 +129,6 @@ const CardStruct = Schema.struct({
 });
 
 const CardNames = Schema.union(TreasureNames, VictoryNames, ActionNames);
-export const safeParseCardName = Schema.parse(CardNames);
 
 export const getAllCardNames = (): CardName[] => {
   return [
@@ -311,11 +310,32 @@ export const ChatMessageStruct = Schema.struct({
   message: Schema.string,
 });
 
+export const BroadCastStruct = Schema.struct({
+  broadcastType: Schema.union(
+    Schema.literal("gameState"),
+    Schema.literal("chatLog"),
+    Schema.literal("error")
+  ),
+  gameState: GameStateStruct.pipe(Schema.optional),
+  chatLog: Schema.array(ChatMessageStruct).pipe(Schema.optional),
+  error: Schema.string.pipe(Schema.optional),
+});
+
 export type ActorState = Schema.To<typeof ActorStateStruct>;
 export type GlobalState = Schema.To<typeof GlobalStateStruct>;
 export type GameState = Schema.To<typeof GameStateStruct>;
 export type ClientPayload = Schema.To<typeof ClientPayloadStruct>;
 export type ChatMessage = Schema.To<typeof ChatMessageStruct>;
+
+export const safeParseNonEmptyString = Schema.parse(
+  Schema.string.pipe(Schema.minLength(1))
+);
+export const safeParseCardName = Schema.parse(CardNames);
+export const safeParseBroadCast = Schema.parse(BroadCastStruct);
+export const safeParseGameState = Schema.parse(GameStateStruct);
+export const safeParseChatLog = Schema.parse(Schema.array(ChatMessageStruct));
+
+export type BroadCastType = "gameState" | "chatLog" | "error";
 
 export enum SupportedEffects {
   startGame = "startGame",

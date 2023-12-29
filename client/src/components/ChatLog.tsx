@@ -11,7 +11,7 @@ const ChatLog = ({
   socket,
   setErrorMessage,
 }: {
-  chatLog: ChatMessage[] | null;
+  chatLog: readonly ChatMessage[] | null;
   socket: WebSocket;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {

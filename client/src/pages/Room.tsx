@@ -39,8 +39,8 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
       <div>
         <ActivePlayerInfo
           coreUserInfo={coreUserInfo}
-          gameState={gameState}
           coreRoomInfo={coreRoomInfo}
+          gameState={gameState}
           setErrorMessage={setErrorMessage}
         />
         <div>

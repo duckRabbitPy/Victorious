@@ -11,7 +11,8 @@ import {
   Phases,
   zeroCardCount,
 } from "../../../../shared/common";
-import { logAndThrowError, safeParseGameState, tapPipeLine } from "../../utils";
+import { logAndThrowError, tapPipeLine } from "../../utils";
+import { safeParseGameState } from "../../safeParseGameState";
 import { getLatestGameSnapshotQuery } from "./queries";
 
 const setUpActorsForGame = ({

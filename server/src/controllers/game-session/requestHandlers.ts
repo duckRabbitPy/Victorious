@@ -6,11 +6,8 @@ import {
   getOpenGameSessionsQuery,
 } from "../../models/gamestate/queries";
 
-import {
-  safeParseGameState,
-  safeParseNumber,
-  safeParseNumberArray,
-} from "../../utils";
+import { safeParseNumber, safeParseNumberArray } from "../../utils";
+import { safeParseGameState } from "../../safeParseGameState";
 import {
   sendGameStateResponse,
   sendOpenRoomsResponse,

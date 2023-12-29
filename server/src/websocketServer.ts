@@ -2,7 +2,6 @@ import * as Effect from "@effect/io/Effect";
 import WebSocket from "ws";
 import {
   addLivePlayerQuery,
-  updateGameState,
   writeNewGameStateToDB,
 } from "./models/gamestate/mutations";
 import * as Schema from "@effect/schema/Schema";
@@ -11,15 +10,15 @@ import { JSONParseError } from "./controllers/customErrors";
 import {
   ClientPayload,
   ClientPayloadStruct,
-  GameState,
   safeParseCardName,
+  safeParseChatLog,
+  safeParseNonEmptyString,
   SupportedEffects,
 } from "../../shared/common";
 import {
-  safeParseChatLog,
-  safeParseGameState,
   safeParseJWT,
-  safeParseNonEmptyString,
+  sendErrorMsgToClient,
+  tapPipeLine,
   verifyJwt,
 } from "./utils";
 import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
@@ -47,6 +46,7 @@ export type RoomConnections = {
 }[];
 
 export function createWebsocketServer(port: number): void {
+  // mutable state
   const roomConnections: RoomConnections = [];
 
   const wss = new WebSocket.Server({ port });
@@ -89,10 +89,12 @@ export function createWebsocketServer(port: number): void {
       // read only operations
       case SupportedEffects.getCurrentGameState: {
         pipe(
-          userDetailsOrError,
-          Effect.flatMap(() => getLatestLiveGameSnapshot({ room })),
+          currentGameState,
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
+          ),
+          Effect.catchAll((error) =>
+            sendErrorMsgToClient(error, room, roomConnections)
           ),
           Effect.runPromise
         );
@@ -108,6 +110,9 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(safeParseChatLog),
           Effect.flatMap((chatLog) =>
             broadcastToRoom("chatLog", chatLog, room, roomConnections)
+          ),
+          Effect.catchAll((error) =>
+            sendErrorMsgToClient(error, room, roomConnections)
           ),
           Effect.runPromise
         );
@@ -128,6 +133,9 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
+          Effect.catchAll((error) =>
+            sendErrorMsgToClient(error, room, roomConnections)
+          ),
           Effect.runPromise
         );
         break;
@@ -145,6 +153,9 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
+          Effect.catchAll((error) =>
+            sendErrorMsgToClient(error, room, roomConnections)
+          ),
           Effect.runPromise
         );
         break;
@@ -159,6 +170,9 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(writeNewGameStateToDB),
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
+          ),
+          Effect.catchAll((error) =>
+            sendErrorMsgToClient(error, room, roomConnections)
           ),
           Effect.runPromise
         );
@@ -185,6 +199,9 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
+          Effect.catchAll((error) =>
+            sendErrorMsgToClient(error, room, roomConnections)
+          ),
           Effect.runPromise
         );
         break;
@@ -209,6 +226,9 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
+          Effect.catchAll((error) =>
+            sendErrorMsgToClient(error, room, roomConnections)
+          ),
           Effect.runPromise
         );
         break;
@@ -224,6 +244,9 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(writeNewGameStateToDB),
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
+          ),
+          Effect.catchAll((error) =>
+            sendErrorMsgToClient(error, room, roomConnections)
           ),
           Effect.runPromise
         );
@@ -250,6 +273,9 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap((gameState) =>
             broadcastToRoom("gameState", gameState, room, roomConnections)
           ),
+          Effect.catchAll((error) =>
+            sendErrorMsgToClient(error, room, roomConnections)
+          ),
           Effect.runPromise
         );
         break;
@@ -273,6 +299,9 @@ export function createWebsocketServer(port: number): void {
           Effect.flatMap(safeParseChatLog),
           Effect.flatMap((chatLog) =>
             broadcastToRoom("chatLog", chatLog, room, roomConnections)
+          ),
+          Effect.catchAll((error) =>
+            sendErrorMsgToClient(error, room, roomConnections)
           ),
           Effect.runPromise
         );

@@ -1,10 +1,10 @@
 import { Effect } from "effect";
-import { GameState, ChatMessage } from "../../shared/common";
+import { GameState, ChatMessage, BroadCastType } from "../../shared/common";
 import { RoomConnections } from "./websocketServer";
 
-type BroadCastType = "gameState" | "chatLog";
-
-export const broadcastToRoom = <T extends GameState | readonly ChatMessage[]>(
+export const broadcastToRoom = <
+  T extends GameState | readonly ChatMessage[] | string
+>(
   broadcastType: BroadCastType,
   payload: T,
   room: number,
