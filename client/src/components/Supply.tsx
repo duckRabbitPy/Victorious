@@ -3,11 +3,13 @@ import {
   countToCardNamesArray,
   GameState,
   getTreasureValue,
+  getCardTypeByName,
 } from "../../../shared/common";
-import { isUsersTurn } from "../../../shared/utils";
+import { groupBy, isUsersTurn } from "../../../shared/utils";
 import { CoreRoomInfo, CoreUserInfo } from "../client-types";
 import { canBuyCard } from "../effects/clientValidation";
 import { buyCard } from "../effects/effects";
+import { SupplyCard } from "./SupplyCard";
 
 type Props = {
   gameState: GameState;
@@ -28,62 +30,119 @@ const Supply = ({
     getTreasureValue(currentUserState.cardsInPlay) +
     currentUserState.bonusTreasureValue;
 
+  const cardTypeGroups = groupBy(getAllCardNames(), (cardName) =>
+    getCardTypeByName(cardName)
+  );
+
+  const treasureCards = cardTypeGroups["treasure"] || [];
+  const victoryCards = cardTypeGroups["victory"] || [];
+  const actionCards = cardTypeGroups["action"] || [];
+
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "row",
-        flexWrap: "wrap",
-        gap: "0.5rem",
+        justifyContent: "space-between",
+        gap: "2rem",
       }}
     >
-      {getAllCardNames().map((cardName) => (
-        <button
-          key={cardName}
-          disabled={
-            !canBuyCard({
-              gameState,
-              loggedInUsername,
-              cardName,
-              totalTreasureValue,
-            })
-          }
+      <div>
+        <div
           style={{
-            cursor: canBuyCard({
-              gameState,
-              loggedInUsername,
-              cardName,
-              totalTreasureValue,
-            })
-              ? "pointer"
-              : "not-allowed",
-            border: `2px solid ${
-              !isUsersTurn(gameState, loggedInUsername)
-                ? "blue"
-                : canBuyCard({
-                    gameState,
-                    loggedInUsername,
-                    cardName,
-                    totalTreasureValue,
-                  })
-                ? "green"
-                : "red"
-            }`,
-          }}
-          onClick={() => {
-            buyCard({
-              socket,
-              authToken,
-              roomNumber,
-              cardName,
-              setErrorMessage,
-              toDiscardFromHand: countToCardNamesArray(currentUserState.hand),
-            });
+            display: "flex",
+            flexWrap: "wrap",
+            flexDirection: "column",
+            gap: "0.5rem",
           }}
         >
-          {cardName + " " + `(${gameState.global_state.supply[cardName]})`}
-        </button>
-      ))}
+          {treasureCards.map((cardName) => (
+            <SupplyCard
+              key={cardName}
+              onClick={() => {
+                buyCard({
+                  socket,
+                  authToken,
+                  roomNumber,
+                  cardName,
+                  setErrorMessage,
+                  toDiscardFromHand: countToCardNamesArray(
+                    currentUserState.hand
+                  ),
+                });
+              }}
+              canBuyCard={canBuyCard({
+                gameState,
+                loggedInUsername,
+                cardName,
+                totalTreasureValue,
+              })}
+              isUsersTurn={isUsersTurn(gameState, loggedInUsername)}
+            >
+              {cardName + " " + `(${gameState.global_state.supply[cardName]})`}
+            </SupplyCard>
+          ))}
+
+          {victoryCards.map((cardName) => (
+            <SupplyCard
+              key={cardName}
+              onClick={() => {
+                buyCard({
+                  socket,
+                  authToken,
+                  roomNumber,
+                  cardName,
+                  setErrorMessage,
+                  toDiscardFromHand: countToCardNamesArray(
+                    currentUserState.hand
+                  ),
+                });
+              }}
+              canBuyCard={canBuyCard({
+                gameState,
+                loggedInUsername,
+                cardName,
+                totalTreasureValue,
+              })}
+              isUsersTurn={isUsersTurn(gameState, loggedInUsername)}
+            >
+              {cardName + " " + `(${gameState.global_state.supply[cardName]})`}
+            </SupplyCard>
+          ))}
+        </div>
+      </div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "1rem",
+        }}
+      >
+        {actionCards.map((cardName) => (
+          <SupplyCard
+            key={cardName}
+            onClick={() => {
+              buyCard({
+                socket,
+                authToken,
+                roomNumber,
+                cardName,
+                setErrorMessage,
+                toDiscardFromHand: countToCardNamesArray(currentUserState.hand),
+              });
+            }}
+            canBuyCard={canBuyCard({
+              gameState,
+              loggedInUsername,
+              cardName,
+              totalTreasureValue,
+            })}
+            isUsersTurn={isUsersTurn(gameState, loggedInUsername)}
+          >
+            {cardName + " " + `(${gameState.global_state.supply[cardName]})`}
+          </SupplyCard>
+        ))}
+      </div>
     </div>
   );
 };

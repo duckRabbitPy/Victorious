@@ -25,3 +25,15 @@ export const isUsersTurn = (gameState: GameState, userName: string) => {
 
   return !!currentActivePlayer.name && currentActivePlayer.name === userName;
 };
+
+type GroupedItems<T> = Record<string, T[]>;
+
+export const groupBy = <T>(
+  array: T[],
+  getKey: (item: T) => string
+): GroupedItems<T> =>
+  array.reduce((result, item) => {
+    const key = getKey(item);
+    (result[key] = result[key] || []).push(item);
+    return result;
+  }, {} as GroupedItems<T>);

@@ -76,8 +76,8 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
         <PlayerHand
           coreRoomInfo={coreRoomInfo}
           coreUserInfo={coreUserInfo}
-          setErrorMessage={setErrorMessage}
           gameState={gameState}
+          setErrorMessage={setErrorMessage}
         />
 
         {

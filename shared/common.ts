@@ -121,14 +121,20 @@ export const ActionNames = Schema.union(
   Schema.literal("curse")
 );
 
+const CardNames = Schema.union(TreasureNames, VictoryNames, ActionNames);
+const CardTypes = Schema.union(
+  Schema.literal("treasure"),
+  Schema.literal("victory"),
+  Schema.literal("action"),
+  Schema.literal("curse")
+);
+
 const CardStruct = Schema.struct({
-  name: Schema.string,
+  name: CardNames,
   cost: Schema.number,
-  type: Schema.string,
+  type: CardTypes,
   value: Schema.number,
 });
-
-const CardNames = Schema.union(TreasureNames, VictoryNames, ActionNames);
 
 export const getAllCardNames = (): CardName[] => {
   return [
@@ -198,7 +204,7 @@ export const discardHand = (
   return currentDiscardPile.concat(countToCardNamesArray(currentHand));
 };
 
-export const getCardTypeByName = (cardName: CardName): string => {
+export const getCardTypeByName = (cardName: CardName): Card["type"] => {
   return cardNameToCard(cardName).type;
 };
 
