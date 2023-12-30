@@ -9,10 +9,11 @@ import {
   GameState,
   GlobalState,
   Phases,
+  safeParseGameState,
   zeroCardCount,
 } from "../../../../shared/common";
 import { logAndThrowError, tapPipeLine } from "../../utils";
-import { safeParseGameState } from "../../safeParseGameState";
+
 import { getLatestGameSnapshotQuery } from "./queries";
 
 const setUpActorsForGame = ({

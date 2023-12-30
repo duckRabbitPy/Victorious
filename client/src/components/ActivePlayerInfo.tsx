@@ -18,7 +18,7 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
         </div>
         <Link to="/">Back to home</Link>
         <h1>Room {roomNumber}</h1>
-        <p>Players ready: {gameState.actor_state.length}/2</p>
+        <p>Players ready: {gameState.actor_state.length}</p>
         {
           <ol style={{ listStyle: "none" }}>
             {gameState.actor_state.map((actor) => (

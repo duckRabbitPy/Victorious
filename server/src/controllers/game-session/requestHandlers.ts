@@ -7,12 +7,12 @@ import {
 } from "../../models/gamestate/queries";
 
 import { safeParseNumber, safeParseNumberArray } from "../../utils";
-import { safeParseGameState } from "../../safeParseGameState";
 import {
   sendGameStateResponse,
   sendOpenRoomsResponse,
 } from "../responseHandlers";
 import { createGameSessionQuery } from "../../models/gamestate/mutations";
+import { safeParseGameState } from "../../../../shared/common";
 
 export const createGameSession: RequestHandler = (req, res) => {
   return pipe(
