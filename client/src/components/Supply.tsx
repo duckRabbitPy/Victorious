@@ -6,14 +6,7 @@ import {
   getCardDescriptionByName,
   getCardTypeByName,
 } from "../../../shared/common";
-import copperUrl from "../../../public/images/copper.jpg";
-import silverUrl from "../../../public/images/silver.jpg";
-import goldUrl from "../../../public/images/gold.jpg";
-import estateUrl from "../../../public/images/estate.jpg";
-import duchyUrl from "../../../public/images/duchy.jpg";
-import provinceUrl from "../../../public/images/province.jpg";
-import village from "../../../public/images/village.jpg";
-import smithy from "../../../public/images/smithy.jpg";
+
 import { groupBy, sortBy } from "../../../shared/utils";
 
 import { CoreProps } from "../types";
@@ -21,14 +14,21 @@ import { SupplyCard } from "./SupplyCard";
 import { pipe } from "effect";
 
 const treasureCardUrls = {
-  copper: copperUrl,
-  silver: silverUrl,
-  gold: goldUrl,
-  estate: estateUrl,
-  duchy: duchyUrl,
-  province: provinceUrl,
-  village: village,
-  smithy: smithy,
+  copper:
+    "https://res.cloudinary.com/dkytnwn87/image/upload/v1703959199/dominion/copper_vriytw.jpg",
+  silver:
+    "https://res.cloudinary.com/dkytnwn87/image/upload/v1703959198/dominion/silver_brqd5d.jpg",
+  gold: "https://res.cloudinary.com/dkytnwn87/image/upload/v1703959198/dominion/gold_cdvobf.jpg",
+  estate:
+    "https://res.cloudinary.com/dkytnwn87/image/upload/v1703959199/dominion/estate_pdsk94.jpg",
+  duchy:
+    "https://res.cloudinary.com/dkytnwn87/image/upload/v1703959197/dominion/duchy_mugjav.jpg",
+  province:
+    "https://res.cloudinary.com/dkytnwn87/image/upload/v1703959198/dominion/province_k1dims.jpg",
+  village:
+    "https://res.cloudinary.com/dkytnwn87/image/upload/v1703959200/dominion/village_chghpw.jpg",
+  smithy:
+    "https://res.cloudinary.com/dkytnwn87/image/upload/v1703959199/dominion/smithy_aq0iv6.jpg",
 } as Record<CardName, string>;
 
 const Supply = ({ props }: { props: CoreProps }) => {
