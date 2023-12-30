@@ -12,13 +12,38 @@ import {
   playTreasure,
   resetPlayedTreasures,
 } from "../effects/effects";
-import { CoreRoomInfo, CoreUserInfo } from "../client-types";
+import { CoreRoomInfo, CoreUserInfo } from "../types";
 
 type Props = {
   gameState: GameState;
   coreRoomInfo: CoreRoomInfo;
   coreUserInfo: CoreUserInfo;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
+};
+
+const CardInHand = ({
+  cardName,
+  onClick,
+  buttonStyle,
+  index,
+  disabled,
+}: {
+  cardName: CardName;
+  onClick: () => void;
+  buttonStyle: React.CSSProperties;
+  index: number;
+  disabled: boolean;
+}) => {
+  return (
+    <button
+      key={index}
+      style={buttonStyle}
+      disabled={disabled}
+      onClick={onClick}
+    >
+      {cardName}
+    </button>
+  );
 };
 
 const PlayerHand = ({
@@ -35,10 +60,16 @@ const PlayerHand = ({
   const visibleHandCountKVP = Object.entries(currentHand).filter(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ([_, count]) => count > 0
-  );
+  ) as [CardName, number][];
 
   return (
-    <div>
+    <div
+      style={{
+        backgroundColor: "#C6D0D5",
+        margin: "1rem",
+        border: "2px solid black",
+      }}
+    >
       <>
         <h3>Hand</h3>
         {!isUsersTurn(gameState, loggedInUsername)
@@ -46,72 +77,78 @@ const PlayerHand = ({
           : "Click on a card to play it."}
       </>
 
-      {visibleHandCountKVP.map(([cardName, count]) => (
-        <div key={cardName}>
-          {
-            <>
-              {new Array(count).fill(0).map((_, i) => (
-                <button
-                  key={i}
-                  style={{
-                    margin: "0.2rem",
-                    border:
-                      currentUserState?.phase === Phases.Action &&
-                      getCardTypeByName(cardName as CardName) === "action"
-                        ? "2px solid green"
-                        : currentUserState?.phase === Phases.Buy &&
-                          getCardTypeByName(cardName as CardName) === "treasure"
-                        ? "2px solid green"
-                        : "2px solid black",
-                    cursor:
-                      !isUsersTurn(gameState, loggedInUsername) ||
-                      !currentUserState?.buys
-                        ? "not-allowed"
-                        : "pointer",
-                  }}
-                  disabled={
-                    // todo fix typing
-                    !isUsersTurn(gameState, loggedInUsername) ||
-                    (currentUserState?.phase === Phases.Action &&
-                      getCardTypeByName(cardName as CardName) !== "action") ||
-                    (currentUserState?.phase === Phases.Buy &&
-                      getCardTypeByName(cardName as CardName) !== "treasure") ||
-                    !currentUserState?.buys ||
-                    cardNameToCard(cardName as CardName).type === "victory"
-                  }
-                  onClick={() => {
-                    if (
-                      currentUserState?.phase === Phases.Buy &&
-                      getCardTypeByName(cardName as CardName) === "treasure"
-                    ) {
-                      playTreasure({
-                        socket,
-                        authToken,
-                        roomNumber,
-                        cardName: cardName as CardName,
-                        setErrorMessage,
-                      });
-                    } else if (
-                      currentUserState?.phase === Phases.Action &&
-                      getCardTypeByName(cardName as CardName) === "action"
-                    ) {
-                      playAction({
-                        socket,
-                        authToken,
-                        roomNumber,
-                        cardName: cardName as CardName,
-                        setErrorMessage,
-                      });
-                    }
-                  }}
-                >
-                  {cardName}
-                </button>
-              ))}
-            </>
+      {visibleHandCountKVP.map(([cardName, count]) => {
+        const isActionCard = getCardTypeByName(cardName) === "action";
+        const isTreasureCard = getCardTypeByName(cardName) === "treasure";
+
+        const borderColor =
+          (currentUserState.phase === Phases.Action && isActionCard) ||
+          (currentUserState.phase === Phases.Buy && isTreasureCard)
+            ? "2px solid green"
+            : "2px solid black";
+
+        const cursor =
+          !isUsersTurn(gameState, loggedInUsername) || !currentUserState.buys
+            ? "not-allowed"
+            : "pointer";
+
+        const buttonStyle = {
+          margin: "0.2rem",
+          border: borderColor,
+          cursor: cursor,
+        };
+
+        const disabled =
+          !isUsersTurn(gameState, loggedInUsername) ||
+          (currentUserState.phase === Phases.Action &&
+            getCardTypeByName(cardName) !== "action") ||
+          (currentUserState.phase === Phases.Buy &&
+            getCardTypeByName(cardName) !== "treasure") ||
+          !currentUserState.buys ||
+          cardNameToCard(cardName).type === "victory";
+
+        const onClick = () => {
+          if (
+            currentUserState?.phase === Phases.Buy &&
+            getCardTypeByName(cardName) === "treasure"
+          ) {
+            playTreasure({
+              socket,
+              authToken,
+              roomNumber,
+              cardName: cardName,
+              setErrorMessage,
+            });
+          } else if (
+            currentUserState.phase === Phases.Action &&
+            getCardTypeByName(cardName) === "action"
+          ) {
+            playAction({
+              socket,
+              authToken,
+              roomNumber,
+              cardName: cardName,
+              setErrorMessage,
+            });
           }
-        </div>
-      ))}
+        };
+
+        return (
+          <div key={cardName}>
+            {new Array(count).fill(0).map((_, index) => {
+              return (
+                <CardInHand
+                  cardName={cardName}
+                  onClick={onClick}
+                  buttonStyle={buttonStyle}
+                  index={index}
+                  disabled={disabled}
+                />
+              );
+            })}
+          </div>
+        );
+      })}
 
       <div>
         <h4>

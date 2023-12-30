@@ -68,6 +68,7 @@ const market = {
   cost: 5,
   type: "action",
   value: 0,
+  description: "Draw 1 card, +1 action, +1 buy, +1 treasure",
 } as const;
 
 const councilRoom = {
@@ -75,6 +76,7 @@ const councilRoom = {
   cost: 5,
   type: "action",
   value: 0,
+  description: "Draw 4 cards, +1 buy",
 } as const;
 
 const laboratory = {
@@ -82,6 +84,7 @@ const laboratory = {
   cost: 5,
   type: "action",
   value: 0,
+  description: "Draw 2 cards, +1 action",
 } as const;
 
 const festival = {
@@ -89,6 +92,7 @@ const festival = {
   cost: 5,
   type: "action",
   value: 0,
+  description: "+2 actions, +1 buy, +2 treasure",
 } as const;
 
 const Mine = {
@@ -96,6 +100,8 @@ const Mine = {
   cost: 5,
   type: "action",
   value: 0,
+  description:
+    "Trash a treasure card from your hand. Gain a treasure card costing up to 3 more; put it into your hand.",
 } as const;
 
 export const TreasureNames = Schema.union(
@@ -121,15 +127,21 @@ export const ActionNames = Schema.union(
   Schema.literal("curse")
 );
 
-const CardStruct = Schema.struct({
-  name: Schema.string,
-  cost: Schema.number,
-  type: Schema.string,
-  value: Schema.number,
-});
-
 const CardNames = Schema.union(TreasureNames, VictoryNames, ActionNames);
-export const safeParseCardName = Schema.parse(CardNames);
+const CardTypes = Schema.union(
+  Schema.literal("treasure"),
+  Schema.literal("victory"),
+  Schema.literal("action"),
+  Schema.literal("curse")
+);
+
+const CardStruct = Schema.struct({
+  name: CardNames,
+  cost: Schema.number,
+  type: CardTypes,
+  value: Schema.number,
+  description: Schema.string.pipe(Schema.optional),
+});
 
 export const getAllCardNames = (): CardName[] => {
   return [
@@ -149,8 +161,12 @@ export const getAllCardNames = (): CardName[] => {
   ];
 };
 
-const getCardCostByName = (cardName: CardName): number => {
+export const getCardCostByName = (cardName: CardName): number => {
   return cardNameToCard(cardName).cost;
+};
+
+export const getCardDescriptionByName = (cardName: CardName): string => {
+  return cardNameToCard(cardName)?.description ?? "";
 };
 
 export const getCardValueByName = (cardName: CardName): number => {
@@ -199,7 +215,7 @@ export const discardHand = (
   return currentDiscardPile.concat(countToCardNamesArray(currentHand));
 };
 
-export const getCardTypeByName = (cardName: CardName): string => {
+export const getCardTypeByName = (cardName: CardName): Card["type"] => {
   return cardNameToCard(cardName).type;
 };
 
@@ -220,12 +236,11 @@ export const getTreasureValue = (hand: CardCount): number => {
   );
 };
 
-const getPlayerVictoryPoints = (deck: CardCount): number => {
-  return (
-    deck.estate * getCardValueByName("estate") +
-    deck.duchy * getCardValueByName("duchy") +
-    deck.province * getCardValueByName("province")
-  );
+export const cardNameToVictoryPoints = (cardName: CardName): number => {
+  if (getCardTypeByName(cardName) !== "victory") {
+    return 0;
+  }
+  return cardNameToCard(cardName).value;
 };
 
 export const cardNameToCard = (cardName: CardName): Card => {
@@ -312,11 +327,32 @@ export const ChatMessageStruct = Schema.struct({
   message: Schema.string,
 });
 
+export const BroadCastStruct = Schema.struct({
+  broadcastType: Schema.union(
+    Schema.literal("gameState"),
+    Schema.literal("chatLog"),
+    Schema.literal("error")
+  ),
+  gameState: GameStateStruct.pipe(Schema.optional),
+  chatLog: Schema.array(ChatMessageStruct).pipe(Schema.optional),
+  error: Schema.string.pipe(Schema.optional),
+});
+
 export type ActorState = Schema.To<typeof ActorStateStruct>;
 export type GlobalState = Schema.To<typeof GlobalStateStruct>;
 export type GameState = Schema.To<typeof GameStateStruct>;
 export type ClientPayload = Schema.To<typeof ClientPayloadStruct>;
 export type ChatMessage = Schema.To<typeof ChatMessageStruct>;
+
+export const safeParseNonEmptyString = Schema.parse(
+  Schema.string.pipe(Schema.minLength(1))
+);
+export const safeParseCardName = Schema.parse(CardNames);
+export const safeParseBroadCast = Schema.parse(BroadCastStruct);
+export const safeParseGameState = Schema.parse(GameStateStruct);
+export const safeParseChatLog = Schema.parse(Schema.array(ChatMessageStruct));
+
+export type BroadCastType = "gameState" | "chatLog" | "error";
 
 export enum SupportedEffects {
   startGame = "startGame",

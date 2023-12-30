@@ -1,6 +1,6 @@
 import { GameState, Phases } from "../../../shared/common";
 import { isUsersTurn } from "../../../shared/utils";
-import { CoreUserInfo } from "../client-types";
+import { CoreUserInfo } from "../types";
 
 type Props = {
   coreUserInfo: CoreUserInfo;
@@ -21,7 +21,7 @@ const TurnInfo = ({
               ? "Buy card"
               : "Play Action"}
           </h2>
-
+          <p>{`victory points: ${currentUserState?.victoryPoints}`}</p>
           <p>{`actions remaining ${currentUserState?.actions}`}</p>
           <p>{`buys remaining ${currentUserState?.buys}`}</p>
         </>

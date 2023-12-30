@@ -8,7 +8,7 @@ import StartGameButton from "../components/StartGameButton";
 import ActivePlayerInfo from "../components/ActivePlayerInfo";
 import GameStateDebugDisplay from "../components/GameStateDebug";
 import ChatLog from "../components/ChatLog";
-import { useGameState } from "../hooks/useGamestate";
+import { useGameState } from "../hooks/useGameState";
 
 const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
   const { gameState, socket, chatLog, errorMessage, setErrorMessage } =
@@ -38,10 +38,12 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
       )}
       <div>
         <ActivePlayerInfo
-          coreUserInfo={coreUserInfo}
-          gameState={gameState}
-          coreRoomInfo={coreRoomInfo}
-          setErrorMessage={setErrorMessage}
+          props={{
+            gameState,
+            coreRoomInfo,
+            coreUserInfo,
+            setErrorMessage,
+          }}
         />
         <div>
           {gameState.actor_state.length > 1 && gameState.turn < 1 && (
@@ -53,10 +55,12 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
 
           {gameState.turn > 0 && isUsersTurn(gameState, loggedInUsername) && (
             <EndTurnButton
-              coreRoomInfo={coreRoomInfo}
-              coreUserInfo={coreUserInfo}
-              gameState={gameState}
-              setErrorMessage={setErrorMessage}
+              props={{
+                gameState,
+                coreRoomInfo,
+                coreUserInfo,
+                setErrorMessage,
+              }}
             />
           )}
         </div>
@@ -65,10 +69,12 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
           <>
             <TurnInfo coreUserInfo={coreUserInfo} gameState={gameState} />
             <Supply
-              coreRoomInfo={coreRoomInfo}
-              coreUserInfo={coreUserInfo}
-              gameState={gameState}
-              setErrorMessage={setErrorMessage}
+              props={{
+                gameState,
+                coreRoomInfo,
+                coreUserInfo,
+                setErrorMessage,
+              }}
             />
           </>
         )}
@@ -76,8 +82,8 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
         <PlayerHand
           coreRoomInfo={coreRoomInfo}
           coreUserInfo={coreUserInfo}
-          setErrorMessage={setErrorMessage}
           gameState={gameState}
+          setErrorMessage={setErrorMessage}
         />
 
         {

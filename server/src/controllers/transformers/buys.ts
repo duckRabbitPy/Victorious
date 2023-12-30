@@ -36,7 +36,10 @@ export const buyCard = ({
   cardName: CardName;
   toDiscardFromHand: readonly CardName[];
 }) => {
+  // todo effect.fail card not available
+
   const newActorState = gameState.actor_state.map((actor) => {
+    // todo effect.fail if not enough buys
     const remainingBuys = actor.buys - 1;
     if (actor.id === userId) {
       return {

@@ -1,22 +1,15 @@
 import { Link } from "react-router-dom";
-import { GameState } from "../../../shared/common";
-import { CoreRoomInfo, CoreUserInfo } from "../client-types";
+import { CoreProps } from "../types";
 import { isUsersTurn } from "../../../shared/utils";
 import { addNewPlayer } from "../effects/effects";
 
-type Props = {
-  gameState: GameState;
-  coreUserInfo: CoreUserInfo;
-  coreRoomInfo: CoreRoomInfo;
-  setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
-};
-
-const ActivePlayerInfo = ({
-  coreUserInfo: { loggedInUsername },
-  gameState,
-  coreRoomInfo: { socket, authToken, roomNumber },
-  setErrorMessage,
-}: Props) => {
+const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
+  const {
+    gameState,
+    coreRoomInfo: { socket, authToken, roomNumber },
+    coreUserInfo: { loggedInUsername },
+    setErrorMessage,
+  } = props;
   return (
     <>
       <div>
@@ -25,7 +18,7 @@ const ActivePlayerInfo = ({
         </div>
         <Link to="/">Back to home</Link>
         <h1>Room {roomNumber}</h1>
-        <p>Players ready: {gameState.actor_state.length}/2</p>
+        <p>Players ready: {gameState.actor_state.length}</p>
         {
           <ol style={{ listStyle: "none" }}>
             {gameState.actor_state.map((actor) => (

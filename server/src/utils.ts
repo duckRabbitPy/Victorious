@@ -3,11 +3,14 @@ import {
   GameStateStruct,
   ClientPayloadStruct,
   ChatMessageStruct,
+  safeParseNonEmptyString,
 } from "../../shared/common";
 import * as Effect from "@effect/io/Effect";
 import { pipe } from "effect";
 import { AuthenticationError } from "./controllers/customErrors";
 import jwt from "jsonwebtoken";
+import { broadcastToRoom } from "./broadcast";
+import { RoomConnections } from "./websocketServer";
 
 export const logAndThrowError = (error: unknown) => {
   console.error(error);
@@ -32,10 +35,6 @@ export const safeParseNumber = Schema.parse(
   Schema.number.pipe(Schema.positive(), Schema.int(), Schema.nonNaN())
 );
 
-export const safeParseNonEmptyString = Schema.parse(
-  Schema.string.pipe(Schema.minLength(1))
-);
-
 export const safeParseJWT = Schema.parse(
   Schema.struct({
     userId: Schema.string,
@@ -49,15 +48,11 @@ export const safeParseUUIDs = Schema.parse(Schema.array(Schema.UUID));
 
 export const safeParseUUID = Schema.parse(Schema.UUID);
 
-export const safeParseGameState = Schema.parse(GameStateStruct);
-
 export const safeParseNumberArray = Schema.parse(
   Schema.array(
     Schema.number.pipe(Schema.positive(), Schema.int(), Schema.nonNaN())
   )
 );
-
-export const safeParseChatLog = Schema.parse(Schema.array(ChatMessageStruct));
 
 export const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -78,5 +73,17 @@ export const verifyJwt = (token: string, secret: string | undefined) => {
         catch: () => new AuthenticationError({ message: "Invalid AuthToken" }),
       });
     })
+  );
+};
+
+export const sendErrorMsgToClient = <T>(
+  error: T,
+  room: number,
+  roomConnections: RoomConnections
+) => {
+  const errorMessage =
+    error instanceof Error ? error.message : "An unknown server error occured";
+  return Effect.succeed(
+    broadcastToRoom("error", errorMessage, room, roomConnections)
   );
 };

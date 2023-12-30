@@ -1,20 +1,13 @@
-import { GameState } from "../../../shared/common";
-import { CoreRoomInfo, CoreUserInfo } from "../client-types";
+import { CoreProps } from "../types";
 import { incrementTurn, startGame } from "../effects/effects";
 
-type Props = {
-  coreUserInfo: CoreUserInfo;
-  gameState: GameState;
-  coreRoomInfo: CoreRoomInfo;
-  setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
-};
-
-const EndTurnButton = ({
-  coreUserInfo: { currentUserState },
-  gameState,
-  coreRoomInfo: { socket, authToken, roomNumber },
-  setErrorMessage,
-}: Props) => {
+const EndTurnButton = ({ props }: { props: CoreProps }) => {
+  const {
+    gameState,
+    coreRoomInfo: { socket, authToken, roomNumber },
+    coreUserInfo: { currentUserState },
+    setErrorMessage,
+  } = props;
   return (
     <button
       id="end-turn"

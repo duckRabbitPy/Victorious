@@ -39,6 +39,7 @@ export function createHttpServer(port: number): Express {
 
   // Serve static files from the dist/client folder in production
   if (!isDev) {
+    server.use("/public", express.static(path.join(rootPath, "dist/public")));
     server.use("/", express.static(path.join(rootPath, "dist/client")));
   }
 

@@ -10,7 +10,7 @@ import {
   verifyUserQuery,
 } from "../../models/users";
 
-import { safeParseJWT, safeParseNonEmptyString, verifyJwt } from "../../utils";
+import { safeParseJWT, verifyJwt } from "../../utils";
 import { RequestHandler } from "express";
 import nodemailer from "nodemailer";
 import {
@@ -19,6 +19,7 @@ import {
   sendLoginResponse,
   sendRegisterResponse,
 } from "../responseHandlers";
+import { safeParseNonEmptyString } from "../../../../shared/common";
 
 export const login: RequestHandler = (req, res) => {
   const username = safeParseNonEmptyString(req.body.username);

@@ -4,7 +4,6 @@ import { pool } from "../../db/connection";
 
 export const getLatestChatLogQuery = (sessionId: string) => {
   const getLatestChatLog = async (sessionId: string) => {
-    console.log("getLatestChatLog");
     try {
       const result = await pool.query(
         `
