@@ -1,3 +1,4 @@
+import React from "react";
 import {
   CardName,
   countToCardNamesArray,
@@ -10,9 +11,11 @@ import { CoreProps } from "../types";
 
 export const SupplyCard = ({
   children: cardName,
-  props,
+  setSupplyCardInFocus,
+  coreProps,
 }: {
-  props: CoreProps;
+  coreProps: CoreProps;
+  setSupplyCardInFocus: React.Dispatch<React.SetStateAction<CardName | null>>;
   children: CardName;
 }) => {
   const {
@@ -20,7 +23,7 @@ export const SupplyCard = ({
     coreRoomInfo: { socket, authToken, roomNumber },
     coreUserInfo: { loggedInUsername, currentUserState },
     setErrorMessage,
-  } = props;
+  } = coreProps;
 
   if (!currentUserState) return null;
 
@@ -37,7 +40,9 @@ export const SupplyCard = ({
 
   const isCurrentUsersTurn = isUsersTurn(gameState, loggedInUsername);
 
-  const cardStyle = {
+  const cardStyle: React.CSSProperties = {
+    width: "100%",
+    height: "100%",
     cursor: canBuy ? "pointer" : "not-allowed",
     border: `2px solid ${
       isCurrentUsersTurn && canBuy
@@ -47,21 +52,29 @@ export const SupplyCard = ({
         : "red"
     }`,
   };
+
   return (
-    <button
-      style={cardStyle}
-      onClick={() => {
-        buyCard({
-          socket,
-          authToken,
-          roomNumber,
-          cardName,
-          setErrorMessage,
-          toDiscardFromHand: countToCardNamesArray(currentUserState.hand),
-        });
-      }}
-    >
-      {cardName + " " + `(${gameState.global_state.supply[cardName]})`}
-    </button>
+    <div>
+      <button
+        style={cardStyle}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          setSupplyCardInFocus(cardName);
+        }}
+        onClick={() => {
+          canBuy &&
+            buyCard({
+              socket,
+              authToken,
+              roomNumber,
+              cardName,
+              setErrorMessage,
+              toDiscardFromHand: countToCardNamesArray(currentUserState.hand),
+            });
+        }}
+      >
+        {cardName + " " + `(${gameState.global_state.supply[cardName]})`}
+      </button>
+    </div>
   );
 };

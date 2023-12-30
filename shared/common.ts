@@ -68,6 +68,7 @@ const market = {
   cost: 5,
   type: "action",
   value: 0,
+  description: "Draw 1 card, +1 action, +1 buy, +1 treasure",
 } as const;
 
 const councilRoom = {
@@ -75,6 +76,7 @@ const councilRoom = {
   cost: 5,
   type: "action",
   value: 0,
+  description: "Draw 4 cards, +1 buy",
 } as const;
 
 const laboratory = {
@@ -82,6 +84,7 @@ const laboratory = {
   cost: 5,
   type: "action",
   value: 0,
+  description: "Draw 2 cards, +1 action",
 } as const;
 
 const festival = {
@@ -89,6 +92,7 @@ const festival = {
   cost: 5,
   type: "action",
   value: 0,
+  description: "+2 actions, +1 buy, +2 treasure",
 } as const;
 
 const Mine = {
@@ -96,6 +100,8 @@ const Mine = {
   cost: 5,
   type: "action",
   value: 0,
+  description:
+    "Trash a treasure card from your hand. Gain a treasure card costing up to 3 more; put it into your hand.",
 } as const;
 
 export const TreasureNames = Schema.union(
@@ -134,6 +140,7 @@ const CardStruct = Schema.struct({
   cost: Schema.number,
   type: CardTypes,
   value: Schema.number,
+  description: Schema.string.pipe(Schema.optional),
 });
 
 export const getAllCardNames = (): CardName[] => {
@@ -154,8 +161,12 @@ export const getAllCardNames = (): CardName[] => {
   ];
 };
 
-const getCardCostByName = (cardName: CardName): number => {
+export const getCardCostByName = (cardName: CardName): number => {
   return cardNameToCard(cardName).cost;
+};
+
+export const getCardDescriptionByName = (cardName: CardName): string => {
+  return cardNameToCard(cardName)?.description ?? "";
 };
 
 export const getCardValueByName = (cardName: CardName): number => {
