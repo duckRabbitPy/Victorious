@@ -1,12 +1,28 @@
 import { Link } from "react-router-dom";
 import { useGetLoggedInUsername } from "../hooks/auth";
 import Room from "../pages/Room";
+import backgroundUrl from "../../../public/images/background.jpg";
 
 const AuthWrappedRoom = () => {
   const { loggedInUsername } = useGetLoggedInUsername();
 
+  const imgStyle = {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    zIndex: -1,
+  } as React.CSSProperties;
+
   if (loggedInUsername) {
-    return <Room loggedInUsername={loggedInUsername} />;
+    return (
+      <>
+        <img src={backgroundUrl} alt="Background" style={imgStyle} />
+        <Room loggedInUsername={loggedInUsername} />
+      </>
+    );
   }
 
   return (

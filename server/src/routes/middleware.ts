@@ -4,7 +4,7 @@ import { AuthorisationError } from "../controllers/customErrors";
 import dotenv from "dotenv";
 import * as Effect from "@effect/io/Effect";
 import jwt from "jsonwebtoken";
-import { safeParseNonEmptyString } from "../utils";
+import { safeParseNonEmptyString } from "../../../shared/common";
 
 dotenv.config();
 

@@ -63,7 +63,13 @@ const PlayerHand = ({
   ) as [CardName, number][];
 
   return (
-    <div>
+    <div
+      style={{
+        backgroundColor: "#C6D0D5",
+        margin: "1rem",
+        border: "2px solid black",
+      }}
+    >
       <>
         <h3>Hand</h3>
         {!isUsersTurn(gameState, loggedInUsername)

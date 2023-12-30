@@ -6,11 +6,30 @@ import {
   getCardDescriptionByName,
   getCardTypeByName,
 } from "../../../shared/common";
+import copperUrl from "../../../public/images/copper.jpg";
+import silverUrl from "../../../public/images/silver.jpg";
+import goldUrl from "../../../public/images/gold.jpg";
+import estateUrl from "../../../public/images/estate.jpg";
+import duchyUrl from "../../../public/images/duchy.jpg";
+import provinceUrl from "../../../public/images/province.jpg";
+import village from "../../../public/images/village.jpg";
+import smithy from "../../../public/images/smithy.jpg";
 import { groupBy, sortBy } from "../../../shared/utils";
 
 import { CoreProps } from "../types";
 import { SupplyCard } from "./SupplyCard";
 import { pipe } from "effect";
+
+const treasureCardUrls = {
+  copper: copperUrl,
+  silver: silverUrl,
+  gold: goldUrl,
+  estate: estateUrl,
+  duchy: duchyUrl,
+  province: provinceUrl,
+  village: village,
+  smithy: smithy,
+} as Record<CardName, string>;
 
 const Supply = ({ props }: { props: CoreProps }) => {
   const {
@@ -47,25 +66,28 @@ const Supply = ({ props }: { props: CoreProps }) => {
         display: "flex",
         flexDirection: "row",
         justifyContent: "space-between",
-        position: "relative", // Add relative positioning
+        position: "relative",
         gap: "2rem",
       }}
     >
       {supplyCardInFocus && (
         <div
           style={{
-            backgroundColor: "white",
             padding: "1rem",
-            border: "1px solid black",
+            border: "3px solid black",
             zIndex: 1,
-            display: "flex",
-            flexDirection: "column",
-            height: "300px",
+            height: "fit-content",
             width: "200px",
-            position: "absolute", // Set absolute positioning
+            position: "absolute",
             top: "50%",
             left: "50%",
-            transform: "translate(-50%, -50%)", // Center the box
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "darkgray",
+            flexDirection: "column",
+            justifyItems: "center",
+            display: "flex",
+            gap: "1rem",
+            borderRadius: "5px",
           }}
         >
           <button
@@ -74,12 +96,30 @@ const Supply = ({ props }: { props: CoreProps }) => {
           >
             x
           </button>
-          <b>{supplyCardInFocus}</b>
-          <div>{`Cost: ${getCardCostByName(supplyCardInFocus)}`}</div>
-          <div>{`Type: ${getCardTypeByName(supplyCardInFocus)}`}</div>
-          {getCardDescriptionByName(supplyCardInFocus) && (
-            <div>{`${getCardDescriptionByName(supplyCardInFocus)}`}</div>
-          )}
+          <img
+            src={treasureCardUrls[supplyCardInFocus]}
+            alt={supplyCardInFocus}
+            style={{
+              border: "3px solid black",
+              borderRadius: "10px",
+              height: "200px",
+            }}
+          />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              backgroundColor: "white",
+              borderRadius: "5px",
+            }}
+          >
+            <b>{supplyCardInFocus}</b>
+            <div>{`Cost: ${getCardCostByName(supplyCardInFocus)}`}</div>
+            <div>{`Type: ${getCardTypeByName(supplyCardInFocus)}`}</div>
+            {getCardDescriptionByName(supplyCardInFocus) && (
+              <div>{`${getCardDescriptionByName(supplyCardInFocus)}`}</div>
+            )}
+          </div>
         </div>
       )}
       <div>

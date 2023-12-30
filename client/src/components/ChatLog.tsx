@@ -44,7 +44,14 @@ const ChatLog = ({
   return (
     <div>
       <h3>ChatLog</h3>
-      <div>
+      <div
+        style={{
+          height: "200px",
+          overflowY: "scroll",
+          backgroundColor: "#C6D0D5",
+          border: "2px solid black",
+        }}
+      >
         {chatLog &&
           chatLog.map((c) => (
             <div key={c.message}>
@@ -55,9 +62,9 @@ const ChatLog = ({
             </div>
           ))}
       </div>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} style={{ margin: "1rem" }}>
         <input
-          style={{ width: "200px" }}
+          style={{ width: "200px", marginRight: "10px" }}
           type="text"
           placeholder="Type your message here"
           value={inputValue ?? ""}
