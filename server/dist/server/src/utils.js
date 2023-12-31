@@ -39,10 +39,13 @@ const logAndThrowError = (error) => {
     throw error;
 };
 exports.logAndThrowError = logAndThrowError;
-const tapPipeLine = (effect) => (0, effect_1.pipe)(effect, Effect.tapBoth({
-    onFailure: (f) => Effect.log(`Failed with: ${JSON.stringify(f, null, 2)}`),
-    onSuccess: (s) => Effect.log(`Success with: ${JSON.stringify(s, null, 2)}`),
-}), Effect.flatMap(() => effect));
+const tapPipeLine = (effect) => {
+    (0, effect_1.pipe)(effect, Effect.tapBoth({
+        onFailure: (f) => Effect.log(`Failed with: ${JSON.stringify(f, null, 2)}`),
+        onSuccess: (s) => Effect.log(`Success with: ${JSON.stringify(s, null, 2)}`),
+    }));
+    return effect;
+};
 exports.tapPipeLine = tapPipeLine;
 exports.safeParseNumber = Schema.parse(Schema.number.pipe(Schema.positive(), Schema.int(), Schema.nonNaN()));
 exports.safeParseJWT = Schema.parse(Schema.struct({
