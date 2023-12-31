@@ -25,8 +25,9 @@ export const Register = () => {
       body: JSON.stringify(data),
     })
       .then((res) => res.json())
+      // todo parse json and type response
       .then((data) => {
-        if (data.success) {
+        if (data.successMsg) {
           setErrorMessage(null);
           setEmailSent(true);
         } else {

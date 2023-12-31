@@ -37,6 +37,7 @@ import { getLatestChatLogQuery } from "./models/chatlog/queries";
 import { broadcastToRoom } from "./broadcast";
 import { deduceVictoryPoints } from "./controllers/transformers/victory";
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
+import { success } from "@effect/schema/ParseResult";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -69,17 +70,20 @@ export function createWebsocketServer(app: wsApplication): void {
             roomConnections,
           })
         ),
-        Effect.catchAll(() => {
-          ws.send(
-            JSON.stringify({
-              broadcastType: "error",
-              error: "error parsing client message",
-            })
+        Effect.catchAll((error) => {
+          const roomOrUndefined = pipe(
+            parseClientMessage(JSON.parse(msg as string)),
+            Effect.map((msg) => msg.room),
+            Effect.orElseSucceed(() => undefined),
+            Effect.runSync
           );
 
-          return Effect.unit;
+          console.log("Error in websocket handler:", error);
+          console.log(JSON.stringify(error, null, 2));
+          console.log("\n");
+          return sendErrorMsgToClient(error, roomOrUndefined, roomConnections);
         }),
-        Effect.runSync
+        Effect.runPromise
       );
     });
 
@@ -137,21 +141,16 @@ const handleMessage = ({
   switch (msg.effect) {
     // read only operations
     case SupportedEffects.getCurrentGameState: {
-      pipe(
+      return pipe(
         currentGameState,
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
-        ),
-        Effect.catchAll((error) =>
-          sendErrorMsgToClient(error, room, roomConnections)
-        ),
-        Effect.runPromise
+        )
       );
-      break;
     }
 
     case SupportedEffects.getCurrentChatLog: {
-      pipe(
+      return pipe(
         Effect.all({ userInfo: userDetailsOrError, currentGameState }),
         Effect.flatMap(({ currentGameState }) =>
           getLatestChatLogQuery(currentGameState.session_id)
@@ -159,18 +158,13 @@ const handleMessage = ({
         Effect.flatMap(safeParseChatLog),
         Effect.flatMap((chatLog) =>
           broadcastToRoom("chatLog", chatLog, room, roomConnections)
-        ),
-        Effect.catchAll((error) =>
-          sendErrorMsgToClient(error, room, roomConnections)
-        ),
-        Effect.runPromise
+        )
       );
-      break;
     }
 
     // mutation operations
     case SupportedEffects.addLivePlayer: {
-      pipe(
+      return pipe(
         Effect.all({ userInfo: userDetailsOrError, currentGameState }),
         Effect.flatMap(({ userInfo, currentGameState }) =>
           addLivePlayerQuery({
@@ -181,17 +175,12 @@ const handleMessage = ({
         ),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
-        ),
-        Effect.catchAll((error) =>
-          sendErrorMsgToClient(error, room, roomConnections)
-        ),
-        Effect.runPromise
+        )
       );
-      break;
     }
 
     case SupportedEffects.startGame: {
-      pipe(
+      return pipe(
         Effect.all({ userInfo: userDetailsOrError, currentGameState }),
         Effect.flatMap(({ currentGameState }) =>
           dealToAllActors(currentGameState)
@@ -201,17 +190,12 @@ const handleMessage = ({
         Effect.flatMap(writeNewGameStateToDB),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
-        ),
-        Effect.catchAll((error) =>
-          sendErrorMsgToClient(error, room, roomConnections)
-        ),
-        Effect.runPromise
+        )
       );
-      break;
     }
 
     case SupportedEffects.incrementTurn: {
-      pipe(
+      return pipe(
         Effect.all({ userInfo: userDetailsOrError, currentGameState }),
         Effect.flatMap(({ currentGameState }) => cleanUp(currentGameState)),
         Effect.flatMap(incrementTurn),
@@ -219,17 +203,12 @@ const handleMessage = ({
         Effect.flatMap(writeNewGameStateToDB),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
-        ),
-        Effect.catchAll((error) =>
-          sendErrorMsgToClient(error, room, roomConnections)
-        ),
-        Effect.runPromise
+        )
       );
-      break;
     }
 
     case SupportedEffects.buyCard: {
-      pipe(
+      return pipe(
         Effect.all({
           userInfo: userDetailsOrError,
           currentGameState,
@@ -247,17 +226,12 @@ const handleMessage = ({
         Effect.flatMap(writeNewGameStateToDB),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
-        ),
-        Effect.catchAll((error) =>
-          sendErrorMsgToClient(error, room, roomConnections)
-        ),
-        Effect.runPromise
+        )
       );
-      break;
     }
 
     case SupportedEffects.playTreasure: {
-      pipe(
+      return pipe(
         Effect.all({
           userInfo: userDetailsOrError,
           currentGameState,
@@ -274,17 +248,12 @@ const handleMessage = ({
         Effect.flatMap(writeNewGameStateToDB),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
-        ),
-        Effect.catchAll((error) =>
-          sendErrorMsgToClient(error, room, roomConnections)
-        ),
-        Effect.runPromise
+        )
       );
-      break;
     }
 
     case SupportedEffects.resetPlayedTreasures: {
-      pipe(
+      return pipe(
         Effect.all({ userInfo: userDetailsOrError, currentGameState }),
         Effect.flatMap(({ currentGameState }) =>
           resetPlayedTreasures(currentGameState)
@@ -293,17 +262,12 @@ const handleMessage = ({
         Effect.flatMap(writeNewGameStateToDB),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
-        ),
-        Effect.catchAll((error) =>
-          sendErrorMsgToClient(error, room, roomConnections)
-        ),
-        Effect.runPromise
+        )
       );
-      break;
     }
 
     case SupportedEffects.playAction: {
-      pipe(
+      return pipe(
         Effect.all({
           userInfo: userDetailsOrError,
           currentGameState,
@@ -321,18 +285,13 @@ const handleMessage = ({
         Effect.flatMap(writeNewGameStateToDB),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
-        ),
-        Effect.catchAll((error) =>
-          sendErrorMsgToClient(error, room, roomConnections)
-        ),
-        Effect.runPromise
+        )
       );
-      break;
     }
 
     case SupportedEffects.sendChatMessage: {
       const chatMessage = safeParseNonEmptyString(msg.chatMessage);
-      pipe(
+      return pipe(
         Effect.all({
           userInfo: userDetailsOrError,
           chatMessage,
@@ -348,14 +307,12 @@ const handleMessage = ({
         Effect.flatMap(safeParseChatLog),
         Effect.flatMap((chatLog) =>
           broadcastToRoom("chatLog", chatLog, room, roomConnections)
-        ),
-        Effect.catchAll((error) =>
-          sendErrorMsgToClient(error, room, roomConnections)
-        ),
-        Effect.runPromise
+        )
       );
-      break;
+    }
+
+    default: {
+      return Effect.succeed({ success: false });
     }
   }
-  return Effect.unit;
 };

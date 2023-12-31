@@ -78,11 +78,19 @@ export const verifyJwt = (token: string, secret: string | undefined) => {
 
 export const sendErrorMsgToClient = <T>(
   error: T,
-  room: number,
+  room: number | undefined,
   roomConnections: RoomConnections
 ) => {
+  if (!room) {
+    console.error(
+      "No room number provided, cannot send error message to client"
+    );
+    return Effect.succeed(Effect.unit);
+  }
+
   const errorMessage =
     error instanceof Error ? error.message : "An unknown server error occured";
+
   return Effect.succeed(
     broadcastToRoom("error", errorMessage, room, roomConnections)
   );
