@@ -11,6 +11,7 @@ const customErrors_1 = require("../controllers/customErrors");
 dotenv_1.default.config();
 console.log("NODE_ENV for db connection", process.env.NODE_ENV);
 const environment = process.env.NODE_ENV;
+console.log({ environment });
 const maybePool = environment === "production"
     ? new pg_1.Pool({
         connectionString: process.env.PROD_DATABASE_URL,

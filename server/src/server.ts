@@ -9,6 +9,12 @@ import expressWs from "@wll8/express-ws";
 // server env set up
 dotenv.config();
 const SERVER_PORT = Number(process.env?.PORT) || 3000;
+export const API_ENDPOINT =
+  process.env.NODE_ENV === "production"
+    ? "https://dominion.onrender.com/api"
+    : "http://localhost:3000/api";
+
+console.log({ API_ENDPOINT });
 
 const expressApp = express();
 

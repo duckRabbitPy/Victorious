@@ -37,7 +37,6 @@ import { getLatestChatLogQuery } from "./models/chatlog/queries";
 import { broadcastToRoom } from "./broadcast";
 import { deduceVictoryPoints } from "./controllers/transformers/victory";
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
-import { success } from "@effect/schema/ParseResult";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -70,18 +69,14 @@ export function createWebsocketServer(app: wsApplication): void {
             roomConnections,
           })
         ),
+        tapPipeLine,
         Effect.catchAll((error) => {
-          const roomOrUndefined = pipe(
+          const msgOrUndefined = pipe(
             parseClientMessage(JSON.parse(msg as string)),
-            Effect.map((msg) => msg.room),
             Effect.orElseSucceed(() => undefined),
             Effect.runSync
           );
-
-          console.log("Error in websocket handler:", error);
-          console.log(JSON.stringify(error, null, 2));
-          console.log("\n");
-          return sendErrorMsgToClient(error, roomOrUndefined, roomConnections);
+          return sendErrorMsgToClient(error, msgOrUndefined, roomConnections);
         }),
         Effect.runPromise
       );

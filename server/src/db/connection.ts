@@ -9,6 +9,8 @@ console.log("NODE_ENV for db connection", process.env.NODE_ENV);
 
 const environment = process.env.NODE_ENV;
 
+console.log({ environment });
+
 const maybePool =
   environment === "production"
     ? new Pool({

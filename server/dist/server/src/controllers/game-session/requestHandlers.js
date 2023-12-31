@@ -40,7 +40,7 @@ const createGameSession = (req, res) => {
 };
 exports.createGameSession = createGameSession;
 const getLatestLiveGameSnapshot = ({ room }) => {
-    return (0, Function_1.pipe)((0, queries_1.getLatestGameSnapshotQuery)(room), Effect.flatMap(common_1.safeParseGameState));
+    return (0, Function_1.pipe)((0, queries_1.getLatestGameSnapshotQuery)(room), utils_1.tapPipeLine, Effect.flatMap(common_1.safeParseGameState));
 };
 exports.getLatestLiveGameSnapshot = getLatestLiveGameSnapshot;
 const getOpenGameSessions = (req, res) => {

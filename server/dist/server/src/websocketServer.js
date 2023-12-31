@@ -56,12 +56,9 @@ function createWebsocketServer(app) {
                 msg,
                 ws,
                 roomConnections,
-            })), Effect.catchAll((error) => {
-                const roomOrUndefined = (0, effect_1.pipe)(parseClientMessage(JSON.parse(msg)), Effect.map((msg) => msg.room), Effect.orElseSucceed(() => undefined), Effect.runSync);
-                console.log("Error in websocket handler:", error);
-                console.log(JSON.stringify(error, null, 2));
-                console.log("\n");
-                return (0, utils_1.sendErrorMsgToClient)(error, roomOrUndefined, roomConnections);
+            })), utils_1.tapPipeLine, Effect.catchAll((error) => {
+                const msgOrUndefined = (0, effect_1.pipe)(parseClientMessage(JSON.parse(msg)), Effect.orElseSucceed(() => undefined), Effect.runSync);
+                return (0, utils_1.sendErrorMsgToClient)(error, msgOrUndefined, roomConnections);
             }), Effect.runPromise);
         });
         ws.on("close", () => {

@@ -23,11 +23,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sumCardCounts = exports.subtractCardCount = exports.zeroCardCount = exports.ClientPayloadStruct = exports.SupportedEffects = exports.safeParseChatLog = exports.safeParseGameState = exports.safeParseBroadCast = exports.safeParseCardName = exports.safeParseNonEmptyString = exports.BroadCastStruct = exports.ChatMessageStruct = exports.GameStateStruct = exports.Phases = exports.CardCountStruct = exports.cardNameToCard = exports.cardNameToVictoryPoints = exports.getTreasureValue = exports.hasActionCard = exports.getCardTypeByName = exports.discardHand = exports.cardNamesToCount = exports.countToCardNamesArray = exports.getCardValueByName = exports.getCardDescriptionByName = exports.getCardCostByName = exports.getAllCardNames = exports.ActionNames = exports.VictoryNames = exports.TreasureNames = exports.API_ENDPOINT = void 0;
+exports.sumCardCounts = exports.subtractCardCount = exports.zeroCardCount = exports.ClientPayloadStruct = exports.SupportedEffects = exports.safeParseChatLog = exports.safeParseGameState = exports.safeParseBroadCast = exports.safeParseCardName = exports.safeParseNonEmptyString = exports.BroadCastStruct = exports.ChatMessageStruct = exports.GameStateStruct = exports.Phases = exports.CardCountStruct = exports.cardNameToCard = exports.cardNameToVictoryPoints = exports.getTreasureValue = exports.hasActionCard = exports.getCardTypeByName = exports.discardHand = exports.cardNamesToCount = exports.countToCardNamesArray = exports.getCardValueByName = exports.getCardDescriptionByName = exports.getCardCostByName = exports.getAllCardNames = exports.ActionNames = exports.VictoryNames = exports.TreasureNames = void 0;
 const Schema = __importStar(require("@effect/schema/Schema"));
-exports.API_ENDPOINT = process.env.NODE_ENV === "production"
-    ? "https://dominion.onrender.com/api"
-    : "http://localhost:3000/api";
 const copper = {
     name: "copper",
     cost: 0,

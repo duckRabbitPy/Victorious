@@ -4,6 +4,7 @@ import {
   ClientPayloadStruct,
   ChatMessageStruct,
   safeParseNonEmptyString,
+  ClientPayload,
 } from "../../shared/common";
 import * as Effect from "@effect/io/Effect";
 import { pipe } from "effect";
@@ -78,10 +79,10 @@ export const verifyJwt = (token: string, secret: string | undefined) => {
 
 export const sendErrorMsgToClient = <T>(
   error: T,
-  room: number | undefined,
+  msg: ClientPayload | undefined,
   roomConnections: RoomConnections
 ) => {
-  if (!room) {
+  if (!msg?.room) {
     console.error(
       "No room number provided, cannot send error message to client"
     );
@@ -92,6 +93,6 @@ export const sendErrorMsgToClient = <T>(
     error instanceof Error ? error.message : "An unknown server error occured";
 
   return Effect.succeed(
-    broadcastToRoom("error", errorMessage, room, roomConnections)
+    broadcastToRoom("error", errorMessage, msg.room, roomConnections)
   );
 };

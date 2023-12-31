@@ -37,6 +37,7 @@ const utils_1 = require("../../utils");
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const responseHandlers_1 = require("../responseHandlers");
 const common_1 = require("../../../../shared/common");
+const server_1 = require("../../server");
 const login = (req, res) => {
     const username = (0, common_1.safeParseNonEmptyString)(req.body.username);
     const password = (0, common_1.safeParseNonEmptyString)(req.body.password);
@@ -130,7 +131,7 @@ const sendConfirmationEmail = ({ email, confirmation_token, }) => Effect.tryProm
                 from: process.env.SENDER_EMAIL,
                 to: email,
                 subject: "Confirm your email",
-                text: `Click the link to confirm your email: ${common_1.API_ENDPOINT}/register/confirm/${confirmation_token}`,
+                text: `Click the link to confirm your email: ${server_1.API_ENDPOINT}/register/confirm/${confirmation_token}`,
             };
             transporter.sendMail(mailOptions, (error, info) => {
                 if (error) {

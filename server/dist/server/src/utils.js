@@ -71,12 +71,12 @@ const verifyJwt = (token, secret) => {
     }));
 };
 exports.verifyJwt = verifyJwt;
-const sendErrorMsgToClient = (error, room, roomConnections) => {
-    if (!room) {
+const sendErrorMsgToClient = (error, msg, roomConnections) => {
+    if (!(msg === null || msg === void 0 ? void 0 : msg.room)) {
         console.error("No room number provided, cannot send error message to client");
         return Effect.succeed(Effect.unit);
     }
     const errorMessage = error instanceof Error ? error.message : "An unknown server error occured";
-    return Effect.succeed((0, broadcast_1.broadcastToRoom)("error", errorMessage, room, roomConnections));
+    return Effect.succeed((0, broadcast_1.broadcastToRoom)("error", errorMessage, msg.room, roomConnections));
 };
 exports.sendErrorMsgToClient = sendErrorMsgToClient;
