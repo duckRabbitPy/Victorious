@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useGetLoggedInUsername } from "../hooks/auth";
+import { API_ENDPOINT } from "../../../shared/common";
 
 export const Login = () => {
   const { loggedInUsername, refetchLoginStatus } = useGetLoggedInUsername();
@@ -17,7 +18,7 @@ export const Login = () => {
       password,
     };
     // fetch from backend running on port 3000
-    fetch(`http://localhost:3000/api/login`, {
+    fetch(`${API_ENDPOINT}login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
