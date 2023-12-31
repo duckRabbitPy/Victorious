@@ -20,7 +20,7 @@ export const logAndThrowError = (error: unknown) => {
 
 export const tapPipeLine = <R, E, A>(
   effect: Effect.Effect<R, E, A>
-): Effect.Effect<R, E, A> =>
+): Effect.Effect<R, E, A> => {
   pipe(
     effect,
     Effect.tapBoth({
@@ -28,9 +28,10 @@ export const tapPipeLine = <R, E, A>(
         Effect.log(`Failed with: ${JSON.stringify(f, null, 2)}`),
       onSuccess: (s) =>
         Effect.log(`Success with: ${JSON.stringify(s, null, 2)}`),
-    }),
-    Effect.flatMap(() => effect)
+    })
   );
+  return effect;
+};
 
 export const safeParseNumber = Schema.parse(
   Schema.number.pipe(Schema.positive(), Schema.int(), Schema.nonNaN())

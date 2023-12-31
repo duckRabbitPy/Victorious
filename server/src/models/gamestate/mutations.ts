@@ -12,7 +12,7 @@ import {
   safeParseGameState,
   zeroCardCount,
 } from "../../../../shared/common";
-import { logAndThrowError, tapPipeLine } from "../../utils";
+import { logAndThrowError } from "../../utils";
 
 import { getLatestGameSnapshotQuery } from "./queries";
 
