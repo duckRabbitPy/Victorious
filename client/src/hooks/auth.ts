@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { uuidv4 } from "../../../shared/utils";
+import { API_ENDPOINT } from "../../../shared/common";
 
 const getLoggedInUserName = async () => {
   const authToken = localStorage.getItem("dominion_auth_token");
@@ -8,7 +9,7 @@ const getLoggedInUserName = async () => {
   }
 
   try {
-    const response = await fetch(`http://localhost:3000/api/auth`, {
+    const response = await fetch(`${API_ENDPOINT}/auth`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

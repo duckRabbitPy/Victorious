@@ -22,13 +22,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.createWebsocketServer = void 0;
 const Effect = __importStar(require("@effect/io/Effect"));
-const ws_1 = __importDefault(require("ws"));
 const mutations_1 = require("./models/gamestate/mutations");
 const Schema = __importStar(require("@effect/schema/Schema"));
 const effect_1 = require("effect");
@@ -45,11 +41,11 @@ const queries_1 = require("./models/chatlog/queries");
 const broadcast_1 = require("./broadcast");
 const victory_1 = require("./controllers/transformers/victory");
 const parseClientMessage = Schema.parse(common_1.ClientPayloadStruct);
-function createWebsocketServer(port) {
+function createWebsocketServer(app) {
     // mutable state
     const roomConnections = [];
-    const wss = new ws_1.default.Server({ port });
-    wss.on("connection", function connection(ws) {
+    // websocket
+    app.ws("/", function (ws, req) {
         ws.on("message", function message(msg) {
             (0, effect_1.pipe)(Effect.try({
                 try: () => JSON.parse(msg),
@@ -60,7 +56,7 @@ function createWebsocketServer(port) {
                 msg,
                 ws,
                 roomConnections,
-            })), Effect.catchAll((error) => {
+            })), Effect.catchAll(() => {
                 ws.send(JSON.stringify({
                     broadcastType: "error",
                     error: "error parsing client message",
@@ -68,7 +64,11 @@ function createWebsocketServer(port) {
                 return Effect.unit;
             }), Effect.runSync);
         });
+        ws.on("close", () => {
+            console.log(`Client disconnected. Total connections: ${roomConnections.length}`);
+        });
     });
+    console.log("Websocket server created");
 }
 exports.createWebsocketServer = createWebsocketServer;
 const handleMessage = ({ msg, ws, roomConnections, }) => {
