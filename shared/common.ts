@@ -1,5 +1,10 @@
 import * as Schema from "@effect/schema/Schema";
 
+export const API_ENDPOINT =
+  process.env.NODE_ENV === "production"
+    ? "https://dominion.onrender.com/api"
+    : "http://localhost:3000/api";
+
 const copper = {
   name: "copper",
   cost: 0,

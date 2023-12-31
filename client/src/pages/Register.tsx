@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { API_ENDPOINT } from "../../../shared/common";
 
 export const Register = () => {
   const [emailSent, setEmailSent] = useState<boolean>(false);
@@ -16,7 +17,7 @@ export const Register = () => {
       password,
     };
     // fetch from backend running on port 3000
-    fetch(`http://localhost:3000/api/register`, {
+    fetch(`${API_ENDPOINT}/api/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

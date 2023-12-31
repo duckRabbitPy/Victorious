@@ -47,7 +47,11 @@ export const useGameState = () => {
   const [initialChatLogFetched, setInitialChatLogFetched] = useState(false);
 
   useEffect(() => {
-    const newSocket = new WebSocket("ws://localhost:8080");
+    const newSocket = new WebSocket(
+      process.env.NODE_EV === "production"
+        ? "wss://dominion.onrender.com"
+        : "ws://localhost:8080"
+    );
 
     newSocket.addEventListener("message", (event) => {
       const eventData = safeParseBroadCast(JSON.parse(event.data)).pipe(

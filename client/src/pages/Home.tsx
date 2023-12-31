@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useGetLoggedInUsername } from "../hooks/auth";
+import { API_ENDPOINT } from "../../../shared/common";
 
 export const Home = () => {
   const [room, setRoom] = useState<number | null>(null);
@@ -16,8 +17,8 @@ export const Home = () => {
     const data = {
       room: Number(room),
     };
-    // fetch from backend running on port 3000
-    fetch(`http://localhost:3000/api/game-sessions`, {
+
+    fetch(`${API_ENDPOINT}/game-sessions`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -41,7 +42,7 @@ export const Home = () => {
 
   const getOpenRooms = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    fetch(`http://localhost:3000/api/game-sessions`, {
+    fetch(`${API_ENDPOINT}/game-sessions`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
