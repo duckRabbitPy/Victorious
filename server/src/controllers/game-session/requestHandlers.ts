@@ -6,13 +6,18 @@ import {
   getOpenGameSessionsQuery,
 } from "../../models/gamestate/queries";
 
-import { safeParseNumber, safeParseNumberArray } from "../../utils";
+import {
+  safeParseNumber,
+  safeParseNumberArray,
+  tapPipeLine,
+} from "../../utils";
 import {
   sendGameStateResponse,
   sendOpenRoomsResponse,
 } from "../responseHandlers";
 import { createGameSessionQuery } from "../../models/gamestate/mutations";
 import { safeParseGameState } from "../../../../shared/common";
+import { tap } from "node:test/reporters";
 
 export const createGameSession: RequestHandler = (req, res) => {
   return pipe(
@@ -31,6 +36,7 @@ export const createGameSession: RequestHandler = (req, res) => {
 export const getLatestLiveGameSnapshot = ({ room }: { room: number }) => {
   return pipe(
     getLatestGameSnapshotQuery(room),
+    tapPipeLine,
     Effect.flatMap(safeParseGameState)
   );
 };

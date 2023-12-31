@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { uuidv4 } from "../../../shared/utils";
-import { API_ENDPOINT } from "../../../shared/common";
+import { API_ENDPOINT } from "../utils";
 
 const getLoggedInUserName = async () => {
   const authToken = localStorage.getItem("dominion_auth_token");

@@ -20,10 +20,8 @@ import {
   sendRegisterResponse,
 } from "../responseHandlers";
 
-import {
-  API_ENDPOINT,
-  safeParseNonEmptyString,
-} from "../../../../shared/common";
+import { safeParseNonEmptyString } from "../../../../shared/common";
+import { API_ENDPOINT } from "../../server";
 
 export const login: RequestHandler = (req, res) => {
   const username = safeParseNonEmptyString(req.body.username);
