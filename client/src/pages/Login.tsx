@@ -18,7 +18,7 @@ export const Login = () => {
       password,
     };
     // fetch from backend running on port 3000
-    fetch(`${API_ENDPOINT}login`, {
+    fetch(`${API_ENDPOINT}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

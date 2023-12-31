@@ -48,15 +48,16 @@ export const useGameState = () => {
 
   useEffect(() => {
     const newSocket = new WebSocket(
-      process.env.NODE_EV === "production"
-        ? "wss://dominion.onrender.com"
-        : "ws://localhost:8080"
+      import.meta.env.VITE_IS_DEV
+        ? "ws://localhost:3000"
+        : "wss://dominion.onrender.com"
     );
 
     newSocket.addEventListener("message", (event) => {
       const eventData = safeParseBroadCast(JSON.parse(event.data)).pipe(
         Effect.runSync
       );
+      console.log("Received message from server:", eventData);
 
       switch (eventData.broadcastType) {
         case "gameState": {

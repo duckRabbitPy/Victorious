@@ -36,6 +36,7 @@ import { updateChatLogQuery } from "./models/chatlog/mutations";
 import { getLatestChatLogQuery } from "./models/chatlog/queries";
 import { broadcastToRoom } from "./broadcast";
 import { deduceVictoryPoints } from "./controllers/transformers/victory";
+import { wsApplication } from "@wll8/express-ws/dist/src/type";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
@@ -45,13 +46,12 @@ export type RoomConnections = {
   uniqueUserAuthToken: string;
 }[];
 
-export function createWebsocketServer(port: number): void {
+export function createWebsocketServer(app: wsApplication): void {
   // mutable state
   const roomConnections: RoomConnections = [];
 
-  const wss = new WebSocket.Server({ port });
-
-  wss.on("connection", function connection(ws: WebSocket) {
+  // websocket
+  app.ws("/", function (ws, req) {
     ws.on("message", function message(msg: unknown) {
       pipe(
         Effect.try({
@@ -69,7 +69,7 @@ export function createWebsocketServer(port: number): void {
             roomConnections,
           })
         ),
-        Effect.catchAll((error) => {
+        Effect.catchAll(() => {
           ws.send(
             JSON.stringify({
               broadcastType: "error",
@@ -82,7 +82,15 @@ export function createWebsocketServer(port: number): void {
         Effect.runSync
       );
     });
+
+    ws.on("close", () => {
+      console.log(
+        `Client disconnected. Total connections: ${roomConnections.length}`
+      );
+    });
   });
+
+  console.log("Websocket server created");
 }
 
 const handleMessage = ({

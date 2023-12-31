@@ -2,13 +2,33 @@ import dotenv from "dotenv";
 import { createWebsocketServer } from "./websocketServer";
 import { createHttpServer } from "./httpServer";
 
+import express from "express";
+import http from "http";
+import expressWs from "@wll8/express-ws";
+
 // server env set up
 dotenv.config();
 const SERVER_PORT = Number(process.env?.PORT) || 3000;
-const WEBSOCKET_PORT = Number(process.env?.WEBSOCKET_PORT) || 8080;
 
-// websocket server on 8080;
-createWebsocketServer(WEBSOCKET_PORT);
+const expressApp = express();
 
-// http server on 3000
-createHttpServer(SERVER_PORT);
+const httpServer = http.createServer(expressApp);
+const appWithWSSUpgrade = expressWs({
+  app: expressApp,
+  server: httpServer,
+}).app;
+
+createHttpServer(appWithWSSUpgrade);
+createWebsocketServer(appWithWSSUpgrade);
+
+appWithWSSUpgrade.listen(SERVER_PORT, () => {
+  console.log(
+    "\x1b[42m",
+    `Server is running on port ${SERVER_PORT}`,
+    "\x1b[0m"
+  );
+});
+
+appWithWSSUpgrade.on("error", (error) => {
+  console.error("Server failed to start:", error);
+});
