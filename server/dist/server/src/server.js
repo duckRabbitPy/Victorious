@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.API_ENDPOINT = void 0;
+exports.SERVER_API_ENDPOINT = void 0;
 const dotenv_1 = __importDefault(require("dotenv"));
 const websocketServer_1 = require("./websocketServer");
 const httpServer_1 = require("./httpServer");
@@ -14,10 +14,10 @@ const express_ws_1 = __importDefault(require("@wll8/express-ws"));
 // server env set up
 dotenv_1.default.config();
 const SERVER_PORT = Number((_a = process.env) === null || _a === void 0 ? void 0 : _a.PORT) || 3000;
-exports.API_ENDPOINT = process.env.NODE_ENV === "production"
+exports.SERVER_API_ENDPOINT = process.env.NODE_ENV === "production"
     ? "https://dominion.onrender.com/api"
     : "http://localhost:3000/api";
-console.log({ API_ENDPOINT: exports.API_ENDPOINT });
+console.log({ SERVER_API_ENDPOINT: exports.SERVER_API_ENDPOINT });
 const expressApp = (0, express_1.default)();
 const httpServer = http_1.default.createServer(expressApp);
 const appWithWSSUpgrade = (0, express_ws_1.default)({
