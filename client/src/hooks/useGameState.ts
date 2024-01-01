@@ -48,11 +48,11 @@ export const useGameState = () => {
 
   useEffect(() => {
     const newSocket = new WebSocket(
-      import.meta.env.VITE_IS_PROD_MODE
+      import.meta.env.MODE
         ? "wss://dominion.onrender.com"
         : "ws://localhost:3000"
     );
-    console.log("Using prod websocket:", import.meta.env.VITE_IS_PROD_MODE);
+    console.log("Using prod websocket:", import.meta.env.MODE);
 
     newSocket.addEventListener("message", (event) => {
       const eventData = safeParseBroadCast(JSON.parse(event.data)).pipe(
