@@ -21,6 +21,10 @@ const StartGameButton = ({
           setErrorMessage,
         });
       }}
+      style={{
+        border: "1px solid green",
+        animation: "pulse 1.2s infinite",
+      }}
     >
       Start game
     </button>

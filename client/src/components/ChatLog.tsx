@@ -46,6 +46,7 @@ const ChatLog = ({
       <div
         style={{
           height: "100%",
+          minHeight: "200px",
           width: "400px",
           overflowY: "scroll",
           backgroundColor: "rgba(28, 26, 27, 0.66)",
@@ -81,7 +82,10 @@ const ChatLog = ({
             onChange={handleInputChange}
           />
         </div>
-        <button type="submit" style={{ width: "50%" }}>
+        <button
+          type="submit"
+          style={{ width: "50%", border: "2px blue solid" }}
+        >
           Send
         </button>
       </form>

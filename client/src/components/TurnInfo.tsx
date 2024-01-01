@@ -11,22 +11,53 @@ const TurnInfo = ({
   coreUserInfo: { loggedInUsername, currentUserState },
   gameState,
 }: Props) => {
+  if (!currentUserState) return null;
+
+  const buyPhaseInstruction =
+    currentUserState.buys > 0 ? "You may buy a card" : "No buys remaining";
+  const actionPhaseInstruction =
+    currentUserState.actions > 0
+      ? "You may play an action"
+      : "No actions remaining";
   return (
-    <>
-      <h3>Phase: {currentUserState?.phase}</h3>
+    <div
+      style={{
+        border: "1px black solid",
+        background: "rgba(255, 255, 255, 0.7)",
+        padding: "1rem",
+      }}
+    >
+      {!isUsersTurn(gameState, loggedInUsername) && (
+        <p>Waiting for other player...</p>
+      )}
       {isUsersTurn(gameState, loggedInUsername) && (
         <>
-          <h2>
+          <h3 style={{ margin: 0 }}>Phase: {currentUserState.phase}</h3>
+          <p style={{ margin: 0 }}>
             {currentUserState?.phase === Phases.Buy
-              ? "Buy card"
-              : "Play Action"}
-          </h2>
-          <p>{`victory points: ${currentUserState?.victoryPoints}`}</p>
-          <p>{`actions remaining ${currentUserState?.actions}`}</p>
-          <p>{`buys remaining ${currentUserState?.buys}`}</p>
+              ? buyPhaseInstruction
+              : actionPhaseInstruction}
+          </p>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: "1rem",
+            }}
+          >
+            <p>
+              Victory point: <b>{currentUserState.victoryPoints}</b>
+            </p>
+            <p>
+              Actions remaining: <b>{currentUserState.actions}</b>
+            </p>
+            <p>
+              Buys remaining: <b>{currentUserState.buys}</b>
+            </p>
+          </div>
         </>
       )}
-    </>
+    </div>
   );
 };
 

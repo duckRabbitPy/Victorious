@@ -52,6 +52,7 @@ export const SupplyCard = ({
         : "red"
     }`,
     backgroundColor: "rgba(239, 236, 220, 0.7)",
+    animation: canBuy ? "pulse 1.2s 1s" : "",
   };
 
   return (

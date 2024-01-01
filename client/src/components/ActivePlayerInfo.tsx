@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { CoreProps } from "../types";
 import { isUsersTurn } from "../../../shared/utils";
 import { addNewPlayer } from "../effects/effects";
@@ -17,16 +16,18 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
           backgroundColor: "rgba(239, 236, 220, 0.7)",
           border: "2px solid black",
           padding: "1rem",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
-          playing as : {loggedInUsername}
-        </div>
-        <Link to="/">Back to home</Link>
         <h1>Room {roomNumber}</h1>
-        <p>Players ready: {gameState.actor_state.length}</p>
+        <p style={{ fontWeight: "bold" }}>
+          Players ready: {gameState.actor_state.length}
+        </p>
         {
-          <ol style={{ listStyle: "none" }}>
+          <ol style={{ listStyle: "none", padding: "0" }}>
             {gameState.actor_state.map((actor) => (
               <li
                 key={actor.id}
@@ -59,6 +60,10 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
                   setErrorMessage,
                 })
               }
+              style={{
+                border: "2px solid green",
+                animation: "pulse 1.2s infinite",
+              }}
             >
               Ready
             </button>
