@@ -29,6 +29,15 @@ const treasureCardUrls = {
     "https://res.cloudinary.com/dkytnwn87/image/upload/v1703959200/dominion/village_chghpw.jpg",
   smithy:
     "https://res.cloudinary.com/dkytnwn87/image/upload/v1703959199/dominion/smithy_aq0iv6.jpg",
+  market:
+    "https://res.cloudinary.com/dkytnwn87/image/upload/v1704141742/dominion/Leonardo_Diffusion_XL_medieval_market_trading_3_vbl76b.jpg",
+  laboratory:
+    "https://res.cloudinary.com/dkytnwn87/image/upload/v1704141742/dominion/Leonardo_Diffusion_XL_medieval_laboratory_0_flwgg2.jpg",
+  festival:
+    "https://res.cloudinary.com/dkytnwn87/image/upload/v1704141742/dominion/Leonardo_Diffusion_XL_medieval_festival_tents_peasants_party_j_2_ufvpsa.jpg",
+  councilRoom:
+    "https://res.cloudinary.com/dkytnwn87/image/upload/v1704141742/dominion/Leonardo_Diffusion_XL_medieval_council_room_0_g9hye5.jpg",
+  mine: "https://res.cloudinary.com/dkytnwn87/image/upload/v1704141742/dominion/Leonardo_Diffusion_XL_medieval_mine_0_rizl4d.jpg",
 } as Record<CardName, string>;
 
 const Supply = ({ props }: { props: CoreProps }) => {
@@ -82,7 +91,7 @@ const Supply = ({ props }: { props: CoreProps }) => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            backgroundColor: "darkgray",
+            backgroundColor: "rgba(28, 26, 27, 0.8)",
             flexDirection: "column",
             justifyItems: "center",
             display: "flex",
@@ -109,7 +118,7 @@ const Supply = ({ props }: { props: CoreProps }) => {
             style={{
               display: "flex",
               flexDirection: "column",
-              backgroundColor: "white",
+              backgroundColor: "rgba(239, 236, 220, 0.7)",
               borderRadius: "5px",
             }}
           >

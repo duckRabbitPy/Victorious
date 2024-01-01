@@ -1,10 +1,10 @@
 import React from "react";
 import { CardCount, CardName } from "../../shared/common";
 
-// todo make default url localhost
-export const API_ENDPOINT = import.meta.env.VITE_IS_DEV_MODE
-  ? "http://localhost:3000/api"
-  : "https://dominion.onrender.com/api";
+export const API_ENDPOINT =
+  import.meta.env.VITE_IS_PROD_MODE === "true"
+    ? "https://dominion.onrender.com/api"
+    : "http://localhost:3000/api";
 
 console.log({ API_ENDPOINT });
 

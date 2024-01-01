@@ -21,7 +21,7 @@ import {
 } from "../responseHandlers";
 
 import { safeParseNonEmptyString } from "../../../../shared/common";
-import { API_ENDPOINT } from "../../server";
+import { SERVER_API_ENDPOINT } from "../../server";
 
 export const login: RequestHandler = (req, res) => {
   const username = safeParseNonEmptyString(req.body.username);
@@ -184,7 +184,7 @@ export const sendConfirmationEmail = ({
           from: process.env.SENDER_EMAIL,
           to: email,
           subject: "Confirm your email",
-          text: `Click the link to confirm your email: ${API_ENDPOINT}/register/confirm/${confirmation_token}`,
+          text: `Click the link to confirm your email: ${SERVER_API_ENDPOINT}/register/confirm/${confirmation_token}`,
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
