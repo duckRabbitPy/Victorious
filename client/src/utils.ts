@@ -1,10 +1,9 @@
 import React from "react";
 import { CardCount, CardName } from "../../shared/common";
 
-export const API_ENDPOINT =
-  import.meta.env.VITE_IS_PROD_MODE === "true"
-    ? "https://dominion.onrender.com/api"
-    : "http://localhost:3000/api";
+export const API_ENDPOINT = import.meta.env.MODE
+  ? "https://dominion.onrender.com/api"
+  : "http://localhost:3000/api";
 
 console.log({ API_ENDPOINT });
 
