@@ -151,12 +151,32 @@ const PlayerHand = ({
       })}
 
       <div>
-        <h4>
-          Treasure{" "}
-          {getTreasureValue(cardsInPlay) + currentUserState.bonusTreasureValue}
-        </h4>
+        <div
+          style={{
+            display: "flex",
+            gap: "1rem",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <p style={{ color: "yellow" }}>
+            Cash:{" "}
+            {getTreasureValue(cardsInPlay) +
+              currentUserState.bonusTreasureValue}
+          </p>
+          <p>
+            Trash:{" "}
+            {Object.values(currentUserState.cardsInPlay).reduce(
+              (acc, curr) => acc + curr,
+              0
+            )}
+          </p>
+        </div>
         {getTreasureValue(cardsInPlay) > 0 && (
           <button
+            style={{
+              margin: "1rem",
+            }}
             onClick={() => {
               resetPlayedTreasures({
                 socket,

@@ -55,7 +55,10 @@ const OpponentHands = ({
               {Array(cardsInHand)
                 .fill(0)
                 .map((_, index) => (
-                  <div
+                  <img
+                    src={
+                      "https://res.cloudinary.com/dkytnwn87/image/upload/v1704141742/dominion/Leonardo_Diffusion_XL_back_of_playing_card_dark_blue_regal_0_unuaad.jpg"
+                    }
                     key={index}
                     style={{
                       height: isUsersTurn(gameState, loggedInUsername)
@@ -65,7 +68,6 @@ const OpponentHands = ({
                         ? "30px"
                         : "90px",
                       border: "2px black solid",
-                      background: "rgba(72, 10, 65, 0.8)",
                     }}
                   />
                 ))}
