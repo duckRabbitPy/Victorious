@@ -42,13 +42,13 @@ const ChatLog = ({
   }, {} as UserNameColors);
 
   return (
-    <div>
-      <h3>ChatLog</h3>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div
         style={{
-          height: "200px",
+          height: "100%",
+          width: "400px",
           overflowY: "scroll",
-          backgroundColor: "#C6D0D5",
+          backgroundColor: "rgba(28, 26, 27, 0.66)",
           border: "2px solid black",
         }}
       >
@@ -62,15 +62,28 @@ const ChatLog = ({
             </div>
           ))}
       </div>
-      <form onSubmit={handleSubmit} style={{ margin: "1rem" }}>
-        <input
-          style={{ width: "200px", marginRight: "10px" }}
-          type="text"
-          placeholder="Type your message here"
-          value={inputValue ?? ""}
-          onChange={handleInputChange}
-        />
-        <button type="submit">Send</button>
+      <form
+        onSubmit={handleSubmit}
+        style={{
+          display: "flex",
+          gap: "1rem",
+          flexDirection: "column",
+          alignItems: "flex-end",
+        }}
+      >
+        <div style={{ width: "100%" }}>
+          <input
+            // has 8px padding and border
+            style={{ height: "1.5rem", width: "calc(100% - 8px)" }}
+            type="text"
+            placeholder="Type your message here"
+            value={inputValue ?? ""}
+            onChange={handleInputChange}
+          />
+        </div>
+        <button type="submit" style={{ width: "50%" }}>
+          Send
+        </button>
       </form>
     </div>
   );

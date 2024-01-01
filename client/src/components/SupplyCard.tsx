@@ -51,7 +51,7 @@ export const SupplyCard = ({
         ? "blue"
         : "red"
     }`,
-    backgroundColor: "#C6D0D5",
+    backgroundColor: "rgba(239, 236, 220, 0.7)",
   };
 
   return (

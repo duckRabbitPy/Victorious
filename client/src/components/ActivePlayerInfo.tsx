@@ -12,7 +12,13 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
   } = props;
   return (
     <>
-      <div>
+      <div
+        style={{
+          backgroundColor: "rgba(239, 236, 220, 0.7)",
+          border: "2px solid black",
+          padding: "1rem",
+        }}
+      >
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           playing as : {loggedInUsername}
         </div>

@@ -65,9 +65,9 @@ const PlayerHand = ({
   return (
     <div
       style={{
-        backgroundColor: "#C6D0D5",
-        margin: "1rem",
+        backgroundColor: "rgba(28, 26, 27, 0.66)",
         border: "2px solid black",
+        color: "white",
       }}
     >
       <>

@@ -29,74 +29,80 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
     return <div>Error fetching game state from server...</div>;
 
   return (
-    <>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       {errorMessage && (
         <>
           <div style={{ color: "red" }}>{`Error: ${errorMessage}`}</div>
           <button onClick={() => setErrorMessage(null)}>clear</button>
         </>
       )}
-      <div>
-        <ActivePlayerInfo
-          props={{
-            gameState,
-            coreRoomInfo,
-            coreUserInfo,
-            setErrorMessage,
-          }}
-        />
-        <div>
-          {gameState.actor_state.length > 1 && gameState.turn < 1 && (
-            <StartGameButton
-              coreRoomInfo={coreRoomInfo}
-              setErrorMessage={setErrorMessage}
-            />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          gap: "1rem",
+        }}
+      >
+        <div style={{ display: "flex", gap: "1rem", flexDirection: "column" }}>
+          <ActivePlayerInfo
+            props={{
+              gameState,
+              coreRoomInfo,
+              coreUserInfo,
+              setErrorMessage,
+            }}
+          />
+          <div>
+            {gameState.actor_state.length > 1 && gameState.turn < 1 && (
+              <StartGameButton
+                coreRoomInfo={coreRoomInfo}
+                setErrorMessage={setErrorMessage}
+              />
+            )}
+
+            {gameState.turn > 0 && isUsersTurn(gameState, loggedInUsername) && (
+              <EndTurnButton
+                props={{
+                  gameState,
+                  coreRoomInfo,
+                  coreUserInfo,
+                  setErrorMessage,
+                }}
+              />
+            )}
+          </div>
+
+          {(gameState.turn || 0) > 0 && (
+            <>
+              <TurnInfo coreUserInfo={coreUserInfo} gameState={gameState} />
+              <Supply
+                props={{
+                  gameState,
+                  coreRoomInfo,
+                  coreUserInfo,
+                  setErrorMessage,
+                }}
+              />
+            </>
           )}
 
-          {gameState.turn > 0 && isUsersTurn(gameState, loggedInUsername) && (
-            <EndTurnButton
-              props={{
-                gameState,
-                coreRoomInfo,
-                coreUserInfo,
-                setErrorMessage,
-              }}
-            />
-          )}
+          <PlayerHand
+            coreRoomInfo={coreRoomInfo}
+            coreUserInfo={coreUserInfo}
+            gameState={gameState}
+            setErrorMessage={setErrorMessage}
+          />
         </div>
 
-        {(gameState.turn || 0) > 0 && (
-          <>
-            <TurnInfo coreUserInfo={coreUserInfo} gameState={gameState} />
-            <Supply
-              props={{
-                gameState,
-                coreRoomInfo,
-                coreUserInfo,
-                setErrorMessage,
-              }}
-            />
-          </>
-        )}
-
-        <PlayerHand
-          coreRoomInfo={coreRoomInfo}
-          coreUserInfo={coreUserInfo}
-          gameState={gameState}
+        <ChatLog
+          chatLog={chatLog}
           setErrorMessage={setErrorMessage}
+          socket={socket}
         />
-
-        {
-          <ChatLog
-            chatLog={chatLog}
-            setErrorMessage={setErrorMessage}
-            socket={socket}
-          />
-        }
-
-        <GameStateDebugDisplay gameState={gameState} />
       </div>
-    </>
+
+      <GameStateDebugDisplay gameState={gameState} />
+    </div>
   );
 };
 

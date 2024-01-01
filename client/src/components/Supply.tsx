@@ -82,7 +82,7 @@ const Supply = ({ props }: { props: CoreProps }) => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            backgroundColor: "darkgray",
+            backgroundColor: "rgba(28, 26, 27, 0.8)",
             flexDirection: "column",
             justifyItems: "center",
             display: "flex",
@@ -109,7 +109,7 @@ const Supply = ({ props }: { props: CoreProps }) => {
             style={{
               display: "flex",
               flexDirection: "column",
-              backgroundColor: "white",
+              backgroundColor: "rgba(239, 236, 220, 0.7)",
               borderRadius: "5px",
             }}
           >
