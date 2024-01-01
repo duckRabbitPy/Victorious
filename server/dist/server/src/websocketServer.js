@@ -59,7 +59,7 @@ function createWebsocketServer(app) {
             })), utils_1.tapPipeLine, Effect.catchAll((error) => {
                 const msgOrUndefined = (0, effect_1.pipe)(parseClientMessage(JSON.parse(msg)), Effect.orElseSucceed(() => undefined), Effect.runSync);
                 return (0, utils_1.sendErrorMsgToClient)(error, msgOrUndefined, roomConnections);
-            }), Effect.runPromise);
+            }), effect_1.Logger.withMinimumLogLevel(effect_1.LoggerLevel.Error), Effect.runPromise);
         });
         ws.on("close", () => {
             console.log(`Client disconnected. Total connections: ${roomConnections.length}`);
@@ -104,7 +104,7 @@ const handleMessage = ({ msg, ws, roomConnections, }) => {
                 userId: userInfo.userId,
                 username: userInfo.username,
                 currentGameState,
-            })), Effect.flatMap((gameState) => (0, broadcast_1.broadcastToRoom)("gameState", gameState, room, roomConnections)));
+            })), Effect.flatMap(common_1.safeParseGameState), Effect.flatMap((gameState) => (0, broadcast_1.broadcastToRoom)("gameState", gameState, room, roomConnections)));
         }
         case common_1.SupportedEffects.startGame: {
             return (0, effect_1.pipe)(Effect.all({ userInfo: userDetailsOrError, currentGameState }), Effect.flatMap(({ currentGameState }) => (0, hand_1.dealToAllActors)(currentGameState)), Effect.flatMap(buys_1.resetBuysAndActions), Effect.flatMap(turn_1.incrementTurn), Effect.flatMap(mutations_1.writeNewGameStateToDB), Effect.flatMap((gameState) => (0, broadcast_1.broadcastToRoom)("gameState", gameState, room, roomConnections)));
