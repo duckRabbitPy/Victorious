@@ -32,12 +32,12 @@ const ChatLog = ({
     });
   };
 
-  const colours = ["blue", "red", "green", "orange", "purple"];
+  const colours = ["cyan", "magenta", "lime", "yellow", "orange"];
 
   const userNameColours: UserNameColors = Array.from(
     new Set(chatLog?.map((c) => c.username))
   ).reduce((acc, curr, i) => {
-    acc[curr] = colours[i];
+    acc[curr] = colours[i] ?? "white";
     return acc;
   }, {} as UserNameColors);
 
@@ -58,7 +58,7 @@ const ChatLog = ({
               <span style={{ color: userNameColours[c.username] }}>
                 {c.username}:{" "}
               </span>
-              <span>{c.message}</span>
+              <span style={{ color: "white" }}>{c.message}</span>
             </div>
           ))}
       </div>

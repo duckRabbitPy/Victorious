@@ -5,13 +5,14 @@ import {
   writeNewGameStateToDB,
 } from "./models/gamestate/mutations";
 import * as Schema from "@effect/schema/Schema";
-import { pipe } from "effect";
+import { Logger, pipe, LoggerLevel } from "effect";
 import { JSONParseError } from "./controllers/customErrors";
 import {
   ClientPayload,
   ClientPayloadStruct,
   safeParseCardName,
   safeParseChatLog,
+  safeParseGameState,
   safeParseNonEmptyString,
   SupportedEffects,
 } from "../../shared/common";
@@ -78,6 +79,7 @@ export function createWebsocketServer(app: wsApplication): void {
           );
           return sendErrorMsgToClient(error, msgOrUndefined, roomConnections);
         }),
+        Logger.withMinimumLogLevel(LoggerLevel.Error),
         Effect.runPromise
       );
     });
@@ -168,6 +170,7 @@ const handleMessage = ({
             currentGameState,
           })
         ),
+        Effect.flatMap(safeParseGameState),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
         )
