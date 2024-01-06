@@ -11,9 +11,8 @@ export const program = DBConnection.pipe(
   Effect.flatMap((connection) => connection.pool)
 );
 
-export const ConnectionLive = DBConnection.of({
+export const DBConnectionLive = DBConnection.of({
   pool: Effect.sync(() => {
-    console.log("NODE_ENV for db connection", process.env.NODE_ENV);
     return process.env.NODE_ENV === "production"
       ? new Pool({
           connectionString: process.env.PROD_DATABASE_URL,
@@ -29,7 +28,7 @@ export const ConnectionLive = DBConnection.of({
   }),
 });
 
-export const ConnectionTest = DBConnection.of({
+export const DBConnectionTest = DBConnection.of({
   pool: Effect.sync(() => {
     return new Pool({
       user: "postgres",

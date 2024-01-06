@@ -9,7 +9,7 @@ import {
 } from "./responseHandlers";
 import { createGameSessionQuery } from "../models/gamestate/mutations";
 import { safeParseGameState } from "../../../shared/common";
-import { DBConnection, ConnectionLive } from "../db/connection";
+import { DBConnection, DBConnectionLive } from "../db/connection";
 
 import bcrypt from "bcrypt";
 import { pipe } from "effect";
@@ -56,7 +56,7 @@ export const createGameSession: RequestHandler = (req, res) => {
   const runnable = Effect.provideService(
     createGameSession,
     DBConnection,
-    ConnectionLive
+    DBConnectionLive
   );
 
   Effect.runPromise(runnable);
@@ -78,7 +78,7 @@ export const getOpenGameSessions: RequestHandler = (req, res) => {
   const runnable = Effect.provideService(
     getOpenGameSessions,
     DBConnection,
-    ConnectionLive
+    DBConnectionLive
   );
 
   Effect.runPromise(runnable);
@@ -106,7 +106,7 @@ export const login: RequestHandler = (req, res) => {
       })
   );
 
-  const runnable = Effect.provideService(login, DBConnection, ConnectionLive);
+  const runnable = Effect.provideService(login, DBConnection, DBConnectionLive);
 
   return Effect.runPromise(runnable);
 };
@@ -146,7 +146,7 @@ export const register: RequestHandler = (req, res) => {
   const runnable = Effect.provideService(
     successMsgOrError,
     DBConnection,
-    ConnectionLive
+    DBConnectionLive
   );
 
   return Effect.runPromise(runnable);
@@ -185,7 +185,7 @@ export const verify: RequestHandler = (req, res) => {
   const runnable = Effect.provideService(
     usernameOrError,
     DBConnection,
-    ConnectionLive
+    DBConnectionLive
   );
 
   return Effect.runPromise(runnable);
@@ -278,7 +278,7 @@ export const auth: RequestHandler = (req, res) => {
   const runnable = Effect.provideService(
     getUsername,
     DBConnection,
-    ConnectionLive
+    DBConnectionLive
   );
 
   return Effect.runPromise(runnable);

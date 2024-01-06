@@ -129,7 +129,17 @@ export const cleanUp = (gameState: GameState) => {
     ...gameState,
     actor_state: gameState.actor_state.map((actor, index) => {
       if (isUsersTurn(gameState, actor.name)) {
-        const newDeck = reshuffleDeck(actor.deck, actor.discardPile);
+        const toDiscardFromHand = Object.entries(actor.hand).reduce(
+          (acc, [cardName, count]) => {
+            return acc.concat(Array(count).fill(cardName));
+          },
+          [] as CardName[]
+        );
+
+        const newDeck = reshuffleDeck(
+          actor.deck,
+          actor.discardPile.concat(toDiscardFromHand)
+        );
         const { newCards, remainingDeck, discardPile } = dealCards(
           newDeck,
           5,

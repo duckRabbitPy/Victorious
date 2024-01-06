@@ -13,6 +13,7 @@ import {
 } from "../../../../shared/common";
 import { logAndThrowError } from "../../utils";
 import { Pool } from "pg";
+import { UserInfo } from "../../websocketServer/createWebsocketServer";
 
 const setUpActorsForGame = ({
   currentActorStateArray,
@@ -72,7 +73,7 @@ const setUpActorsForGame = ({
 const generatateGlobalState = () => {
   const startingState: GlobalState = {
     supply: {
-      copper: 2,
+      copper: 60,
       silver: 40,
       gold: 30,
       estate: 24,
@@ -128,13 +129,11 @@ export const createGameSessionQuery = (room: number, pool: Pool) => {
 
 // @mutation
 export const addLivePlayerQuery = ({
-  userId,
-  username,
+  userInfo,
   currentGameState,
   pool,
 }: {
-  userId: string;
-  username: string;
+  userInfo: UserInfo;
   currentGameState: GameState;
   pool: Pool;
 }) => {
@@ -151,17 +150,21 @@ export const addLivePlayerQuery = ({
       } = currentGameState;
 
       if (
-        currentGameState.actor_state.map((actor) => actor.id).includes(userId)
+        currentGameState.actor_state
+          .map((actor) => actor.id)
+          .includes(userInfo.userId)
       ) {
-        throw new Error(`User ${userId} already exists in room ${room}`);
+        throw new Error(
+          `User ${userInfo.username} already exists in room ${room}`
+        );
       }
 
       const newMutationIndex = mutation_index + 1;
 
       const newActorState = setUpActorsForGame({
         currentActorStateArray: actor_state,
-        newUserId: userId,
-        newUserName: username,
+        newUserId: userInfo.userId,
+        newUserName: userInfo.username,
       });
 
       const result = await pool.query(

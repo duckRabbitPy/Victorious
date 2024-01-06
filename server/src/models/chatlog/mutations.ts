@@ -1,6 +1,7 @@
 import * as Effect from "@effect/io/Effect";
 import { logAndThrowError } from "../../utils";
 import { Pool } from "pg";
+import { UserInfo } from "../../websocketServer/createWebsocketServer";
 
 // @mutation
 export const updateChatLogQuery = ({
@@ -10,7 +11,7 @@ export const updateChatLogQuery = ({
   pool,
 }: {
   sessionId: string;
-  userInfo: { userId: string; username: string };
+  userInfo: UserInfo;
   chatMessage: string;
   pool: Pool;
 }) => {

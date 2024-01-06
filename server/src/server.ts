@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import { createWebsocketServer } from "./websocketServer/createWebsocketServer";
 import { createHttpServer } from "./httpServer/createHttpServer";
-
 import express from "express";
 import http from "http";
 import expressWs from "@wll8/express-ws";
@@ -26,6 +25,7 @@ createHttpServer(appWithWSSUpgrade);
 createWebsocketServer(appWithWSSUpgrade);
 
 appWithWSSUpgrade.listen(SERVER_PORT, () => {
+  console.log({ NODE_ENV: process.env.NODE_ENV });
   console.log({ SERVER_API_ENDPOINT: SERVER_API_ENDPOINT });
   console.log(
     "\x1b[42m",
