@@ -8,7 +8,6 @@ export const getLatestGameSnapshotQuery = (room: number, pool: Pool) => {
         [room]
       );
 
-      console.log({ result: result.rows[0] });
       return result.rows[0];
     } catch (error) {
       logAndThrowError(error);

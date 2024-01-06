@@ -70,28 +70,24 @@ const setUpActorsForGame = ({
   return JSON.stringify(newActorState);
 };
 
-const generatateGlobalState = () => {
-  const startingState: GlobalState = {
-    supply: {
-      copper: 60,
-      silver: 40,
-      gold: 30,
-      estate: 24,
-      duchy: 12,
-      province: 12,
-      village: 10,
-      smithy: 10,
-      market: 10,
-      councilRoom: 10,
-      mine: 10,
-      curse: 30,
-      festival: 10,
-      laboratory: 10,
-    },
-    history: [],
-  };
-
-  return JSON.stringify(startingState);
+const startingState: GlobalState = {
+  supply: {
+    copper: 60,
+    silver: 40,
+    gold: 30,
+    estate: 24,
+    duchy: 12,
+    province: 12,
+    village: 10,
+    smithy: 10,
+    market: 10,
+    councilRoom: 10,
+    mine: 10,
+    curse: 30,
+    festival: 10,
+    laboratory: 10,
+  },
+  history: [],
 };
 
 // @mutation
@@ -112,7 +108,7 @@ export const createGameSessionQuery = (room: number, pool: Pool) => {
       const result = await pool.query(
         `INSERT INTO game_snapshots (room, turn, actor_state, global_state)
              VALUES ($1, $2, $3, $4) RETURNING *`,
-        [room, turn, "[]", generatateGlobalState()]
+        [room, turn, "[]", JSON.stringify(startingState)]
       );
       return result.rows[0];
     } catch (error) {

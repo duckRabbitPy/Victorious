@@ -8,7 +8,6 @@ import { pipe } from "effect";
 import {
   ClientPayload,
   safeParseCardName,
-  safeParseChatLog,
   safeParseGameState,
   SupportedEffects,
 } from "../../../shared/common";
@@ -22,7 +21,6 @@ import {
 import { buyCard, resetBuysAndActions } from "./inMemoryMutation/buys";
 import { incrementTurn } from "./inMemoryMutation/turn";
 import { playAction } from "./inMemoryMutation/actions";
-import { getLatestChatLogQuery } from "../models/chatlog/queries";
 import {
   deduceVictoryPoints,
   determineIfGameIsOver,
@@ -69,7 +67,7 @@ export const handleGameMessage = ({
             pool,
           })
         ),
-        safeParseGameState
+        Effect.flatMap(safeParseGameState)
       );
     }
 

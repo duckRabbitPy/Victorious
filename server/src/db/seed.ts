@@ -17,7 +17,7 @@ export const SEED_ROOM = 1;
 export const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
   game_snapshots: [
     {
-      id: 1,
+      id: 1454425,
       room: SEED_ROOM,
       turn: 0,
       game_over: false,
@@ -207,11 +207,11 @@ export const resetAndSeedDatabase = async () => {
     // create new game snapshot
     await client.query(
       `INSERT INTO game_snapshots (id, room, turn, actor_state, global_state) VALUES
-        (1, $1, 0, 
+        (1454425, $1, 0, 
         $2::jsonb, $3::jsonb) RETURNING *`,
       [
         SEED_ROOM,
-        JSON.stringify(GAME_SNAPSHOT_SEED_VALUES.game_snapshots[0].actor_state),
+        JSON.stringify([]),
         JSON.stringify(
           GAME_SNAPSHOT_SEED_VALUES.game_snapshots[0].global_state
         ),
