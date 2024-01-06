@@ -36,7 +36,10 @@ import { playAction } from "./controllers/transformers/actions";
 import { updateChatLogQuery } from "./models/chatlog/mutations";
 import { getLatestChatLogQuery } from "./models/chatlog/queries";
 import { broadcastToRoom } from "./broadcast";
-import { deduceVictoryPoints } from "./controllers/transformers/victory";
+import {
+  deduceVictoryPoints,
+  determineIfGameIsOver,
+} from "./controllers/transformers/victory";
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
 
 const parseClientMessage = Schema.parse(ClientPayloadStruct);
@@ -119,6 +122,7 @@ const handleMessage = ({
   );
 
   const currentGameState = getLatestLiveGameSnapshot({ room });
+
   const cardName = pipe(safeParseCardName(msg.cardName));
   const toDiscardFromHand = msg.toDiscardFromHand;
 
@@ -134,6 +138,8 @@ const handleMessage = ({
       uniqueUserAuthToken: authToken,
     });
   }
+
+  // todo: validate that next effect permitted given current game state, e.g pass mutation index from frontend and compare to mutation index in db
 
   switch (msg.effect) {
     // read only operations
@@ -221,6 +227,7 @@ const handleMessage = ({
           })
         ),
         Effect.flatMap(deduceVictoryPoints),
+        Effect.flatMap(determineIfGameIsOver),
         Effect.flatMap(writeNewGameStateToDB),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
@@ -243,6 +250,7 @@ const handleMessage = ({
           })
         ),
         Effect.flatMap(deduceVictoryPoints),
+        Effect.flatMap(determineIfGameIsOver),
         Effect.flatMap(writeNewGameStateToDB),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
@@ -256,7 +264,6 @@ const handleMessage = ({
         Effect.flatMap(({ currentGameState }) =>
           resetPlayedTreasures(currentGameState)
         ),
-        Effect.flatMap(deduceVictoryPoints),
         Effect.flatMap(writeNewGameStateToDB),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
@@ -280,6 +287,7 @@ const handleMessage = ({
           })
         ),
         Effect.flatMap(deduceVictoryPoints),
+        Effect.flatMap(determineIfGameIsOver),
         Effect.flatMap(writeNewGameStateToDB),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)

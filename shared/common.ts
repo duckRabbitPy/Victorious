@@ -208,13 +208,6 @@ export const cardNamesToCount = (cardNames: readonly CardName[]): CardCount => {
   return temporaryCardCount;
 };
 
-export const discardHand = (
-  currentHand: CardCount,
-  currentDiscardPile: readonly CardName[]
-): readonly CardName[] => {
-  return currentDiscardPile.concat(countToCardNamesArray(currentHand));
-};
-
 export const getCardTypeByName = (cardName: CardName): Card["type"] => {
   return cardNameToCard(cardName).type;
 };
@@ -308,7 +301,6 @@ const ActorStateStruct = Schema.struct({
 const GlobalStateStruct = Schema.struct({
   supply: CardCountStruct,
   history: Schema.array(Schema.string),
-  playerUserIds: Schema.array(Schema.UUID),
 });
 
 export const GameStateStruct = Schema.struct({

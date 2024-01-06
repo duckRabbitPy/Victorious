@@ -46,7 +46,7 @@ const TurnInfo = ({
             }}
           >
             <p>
-              Victory point: <b>{currentUserState.victoryPoints}</b>
+              Victory points: <b>{currentUserState.victoryPoints}</b>
             </p>
             <p>
               Actions remaining: <b>{currentUserState.actions}</b>

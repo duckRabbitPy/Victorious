@@ -4,7 +4,6 @@ import {
   GameState,
   Phases,
   cardNamesToCount,
-  discardHand,
   hasActionCard,
   subtractCardCount,
   zeroCardCount,
@@ -64,7 +63,7 @@ export const dealToAllActors = (gameState: GameState) => {
         ...actor,
         hand: newHand,
         deck: remainingDeck,
-        discardPile: discardHand(newHand, discardPile),
+        discardPile: discardPile,
         phase: hasActionCard(newHand) ? Phases.Action : Phases.Buy,
       };
     }),
@@ -136,6 +135,19 @@ export const cleanUp = (gameState: GameState) => {
           5,
           actor.discardPile
         );
+
+        // count num of estates
+
+        console.log(
+          ` actor ${actor.name} has ${newDeck.length} cards in deck`,
+          "and has",
+          newDeck.reduce((acc, curr) => {
+            if (curr === "estate") return acc + 1;
+            return acc;
+          }, 0),
+          "estates"
+        );
+
         return {
           ...actor,
           hand: cardNamesToCount(newCards),

@@ -10,7 +10,7 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
     setErrorMessage,
   } = props;
   return (
-    <>
+    <div style={{ display: "flex", gap: "1rem", flexDirection: "column" }}>
       <div
         style={{
           backgroundColor: "rgba(239, 236, 220, 0.7)",
@@ -27,50 +27,52 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
           Players ready: {gameState.actor_state.length}
         </p>
         {
-          <ol style={{ listStyle: "none", padding: "0" }}>
-            {gameState.actor_state.map((actor) => (
-              <li
-                key={actor.id}
-                style={{
-                  color: isUsersTurn(gameState, actor.name) ? "green" : "black",
-                }}
-              >{`✅ ${actor.name} ${
-                isUsersTurn(gameState, actor.name) ? "👈" : ""
-              }`}</li>
-            ))}
-          </ol>
+          <>
+            <ol style={{ listStyle: "none", padding: "0" }}>
+              {gameState.actor_state.map((actor) => (
+                <li
+                  key={actor.id}
+                  style={{
+                    color: isUsersTurn(gameState, actor.name)
+                      ? "green"
+                      : "black",
+                  }}
+                >{`✅ ${actor.name} ${
+                  isUsersTurn(gameState, actor.name) ? "👈" : ""
+                }`}</li>
+              ))}
+            </ol>
+            <div>
+              {gameState.actor_state.length < 2 && (
+                <p>Waiting for players to join...</p>
+              )}
+            </div>
+          </>
         }
       </div>
-      <div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "1rem",
-          }}
-        >
-          {gameState.actor_state.every((a) => a.name !== loggedInUsername) && (
-            <button
-              id="player-ready"
-              onClick={() =>
-                addNewPlayer({
-                  socket,
-                  authToken,
-                  roomNumber,
-                  setErrorMessage,
-                })
-              }
-              style={{
-                border: "2px solid green",
-                animation: "pulse 1.2s infinite",
-              }}
-            >
-              Ready
-            </button>
-          )}
-        </div>
+
+      <div style={{}}>
+        {gameState.actor_state.every((a) => a.name !== loggedInUsername) && (
+          <button
+            id="player-ready"
+            onClick={() =>
+              addNewPlayer({
+                socket,
+                authToken,
+                roomNumber,
+                setErrorMessage,
+              })
+            }
+            style={{
+              border: "2px solid green",
+              animation: "pulse 1.2s infinite",
+            }}
+          >
+            Ready
+          </button>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 

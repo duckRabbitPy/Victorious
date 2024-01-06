@@ -51,8 +51,10 @@ const ChatLog = ({
           overflowY: "scroll",
           backgroundColor: "rgba(28, 26, 27, 0.66)",
           border: "2px solid black",
+          color: "white",
         }}
       >
+        Chat log:
         {chatLog &&
           chatLog.map((c) => (
             <div key={c.message}>

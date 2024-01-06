@@ -10,6 +10,7 @@ import {
 import { pipe } from "effect";
 import { getInitialGameState, getInititalChatLog } from "../effects/effects";
 import * as Effect from "@effect/io/Effect";
+import { WEB_SOCKET_URL } from "../constants";
 
 const updateStateElseError = <T>({
   effect,
@@ -47,11 +48,7 @@ export const useGameState = () => {
   const [initialChatLogFetched, setInitialChatLogFetched] = useState(false);
 
   useEffect(() => {
-    const newSocket = new WebSocket(
-      import.meta.env.MODE
-        ? "wss://dominion.onrender.com"
-        : "ws://localhost:3000"
-    );
+    const newSocket = new WebSocket(WEB_SOCKET_URL);
     console.log("Using prod websocket:", import.meta.env.MODE);
 
     newSocket.addEventListener("message", (event) => {

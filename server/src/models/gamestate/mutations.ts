@@ -14,8 +14,6 @@ import {
 } from "../../../../shared/common";
 import { logAndThrowError } from "../../utils";
 
-import { getLatestGameSnapshotQuery } from "./queries";
-
 const setUpActorsForGame = ({
   currentActorStateArray,
   newUserId,
@@ -90,7 +88,6 @@ const generatateGlobalState = () => {
       laboratory: 10,
     },
     history: [],
-    playerUserIds: [],
   };
 
   return JSON.stringify(startingState);
@@ -150,20 +147,14 @@ export const addLivePlayerQuery = ({
         game_over,
         session_id,
       } = currentGameState;
-      const newMutationIndex = mutation_index + 1;
 
-      if (global_state.playerUserIds?.includes(userId)) {
-        // no change in state if player already in game
-        const currState = await Effect.runPromise(
-          getLatestGameSnapshotQuery(room)
-        );
-        return currState;
+      if (
+        currentGameState.actor_state.map((actor) => actor.id).includes(userId)
+      ) {
+        throw new Error(`User ${userId} already exists in room ${room}`);
       }
 
-      const newGlobalState = JSON.stringify({
-        ...global_state,
-        playerUserIds: [...global_state.playerUserIds, userId],
-      });
+      const newMutationIndex = mutation_index + 1;
 
       const newActorState = setUpActorsForGame({
         currentActorStateArray: actor_state,
@@ -187,13 +178,13 @@ export const addLivePlayerQuery = ({
           room,
           turn,
           newActorState,
-          newGlobalState,
+          global_state,
           newMutationIndex,
           game_over,
           session_id,
         ]
       );
-      return result.rows[0];
+      return result.rows[0] as Partial<GameState>;
     } catch (error) {
       logAndThrowError(error);
     }
@@ -201,7 +192,9 @@ export const addLivePlayerQuery = ({
 
   return Effect.tryPromise({
     try: () => add(),
-    catch: () => new PostgresError({ message: "postgres query error" }),
+    catch: () => {
+      return new PostgresError({ message: "postgres query error" });
+    },
   }).pipe(Effect.retryN(1));
 };
 

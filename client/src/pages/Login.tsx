@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useGetLoggedInUsername } from "../hooks/auth";
-import { API_ENDPOINT } from "../utils";
+import { API_ENDPOINT } from "../constants";
 
 export const Login = () => {
   const { loggedInUsername, refetchLoginStatus } = useGetLoggedInUsername();

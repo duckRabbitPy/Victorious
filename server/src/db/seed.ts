@@ -125,7 +125,6 @@ export const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
         },
       ],
       global_state: {
-        playerUserIds: [],
         supply: {
           copper: 60,
           silver: 40,

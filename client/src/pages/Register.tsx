@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { API_ENDPOINT } from "../utils";
+import { API_ENDPOINT } from "../constants";
 
 export const Register = () => {
   const [emailSent, setEmailSent] = useState<boolean>(false);
