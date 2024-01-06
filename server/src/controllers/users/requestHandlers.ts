@@ -22,24 +22,34 @@ import {
 
 import { safeParseNonEmptyString } from "../../../../shared/common";
 import { SERVER_API_ENDPOINT } from "../../server";
+import { Pool } from "pg";
+import { Connection, ConnectionLive } from "../../db/connection";
 
 export const login: RequestHandler = (req, res) => {
-  const username = safeParseNonEmptyString(req.body.username);
-  const password = safeParseNonEmptyString(req.body.password);
-
-  const authToken = pipe(
-    Effect.all({ username, password }),
-    Effect.flatMap(({ username, password }) =>
-      authenticateUser(username, password)
-    )
+  const login = Connection.pipe(
+    Effect.flatMap((connection) => connection.pool),
+    Effect.flatMap((pool) =>
+      Effect.all({
+        username: safeParseNonEmptyString(req.body.username),
+        password: safeParseNonEmptyString(req.body.password),
+        pool: Effect.succeed(pool),
+      })
+    ),
+    Effect.flatMap(({ username, password, pool }) =>
+      authenticateUser(username, password, pool)
+    ),
+    (authToken) =>
+      sendLoginResponse({
+        dataOrError: authToken,
+        res,
+        successStatus: 200,
+        label: "authToken",
+      })
   );
 
-  return sendLoginResponse({
-    dataOrError: authToken,
-    res,
-    successStatus: 200,
-    label: "authToken",
-  });
+  const runnable = Effect.provideService(login, Connection, ConnectionLive);
+
+  return Effect.runPromise(runnable);
 };
 
 export const register: RequestHandler = (req, res) => {
@@ -47,19 +57,30 @@ export const register: RequestHandler = (req, res) => {
   const email = safeParseNonEmptyString(req.body.email);
   const password = safeParseNonEmptyString(req.body.password);
 
-  const successMsgOrError = pipe(
-    Effect.all({ username, email, password }),
-    Effect.flatMap(({ username, email, password }) =>
-      registerUser(username, email, password)
-    )
+  const successMsgOrError = Connection.pipe(
+    Effect.flatMap((connection) => connection.pool),
+    Effect.flatMap((pool) =>
+      Effect.all({ username, email, password, pool: Effect.succeed(pool) })
+    ),
+    Effect.flatMap(({ username, email, password, pool }) =>
+      registerUser(username, email, password, pool)
+    ),
+    (dataOrError) =>
+      sendRegisterResponse({
+        dataOrError: dataOrError,
+        res,
+        successStatus: 201,
+        label: "successMsg",
+      })
   );
 
-  return sendRegisterResponse({
-    dataOrError: successMsgOrError,
-    res,
-    successStatus: 201,
-    label: "message",
-  });
+  const runnable = Effect.provideService(
+    successMsgOrError,
+    Connection,
+    ConnectionLive
+  );
+
+  return Effect.runPromise(runnable);
 };
 
 export const verify: RequestHandler = (req, res) => {
@@ -67,32 +88,53 @@ export const verify: RequestHandler = (req, res) => {
     req.params.confirmation_token
   );
 
-  const usernameOrError = pipe(
-    confirmation_token,
-    Effect.flatMap((confirmation_token) => verifyUserQuery(confirmation_token)),
+  const usernameOrError = Connection.pipe(
+    Effect.flatMap((connection) => connection.pool),
+    Effect.flatMap((pool) =>
+      Effect.all({
+        pool: Effect.succeed(pool),
+        confirmation_token: safeParseNonEmptyString(confirmation_token),
+      })
+    ),
+    Effect.flatMap(({ confirmation_token, pool }) =>
+      verifyUserQuery(confirmation_token, pool)
+    ),
     Effect.flatMap((username) =>
       Effect.succeed(
         `Verified ${username}. You can now log in with your account.`
       )
-    )
+    ),
+    (dataOrError) =>
+      sendConfirmUserResponse({
+        dataOrError: dataOrError,
+        res,
+        successStatus: 200,
+        label: "message",
+      })
   );
 
-  return sendConfirmUserResponse({
-    dataOrError: usernameOrError,
-    res,
-    successStatus: 201,
-    label: "message",
-  });
+  const runnable = Effect.provideService(
+    usernameOrError,
+    Connection,
+    ConnectionLive
+  );
+
+  return Effect.runPromise(runnable);
 };
 
-const registerUser = (username: string, email: string, password: string) => {
+const registerUser = (
+  username: string,
+  email: string,
+  password: string,
+  pool: Pool
+) => {
   const saltRounds = 10;
   const hashedPassword = bcrypt.hashSync(password, saltRounds);
 
   // todo: check if user already exists first
 
   return pipe(
-    registerNewUserQuery(username, email, hashedPassword),
+    registerNewUserQuery(username, email, hashedPassword, pool),
     Effect.flatMap(({ email, confirmation_token }) =>
       sendConfirmationEmail({ email, confirmation_token })
     ),
@@ -126,7 +168,7 @@ const createAuthToken = (userId: string, username: string) => {
   return Effect.succeed(authToken);
 };
 
-const getAuthToken = (username: string, passwordMatch: boolean) => {
+const getAuthToken = (username: string, passwordMatch: boolean, pool: Pool) => {
   return pipe(
     Effect.try({
       try: () => {
@@ -140,14 +182,14 @@ const getAuthToken = (username: string, passwordMatch: boolean) => {
         }),
     }),
 
-    Effect.flatMap(() => getUserIdByUsernameQuery(username)),
+    Effect.flatMap(() => getUserIdByUsernameQuery(username, pool)),
     Effect.flatMap((userId) => createAuthToken(userId, username))
   );
 };
 
-const authenticateUser = (username: string, password: string) => {
+const authenticateUser = (username: string, password: string, pool: Pool) => {
   return pipe(
-    getHashedPasswordByUsernameQuery(username),
+    getHashedPasswordByUsernameQuery(username, pool),
     Effect.flatMap((hashedPassword) => safeParseNonEmptyString(hashedPassword)),
     Effect.orElseFail(
       () => new AuthenticationError({ message: "User not registered" })
@@ -155,7 +197,9 @@ const authenticateUser = (username: string, password: string) => {
     Effect.flatMap((hashedPassword) =>
       comparePasswords(password, hashedPassword)
     ),
-    Effect.flatMap((passwordMatch) => getAuthToken(username, passwordMatch))
+    Effect.flatMap((passwordMatch) =>
+      getAuthToken(username, passwordMatch, pool)
+    )
   );
 };
 
@@ -218,10 +262,23 @@ export const auth: RequestHandler = (req, res) => {
     Effect.flatMap((decoded) => Effect.succeed(decoded.username))
   );
 
-  return sendAuthenticatedUserResponse({
-    dataOrError: userNameOrError,
-    res,
-    successStatus: 200,
-    label: "username",
-  });
+  // todo type dataOrError so that connection not needed here as is not used
+  const getUsername = Connection.pipe(
+    Effect.flatMap(() =>
+      sendAuthenticatedUserResponse({
+        dataOrError: userNameOrError,
+        res,
+        successStatus: 200,
+        label: "username",
+      })
+    )
+  );
+
+  const runnable = Effect.provideService(
+    getUsername,
+    Connection,
+    ConnectionLive
+  );
+
+  return Effect.runPromise(runnable);
 };

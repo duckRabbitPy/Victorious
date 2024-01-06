@@ -136,18 +136,6 @@ export const cleanUp = (gameState: GameState) => {
           actor.discardPile
         );
 
-        // count num of estates
-
-        console.log(
-          ` actor ${actor.name} has ${newDeck.length} cards in deck`,
-          "and has",
-          newDeck.reduce((acc, curr) => {
-            if (curr === "estate") return acc + 1;
-            return acc;
-          }, 0),
-          "estates"
-        );
-
         return {
           ...actor,
           hand: cardNamesToCount(newCards),

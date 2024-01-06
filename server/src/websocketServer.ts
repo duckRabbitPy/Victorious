@@ -6,7 +6,6 @@ import {
 } from "./models/gamestate/mutations";
 import * as Schema from "@effect/schema/Schema";
 import { Logger, pipe, LoggerLevel } from "effect";
-import { JSONParseError } from "./controllers/customErrors";
 import {
   ClientPayload,
   ClientPayloadStruct,
@@ -17,12 +16,13 @@ import {
   SupportedEffects,
 } from "../../shared/common";
 import {
+  parseClientMessage,
+  parseJSONToClientMsg,
   safeParseJWT,
   sendErrorMsgToClient,
   tapPipeLine,
   verifyJwt,
 } from "./utils";
-import { getLatestLiveGameSnapshot } from "./controllers/game-session/requestHandlers";
 import {
   cleanUp,
   dealToAllActors,
@@ -41,8 +41,9 @@ import {
   determineIfGameIsOver,
 } from "./controllers/transformers/victory";
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
-
-const parseClientMessage = Schema.parse(ClientPayloadStruct);
+import { Connection, ConnectionLive } from "./db/connection";
+import { Pool } from "pg";
+import { getLatestGameSnapshotQuery } from "./models/gamestate/queries";
 
 export type RoomConnections = {
   socket: WebSocket;
@@ -57,20 +58,20 @@ export function createWebsocketServer(app: wsApplication): void {
   // websocket
   app.ws("/", function (ws, req) {
     ws.on("message", function message(msg: unknown) {
-      pipe(
-        Effect.try({
-          try: () => JSON.parse(msg as string),
-          catch: (e) =>
-            new JSONParseError({
-              message: `error parsing client message: ${e}`,
-            }),
-        }),
-        Effect.flatMap((msg) => parseClientMessage(msg)),
-        Effect.flatMap((msg) =>
+      const processMessage = Connection.pipe(
+        Effect.flatMap((connection) => connection.pool),
+        Effect.flatMap((pool) =>
+          Effect.all({
+            pool: Effect.succeed(pool),
+            msg: parseJSONToClientMsg(msg),
+          })
+        ),
+        Effect.flatMap(({ msg, pool }) =>
           handleMessage({
             msg,
             ws,
             roomConnections,
+            pool,
           })
         ),
         tapPipeLine,
@@ -82,9 +83,16 @@ export function createWebsocketServer(app: wsApplication): void {
           );
           return sendErrorMsgToClient(error, msgOrUndefined, roomConnections);
         }),
-        Logger.withMinimumLogLevel(LoggerLevel.Error),
-        Effect.runPromise
+        Logger.withMinimumLogLevel(LoggerLevel.Error)
       );
+
+      const runnable = Effect.provideService(
+        processMessage,
+        Connection,
+        ConnectionLive
+      );
+
+      Effect.runPromise(runnable);
     });
 
     ws.on("close", () => {
@@ -101,10 +109,12 @@ const handleMessage = ({
   msg,
   ws,
   roomConnections,
+  pool,
 }: {
   msg: ClientPayload;
   ws: WebSocket;
   roomConnections: RoomConnections;
+  pool: Pool;
 }) => {
   const room = Number(msg.room);
   const authToken = msg.authToken;
@@ -121,7 +131,10 @@ const handleMessage = ({
     )
   );
 
-  const currentGameState = getLatestLiveGameSnapshot({ room });
+  const currentGameState = pipe(
+    getLatestGameSnapshotQuery(room, pool),
+    Effect.flatMap(safeParseGameState)
+  );
 
   const cardName = pipe(safeParseCardName(msg.cardName));
   const toDiscardFromHand = msg.toDiscardFromHand;
@@ -156,7 +169,7 @@ const handleMessage = ({
       return pipe(
         Effect.all({ userInfo: userDetailsOrError, currentGameState }),
         Effect.flatMap(({ currentGameState }) =>
-          getLatestChatLogQuery(currentGameState.session_id)
+          getLatestChatLogQuery(currentGameState.session_id, pool)
         ),
         Effect.flatMap(safeParseChatLog),
         Effect.flatMap((chatLog) =>
@@ -174,6 +187,7 @@ const handleMessage = ({
             userId: userInfo.userId,
             username: userInfo.username,
             currentGameState,
+            pool,
           })
         ),
         Effect.flatMap(safeParseGameState),
@@ -191,7 +205,7 @@ const handleMessage = ({
         ),
         Effect.flatMap(resetBuysAndActions),
         Effect.flatMap(incrementTurn),
-        Effect.flatMap(writeNewGameStateToDB),
+        Effect.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool)),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
         )
@@ -204,7 +218,7 @@ const handleMessage = ({
         Effect.flatMap(({ currentGameState }) => cleanUp(currentGameState)),
         Effect.flatMap(incrementTurn),
         Effect.flatMap(resetBuysAndActions),
-        Effect.flatMap(writeNewGameStateToDB),
+        Effect.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool)),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
         )
@@ -228,7 +242,7 @@ const handleMessage = ({
         ),
         Effect.flatMap(deduceVictoryPoints),
         Effect.flatMap(determineIfGameIsOver),
-        Effect.flatMap(writeNewGameStateToDB),
+        Effect.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool)),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
         )
@@ -251,7 +265,7 @@ const handleMessage = ({
         ),
         Effect.flatMap(deduceVictoryPoints),
         Effect.flatMap(determineIfGameIsOver),
-        Effect.flatMap(writeNewGameStateToDB),
+        Effect.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool)),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
         )
@@ -264,7 +278,7 @@ const handleMessage = ({
         Effect.flatMap(({ currentGameState }) =>
           resetPlayedTreasures(currentGameState)
         ),
-        Effect.flatMap(writeNewGameStateToDB),
+        Effect.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool)),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
         )
@@ -288,7 +302,7 @@ const handleMessage = ({
         ),
         Effect.flatMap(deduceVictoryPoints),
         Effect.flatMap(determineIfGameIsOver),
-        Effect.flatMap(writeNewGameStateToDB),
+        Effect.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool)),
         Effect.flatMap((gameState) =>
           broadcastToRoom("gameState", gameState, room, roomConnections)
         )
@@ -308,6 +322,7 @@ const handleMessage = ({
             sessionId: currentGameState.session_id,
             userInfo,
             chatMessage,
+            pool,
           })
         ),
         Effect.flatMap(safeParseChatLog),

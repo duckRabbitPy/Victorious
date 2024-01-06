@@ -8,7 +8,10 @@ import {
 } from "../../shared/common";
 import * as Effect from "@effect/io/Effect";
 import { pipe } from "effect";
-import { AuthenticationError } from "./controllers/customErrors";
+import {
+  AuthenticationError,
+  JSONParseError,
+} from "./controllers/customErrors";
 import jwt from "jsonwebtoken";
 import { broadcastToRoom } from "./broadcast";
 import { RoomConnections } from "./websocketServer";
@@ -54,8 +57,6 @@ export const safeParseNumberArray = Schema.parse(
   )
 );
 
-export const parseClientMessage = Schema.parse(ClientPayloadStruct);
-
 export const verifyJwt = (token: string, secret: string | undefined) => {
   return pipe(
     safeParseNonEmptyString(secret),
@@ -95,3 +96,17 @@ export const sendErrorMsgToClient = <T>(
     broadcastToRoom("error", errorMessage, msg.room, roomConnections)
   );
 };
+
+export const parseClientMessage = Schema.parse(ClientPayloadStruct);
+
+export const parseJSONToClientMsg = (msg: unknown) =>
+  pipe(
+    Effect.try({
+      try: () => JSON.parse(msg as string),
+      catch: (e) =>
+        new JSONParseError({
+          message: `error parsing client message: ${e}`,
+        }),
+    }),
+    Effect.flatMap((msg) => parseClientMessage(msg))
+  );

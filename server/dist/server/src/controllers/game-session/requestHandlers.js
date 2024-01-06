@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOpenGameSessions = exports.getLatestLiveGameSnapshot = exports.createGameSession = void 0;
+exports.getLatestLiveGameSnapshot = exports.getOpenGameSessions = exports.createGameSession = void 0;
 const Function_1 = require("@effect/data/Function");
 const Effect = __importStar(require("@effect/io/Effect"));
 const queries_1 = require("../../models/gamestate/queries");
@@ -31,23 +31,31 @@ const utils_1 = require("../../utils");
 const responseHandlers_1 = require("../responseHandlers");
 const mutations_1 = require("../../models/gamestate/mutations");
 const common_1 = require("../../../../shared/common");
+const connection_1 = require("../../db/connection");
 const createGameSession = (req, res) => {
-    return (0, Function_1.pipe)((0, utils_1.safeParseNumber)(Number(req.body.room)), Effect.flatMap((room) => (0, mutations_1.createGameSessionQuery)(room)), Effect.flatMap(common_1.safeParseGameState), (dataOrError) => (0, responseHandlers_1.sendGameStateResponse)({
+    const createGameSession = connection_1.Connection.pipe(Effect.flatMap((connection) => connection.pool), Effect.flatMap((pool) => Effect.all({
+        pool: Effect.succeed(pool),
+        room: (0, utils_1.safeParseNumber)(req.body.room),
+    })), Effect.flatMap(({ pool, room }) => (0, mutations_1.createGameSessionQuery)(room, pool)), Effect.flatMap(common_1.safeParseGameState), (dataOrError) => (0, responseHandlers_1.sendGameStateResponse)({
         dataOrError: dataOrError,
         res,
         successStatus: 201,
     }));
+    const runnable = Effect.provideService(createGameSession, connection_1.Connection, connection_1.ConnectionLive);
+    Effect.runPromise(runnable);
 };
 exports.createGameSession = createGameSession;
-const getLatestLiveGameSnapshot = ({ room }) => {
-    return (0, Function_1.pipe)((0, queries_1.getLatestGameSnapshotQuery)(room), Effect.flatMap(common_1.safeParseGameState));
-};
-exports.getLatestLiveGameSnapshot = getLatestLiveGameSnapshot;
 const getOpenGameSessions = (req, res) => {
-    return (0, Function_1.pipe)((0, queries_1.getOpenGameSessionsQuery)(), Effect.flatMap((rooms) => (0, utils_1.safeParseNumberArray)(rooms)), (dataOrError) => (0, responseHandlers_1.sendOpenRoomsResponse)({
+    const getOpenGameSessions = connection_1.Connection.pipe(Effect.flatMap((connection) => connection.pool), Effect.flatMap((pool) => (0, queries_1.getOpenGameSessionsQuery)(pool)), Effect.flatMap((rooms) => (0, utils_1.safeParseNumberArray)(rooms)), (dataOrError) => (0, responseHandlers_1.sendOpenRoomsResponse)({
         dataOrError: dataOrError,
         res,
         successStatus: 200,
     }));
+    const runnable = Effect.provideService(getOpenGameSessions, connection_1.Connection, connection_1.ConnectionLive);
+    Effect.runPromise(runnable);
 };
 exports.getOpenGameSessions = getOpenGameSessions;
+const getLatestLiveGameSnapshot = ({ room, pool, }) => {
+    return (0, Function_1.pipe)((0, queries_1.getLatestGameSnapshotQuery)(room, pool), Effect.flatMap(common_1.safeParseGameState));
+};
+exports.getLatestLiveGameSnapshot = getLatestLiveGameSnapshot;

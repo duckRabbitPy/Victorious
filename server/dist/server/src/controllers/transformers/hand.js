@@ -58,7 +58,7 @@ const dealToAllActors = (gameState) => {
     return Effect.succeed(Object.assign(Object.assign({}, gameState), { actor_state: gameState.actor_state.map((actor, index) => {
             const { newCards, remainingDeck, discardPile } = (0, exports.dealCards)(shuffledDecks[index], 5, actor.discardPile);
             const newHand = (0, common_1.cardNamesToCount)(newCards);
-            return Object.assign(Object.assign({}, actor), { hand: newHand, deck: remainingDeck, discardPile: (0, common_1.discardHand)(newHand, discardPile), phase: (0, common_1.hasActionCard)(newHand) ? common_1.Phases.Action : common_1.Phases.Buy });
+            return Object.assign(Object.assign({}, actor), { hand: newHand, deck: remainingDeck, discardPile: discardPile, phase: (0, common_1.hasActionCard)(newHand) ? common_1.Phases.Action : common_1.Phases.Buy });
         }) }));
 };
 exports.dealToAllActors = dealToAllActors;
@@ -87,6 +87,12 @@ const cleanUp = (gameState) => {
             if ((0, utils_1.isUsersTurn)(gameState, actor.name)) {
                 const newDeck = (0, exports.reshuffleDeck)(actor.deck, actor.discardPile);
                 const { newCards, remainingDeck, discardPile } = (0, exports.dealCards)(newDeck, 5, actor.discardPile);
+                // count num of estates
+                console.log(` actor ${actor.name} has ${newDeck.length} cards in deck`, "and has", newDeck.reduce((acc, curr) => {
+                    if (curr === "estate")
+                        return acc + 1;
+                    return acc;
+                }, 0), "estates");
                 return Object.assign(Object.assign({}, actor), { hand: (0, common_1.cardNamesToCount)(newCards), deck: remainingDeck, discardPile });
             }
             else

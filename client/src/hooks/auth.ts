@@ -4,6 +4,7 @@ import { API_ENDPOINT } from "../constants";
 
 const getLoggedInUserName = async () => {
   const authToken = localStorage.getItem("dominion_auth_token");
+
   if (!authToken) {
     return null;
   }
@@ -18,6 +19,7 @@ const getLoggedInUserName = async () => {
     });
 
     const json = await response.json();
+    console.log(json);
     return (json?.username as string) || null;
   } catch (error) {
     return null;

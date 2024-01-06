@@ -34,11 +34,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getOpenGameSessionsQuery = exports.getLatestGameSnapshotQuery = void 0;
 // @query
-const getLatestGameSnapshotQuery = (room) => {
+const getLatestGameSnapshotQuery = (room, pool) => {
     const get = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
             // todo ensure is refering to correct game e.g. in a bad state with an old game
-            const result = yield connection_1.pool.query("SELECT * FROM game_snapshots WHERE room = $1 AND game_over = false ORDER BY mutation_index DESC LIMIT 1;", [room]);
+            const result = yield pool.query("SELECT * FROM game_snapshots WHERE room = $1 AND game_over = false ORDER BY mutation_index DESC LIMIT 1;", [room]);
             return result.rows[0];
         }
         catch (error) {
@@ -52,14 +52,13 @@ const getLatestGameSnapshotQuery = (room) => {
 };
 exports.getLatestGameSnapshotQuery = getLatestGameSnapshotQuery;
 const Effect = __importStar(require("@effect/io/Effect"));
-const connection_1 = require("../../db/connection");
 const customErrors_1 = require("../../controllers/customErrors");
 const utils_1 = require("../../utils");
 // @query
-const getOpenGameSessionsQuery = () => {
+const getOpenGameSessionsQuery = (pool) => {
     const get = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const result = yield connection_1.pool.query("SELECT DISTINCT room FROM game_snapshots WHERE turn = 0 AND game_over = false;");
+            const result = yield pool.query("SELECT DISTINCT room FROM game_snapshots WHERE turn = 0 AND game_over = false;");
             return result.rows.map((row) => row.room);
         }
         catch (error) {

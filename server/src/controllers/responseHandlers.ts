@@ -6,9 +6,10 @@ import { AuthenticationError, PostgresError } from "./customErrors";
 import { Response } from "express";
 import { pipe } from "effect";
 import { GameState } from "../../../shared/common";
+import { Connection } from "../db/connection";
 
 type DataOrError<T> = Effect.Effect<
-  never,
+  Connection,
   ParseError | PostgresError | AuthenticationError | Error,
   T
 >;
@@ -40,8 +41,7 @@ const createResponseHandler =
               .status(successStatus)
               .json({ [label ?? "data"]: onSuccess(data) })
           ),
-      }),
-      Effect.runPromise
+      })
     );
 
 export const sendLoginResponse = createResponseHandler<string>(

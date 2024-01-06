@@ -1,5 +1,13 @@
+import { Pool } from "pg";
 import { GameState, Phases, CardCount } from "../../../shared/common";
-import { pool } from "./connection";
+
+const pool = new Pool({
+  user: "postgres",
+  host: "localhost",
+  database: "dominion_pg_test",
+  password: "postgres",
+  port: 5432,
+});
 
 type GameSnapshot = {
   game_snapshots: GameState[];

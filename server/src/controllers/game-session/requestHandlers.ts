@@ -13,11 +13,19 @@ import {
 } from "../responseHandlers";
 import { createGameSessionQuery } from "../../models/gamestate/mutations";
 import { safeParseGameState } from "../../../../shared/common";
+import { Connection, ConnectionLive } from "../../db/connection";
+import { Pool } from "pg";
 
 export const createGameSession: RequestHandler = (req, res) => {
-  return pipe(
-    safeParseNumber(Number(req.body.room)),
-    Effect.flatMap((room) => createGameSessionQuery(room)),
+  const createGameSession = Connection.pipe(
+    Effect.flatMap((connection) => connection.pool),
+    Effect.flatMap((pool) =>
+      Effect.all({
+        pool: Effect.succeed(pool),
+        room: safeParseNumber(req.body.room),
+      })
+    ),
+    Effect.flatMap(({ pool, room }) => createGameSessionQuery(room, pool)),
     Effect.flatMap(safeParseGameState),
     (dataOrError) =>
       sendGameStateResponse({
@@ -26,18 +34,20 @@ export const createGameSession: RequestHandler = (req, res) => {
         successStatus: 201,
       })
   );
-};
 
-export const getLatestLiveGameSnapshot = ({ room }: { room: number }) => {
-  return pipe(
-    getLatestGameSnapshotQuery(room),
-    Effect.flatMap(safeParseGameState)
+  const runnable = Effect.provideService(
+    createGameSession,
+    Connection,
+    ConnectionLive
   );
+
+  Effect.runPromise(runnable);
 };
 
 export const getOpenGameSessions: RequestHandler = (req, res) => {
-  return pipe(
-    getOpenGameSessionsQuery(),
+  const getOpenGameSessions = Connection.pipe(
+    Effect.flatMap((connection) => connection.pool),
+    Effect.flatMap((pool) => getOpenGameSessionsQuery(pool)),
     Effect.flatMap((rooms) => safeParseNumberArray(rooms)),
     (dataOrError) =>
       sendOpenRoomsResponse({
@@ -46,4 +56,12 @@ export const getOpenGameSessions: RequestHandler = (req, res) => {
         successStatus: 200,
       })
   );
+
+  const runnable = Effect.provideService(
+    getOpenGameSessions,
+    Connection,
+    ConnectionLive
+  );
+
+  Effect.runPromise(runnable);
 };

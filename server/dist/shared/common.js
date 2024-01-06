@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sumCardCounts = exports.subtractCardCount = exports.zeroCardCount = exports.ClientPayloadStruct = exports.SupportedEffects = exports.safeParseChatLog = exports.safeParseGameState = exports.safeParseBroadCast = exports.safeParseCardName = exports.safeParseNonEmptyString = exports.BroadCastStruct = exports.ChatMessageStruct = exports.GameStateStruct = exports.Phases = exports.CardCountStruct = exports.cardNameToCard = exports.cardNameToVictoryPoints = exports.getTreasureValue = exports.hasActionCard = exports.getCardTypeByName = exports.discardHand = exports.cardNamesToCount = exports.countToCardNamesArray = exports.getCardValueByName = exports.getCardDescriptionByName = exports.getCardCostByName = exports.getAllCardNames = exports.ActionNames = exports.VictoryNames = exports.TreasureNames = void 0;
+exports.sumCardCounts = exports.subtractCardCount = exports.zeroCardCount = exports.ClientPayloadStruct = exports.SupportedEffects = exports.safeParseChatLog = exports.safeParseGameState = exports.safeParseBroadCast = exports.safeParseCardName = exports.safeParseNonEmptyString = exports.BroadCastStruct = exports.ChatMessageStruct = exports.GameStateStruct = exports.Phases = exports.CardCountStruct = exports.cardNameToCard = exports.cardNameToVictoryPoints = exports.getTreasureValue = exports.hasActionCard = exports.getCardTypeByName = exports.cardNamesToCount = exports.countToCardNamesArray = exports.getCardValueByName = exports.getCardDescriptionByName = exports.getCardCostByName = exports.getAllCardNames = exports.ActionNames = exports.VictoryNames = exports.TreasureNames = void 0;
 const Schema = __importStar(require("@effect/schema/Schema"));
 const copper = {
     name: "copper",
@@ -190,10 +190,6 @@ const cardNamesToCount = (cardNames) => {
     return temporaryCardCount;
 };
 exports.cardNamesToCount = cardNamesToCount;
-const discardHand = (currentHand, currentDiscardPile) => {
-    return currentDiscardPile.concat((0, exports.countToCardNamesArray)(currentHand));
-};
-exports.discardHand = discardHand;
 const getCardTypeByName = (cardName) => {
     return (0, exports.cardNameToCard)(cardName).type;
 };
@@ -275,7 +271,6 @@ const ActorStateStruct = Schema.struct({
 const GlobalStateStruct = Schema.struct({
     supply: exports.CardCountStruct,
     history: Schema.array(Schema.string),
-    playerUserIds: Schema.array(Schema.UUID),
 });
 exports.GameStateStruct = Schema.struct({
     id: Schema.number,

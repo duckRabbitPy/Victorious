@@ -1,5 +1,5 @@
 // @query
-export const getLatestGameSnapshotQuery = (room: number) => {
+export const getLatestGameSnapshotQuery = (room: number, pool: Pool) => {
   const get = async () => {
     try {
       // todo ensure is refering to correct game e.g. in a bad state with an old game
@@ -20,12 +20,12 @@ export const getLatestGameSnapshotQuery = (room: number) => {
 };
 
 import * as Effect from "@effect/io/Effect";
-import { pool } from "../../db/connection";
 import { PostgresError } from "../../controllers/customErrors";
 import { logAndThrowError } from "../../utils";
+import { Pool } from "pg";
 
 // @query
-export const getOpenGameSessionsQuery = () => {
+export const getOpenGameSessionsQuery = (pool: Pool) => {
   const get = async () => {
     try {
       const result = await pool.query(

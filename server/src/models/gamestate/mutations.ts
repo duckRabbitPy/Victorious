@@ -1,7 +1,6 @@
 import * as Effect from "@effect/io/Effect";
 import { pipe } from "effect";
 
-import { pool } from "../../db/connection";
 import { PostgresError } from "../../controllers/customErrors";
 import {
   ActorState,
@@ -13,6 +12,7 @@ import {
   zeroCardCount,
 } from "../../../../shared/common";
 import { logAndThrowError } from "../../utils";
+import { Pool } from "pg";
 
 const setUpActorsForGame = ({
   currentActorStateArray,
@@ -94,7 +94,7 @@ const generatateGlobalState = () => {
 };
 
 // @mutation
-export const createGameSessionQuery = (room: number) => {
+export const createGameSessionQuery = (room: number, pool: Pool) => {
   const turn = 0;
 
   const create = async () => {
@@ -131,10 +131,12 @@ export const addLivePlayerQuery = ({
   userId,
   username,
   currentGameState,
+  pool,
 }: {
   userId: string;
   username: string;
   currentGameState: GameState;
+  pool: Pool;
 }) => {
   const add = async () => {
     try {
@@ -199,7 +201,7 @@ export const addLivePlayerQuery = ({
 };
 
 // @mutation
-export const updateGameState = (newGameState: GameState) => {
+export const updateGameState = (newGameState: GameState, pool: Pool) => {
   const {
     room,
     turn,
@@ -248,9 +250,12 @@ export const updateGameState = (newGameState: GameState) => {
   }).pipe(Effect.retryN(1));
 };
 
-export const writeNewGameStateToDB = (maybeValidGameState: unknown) =>
+export const writeNewGameStateToDB = (
+  maybeValidGameState: unknown,
+  pool: Pool
+) =>
   pipe(
     safeParseGameState(maybeValidGameState),
-    Effect.flatMap(updateGameState),
+    Effect.flatMap((gamestate) => updateGameState(gamestate, pool)),
     Effect.flatMap(safeParseGameState)
   );
