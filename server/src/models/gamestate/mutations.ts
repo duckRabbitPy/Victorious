@@ -114,9 +114,9 @@ export const createGameSessionQuery = (room: number, pool: Pool) => {
              VALUES ($1, $2, $3, $4) RETURNING *`,
         [room, turn, "[]", generatateGlobalState()]
       );
-
       return result.rows[0];
     } catch (error) {
+      console.log({ error });
       logAndThrowError(error);
     }
   };
