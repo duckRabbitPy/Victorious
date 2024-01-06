@@ -1,17 +1,17 @@
 import { Pool } from "pg";
 import { Context, Effect } from "effect";
 
-export interface Connection {
+export interface DBConnection {
   readonly pool: Effect.Effect<never, never, Pool>;
 }
 
-export const Connection = Context.Tag<Connection>();
+export const DBConnection = Context.Tag<DBConnection>();
 
-export const program = Connection.pipe(
+export const program = DBConnection.pipe(
   Effect.flatMap((connection) => connection.pool)
 );
 
-export const ConnectionLive = Connection.of({
+export const ConnectionLive = DBConnection.of({
   pool: Effect.sync(() => {
     console.log("NODE_ENV for db connection", process.env.NODE_ENV);
     return process.env.NODE_ENV === "production"
@@ -29,7 +29,7 @@ export const ConnectionLive = Connection.of({
   }),
 });
 
-export const ConnectionTest = Connection.of({
+export const ConnectionTest = DBConnection.of({
   pool: Effect.sync(() => {
     return new Pool({
       user: "postgres",

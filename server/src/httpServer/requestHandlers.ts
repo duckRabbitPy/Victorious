@@ -9,7 +9,7 @@ import {
 } from "./responseHandlers";
 import { createGameSessionQuery } from "../models/gamestate/mutations";
 import { safeParseGameState } from "../../../shared/common";
-import { Connection, ConnectionLive } from "../db/connection";
+import { DBConnection, ConnectionLive } from "../db/connection";
 
 import bcrypt from "bcrypt";
 import { pipe } from "effect";
@@ -35,7 +35,7 @@ import { Pool } from "pg";
 import { sendConfirmationEmail } from "./sendConfirmationEmail";
 
 export const createGameSession: RequestHandler = (req, res) => {
-  const createGameSession = Connection.pipe(
+  const createGameSession = DBConnection.pipe(
     Effect.flatMap((connection) => connection.pool),
     Effect.flatMap((pool) =>
       Effect.all({
@@ -55,7 +55,7 @@ export const createGameSession: RequestHandler = (req, res) => {
 
   const runnable = Effect.provideService(
     createGameSession,
-    Connection,
+    DBConnection,
     ConnectionLive
   );
 
@@ -63,7 +63,7 @@ export const createGameSession: RequestHandler = (req, res) => {
 };
 
 export const getOpenGameSessions: RequestHandler = (req, res) => {
-  const getOpenGameSessions = Connection.pipe(
+  const getOpenGameSessions = DBConnection.pipe(
     Effect.flatMap((connection) => connection.pool),
     Effect.flatMap((pool) => getOpenGameSessionsQuery(pool)),
     Effect.flatMap((rooms) => safeParseNumberArray(rooms)),
@@ -77,7 +77,7 @@ export const getOpenGameSessions: RequestHandler = (req, res) => {
 
   const runnable = Effect.provideService(
     getOpenGameSessions,
-    Connection,
+    DBConnection,
     ConnectionLive
   );
 
@@ -85,7 +85,7 @@ export const getOpenGameSessions: RequestHandler = (req, res) => {
 };
 
 export const login: RequestHandler = (req, res) => {
-  const login = Connection.pipe(
+  const login = DBConnection.pipe(
     Effect.flatMap((connection) => connection.pool),
     Effect.flatMap((pool) =>
       Effect.all({
@@ -106,7 +106,7 @@ export const login: RequestHandler = (req, res) => {
       })
   );
 
-  const runnable = Effect.provideService(login, Connection, ConnectionLive);
+  const runnable = Effect.provideService(login, DBConnection, ConnectionLive);
 
   return Effect.runPromise(runnable);
 };
@@ -116,7 +116,7 @@ export const register: RequestHandler = (req, res) => {
   const email = safeParseNonEmptyString(req.body.email);
   const password = safeParseNonEmptyString(req.body.password);
 
-  const successMsgOrError = Connection.pipe(
+  const successMsgOrError = DBConnection.pipe(
     Effect.flatMap((connection) => connection.pool),
     Effect.flatMap((pool) =>
       Effect.all({ username, email, password, pool: Effect.succeed(pool) })
@@ -145,7 +145,7 @@ export const register: RequestHandler = (req, res) => {
 
   const runnable = Effect.provideService(
     successMsgOrError,
-    Connection,
+    DBConnection,
     ConnectionLive
   );
 
@@ -157,7 +157,7 @@ export const verify: RequestHandler = (req, res) => {
     req.params.confirmation_token
   );
 
-  const usernameOrError = Connection.pipe(
+  const usernameOrError = DBConnection.pipe(
     Effect.flatMap((connection) => connection.pool),
     Effect.flatMap((pool) =>
       Effect.all({
@@ -184,7 +184,7 @@ export const verify: RequestHandler = (req, res) => {
 
   const runnable = Effect.provideService(
     usernameOrError,
-    Connection,
+    DBConnection,
     ConnectionLive
   );
 
@@ -264,7 +264,7 @@ export const auth: RequestHandler = (req, res) => {
   );
 
   // todo type dataOrError so that connection not needed here as is not used
-  const getUsername = Connection.pipe(
+  const getUsername = DBConnection.pipe(
     Effect.flatMap(() =>
       sendAuthenticatedUserResponse({
         dataOrError: userNameOrError,
@@ -277,7 +277,7 @@ export const auth: RequestHandler = (req, res) => {
 
   const runnable = Effect.provideService(
     getUsername,
-    Connection,
+    DBConnection,
     ConnectionLive
   );
 

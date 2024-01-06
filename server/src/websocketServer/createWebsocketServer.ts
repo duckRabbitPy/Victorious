@@ -10,7 +10,7 @@ import {
 } from "../utils";
 
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
-import { Connection, ConnectionLive } from "../db/connection";
+import { DBConnection, ConnectionLive } from "../db/connection";
 import { handleMessage } from "./handleMessage";
 
 export type RoomConnections = {
@@ -26,7 +26,7 @@ export function createWebsocketServer(app: wsApplication): void {
   // websocket
   app.ws("/", function (ws, req) {
     ws.on("message", function message(msg: unknown) {
-      const processMessage = Connection.pipe(
+      const processMessage = DBConnection.pipe(
         Effect.flatMap((connection) => connection.pool),
         Effect.flatMap((pool) =>
           Effect.all({
@@ -56,7 +56,7 @@ export function createWebsocketServer(app: wsApplication): void {
 
       const runnable = Effect.provideService(
         processMessage,
-        Connection,
+        DBConnection,
         ConnectionLive
       );
 
