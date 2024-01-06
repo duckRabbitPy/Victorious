@@ -1,5 +1,5 @@
 import * as Effect from "@effect/io/Effect";
-import { PostgresError } from "../controllers/customErrors";
+import { PostgresError } from "../customErrors";
 import { logAndThrowError } from "../utils";
 import { uuidv4 } from "../../../shared/utils";
 import { Pool } from "pg";

@@ -3,109 +3,40 @@ import WebSocket from "ws";
 import {
   addLivePlayerQuery,
   writeNewGameStateToDB,
-} from "./models/gamestate/mutations";
-import * as Schema from "@effect/schema/Schema";
-import { Logger, pipe, LoggerLevel } from "effect";
+} from "../models/gamestate/mutations";
+
+import { pipe } from "effect";
 import {
   ClientPayload,
-  ClientPayloadStruct,
   safeParseCardName,
   safeParseChatLog,
   safeParseGameState,
   safeParseNonEmptyString,
   SupportedEffects,
-} from "../../shared/common";
-import {
-  parseClientMessage,
-  parseJSONToClientMsg,
-  safeParseJWT,
-  sendErrorMsgToClient,
-  tapPipeLine,
-  verifyJwt,
-} from "./utils";
+} from "../../../shared/common";
+import { safeParseJWT, verifyJwt } from "../utils";
 import {
   cleanUp,
   dealToAllActors,
   playTreasure,
   resetPlayedTreasures,
-} from "./controllers/transformers/hand";
+} from "./inMemoryMutation/hand";
 
-import { buyCard, resetBuysAndActions } from "./controllers/transformers/buys";
-import { incrementTurn } from "./controllers/transformers/turn";
-import { playAction } from "./controllers/transformers/actions";
-import { updateChatLogQuery } from "./models/chatlog/mutations";
-import { getLatestChatLogQuery } from "./models/chatlog/queries";
+import { buyCard, resetBuysAndActions } from "./inMemoryMutation/buys";
+import { incrementTurn } from "./inMemoryMutation/turn";
+import { playAction } from "./inMemoryMutation/actions";
+import { updateChatLogQuery } from "../models/chatlog/mutations";
+import { getLatestChatLogQuery } from "../models/chatlog/queries";
 import { broadcastToRoom } from "./broadcast";
 import {
   deduceVictoryPoints,
   determineIfGameIsOver,
-} from "./controllers/transformers/victory";
-import { wsApplication } from "@wll8/express-ws/dist/src/type";
-import { Connection, ConnectionLive } from "./db/connection";
+} from "./inMemoryMutation/victory";
 import { Pool } from "pg";
-import { getLatestGameSnapshotQuery } from "./models/gamestate/queries";
+import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
+import { RoomConnections } from "./createWebsocketServer";
 
-export type RoomConnections = {
-  socket: WebSocket;
-  room: number;
-  uniqueUserAuthToken: string;
-}[];
-
-export function createWebsocketServer(app: wsApplication): void {
-  // mutable state
-  const roomConnections: RoomConnections = [];
-
-  // websocket
-  app.ws("/", function (ws, req) {
-    ws.on("message", function message(msg: unknown) {
-      const processMessage = Connection.pipe(
-        Effect.flatMap((connection) => connection.pool),
-        Effect.flatMap((pool) =>
-          Effect.all({
-            pool: Effect.succeed(pool),
-            msg: parseJSONToClientMsg(msg),
-          })
-        ),
-        Effect.flatMap(({ msg, pool }) =>
-          handleMessage({
-            msg,
-            ws,
-            roomConnections,
-            pool,
-          })
-        ),
-        tapPipeLine,
-        Effect.catchAll((error) => {
-          const msgOrUndefined = pipe(
-            parseClientMessage(JSON.parse(msg as string)),
-            Effect.orElseSucceed(() => undefined),
-            Effect.runSync
-          );
-          return sendErrorMsgToClient(error, msgOrUndefined, roomConnections);
-        }),
-        Logger.withMinimumLogLevel(LoggerLevel.Error)
-      );
-
-      const runnable = Effect.provideService(
-        processMessage,
-        Connection,
-        ConnectionLive
-      );
-
-      Effect.runPromise(runnable);
-    });
-
-    ws.on("close", () => {
-      console.log(
-        `Client disconnected. Total connections: ${roomConnections.length}`
-      );
-    });
-  });
-
-  console.log("Websocket server created");
-}
-
-const handleMessage = ({
+export const handleMessage = ({
   msg,
   ws,
   roomConnections,

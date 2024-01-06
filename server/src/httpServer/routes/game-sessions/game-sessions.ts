@@ -1,8 +1,5 @@
 import { Router } from "express";
-import {
-  createGameSession,
-  getOpenGameSessions,
-} from "../../controllers/game-session/requestHandlers";
+import { createGameSession, getOpenGameSessions } from "../../requestHandlers";
 
 const gameRouter = Router();
 

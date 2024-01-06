@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
-import { createWebsocketServer } from "./websocketServer";
-import { createHttpServer } from "./httpServer";
+import { createWebsocketServer } from "./websocketServer/createWebsocketServer";
+import { createHttpServer } from "./httpServer/createHttpServer";
 
 import express from "express";
 import http from "http";
@@ -14,8 +14,6 @@ export const SERVER_API_ENDPOINT =
     ? "https://dominion.onrender.com/api"
     : "http://localhost:3000/api";
 
-console.log({ SERVER_API_ENDPOINT: SERVER_API_ENDPOINT });
-
 const expressApp = express();
 
 const httpServer = http.createServer(expressApp);
@@ -28,6 +26,7 @@ createHttpServer(appWithWSSUpgrade);
 createWebsocketServer(appWithWSSUpgrade);
 
 appWithWSSUpgrade.listen(SERVER_PORT, () => {
+  console.log({ SERVER_API_ENDPOINT: SERVER_API_ENDPOINT });
   console.log(
     "\x1b[42m",
     `Server is running on port ${SERVER_PORT}`,

@@ -1,20 +1,15 @@
 import * as Schema from "@effect/schema/Schema";
 import {
-  GameStateStruct,
   ClientPayloadStruct,
-  ChatMessageStruct,
   safeParseNonEmptyString,
   ClientPayload,
 } from "../../shared/common";
 import * as Effect from "@effect/io/Effect";
 import { pipe } from "effect";
-import {
-  AuthenticationError,
-  JSONParseError,
-} from "./controllers/customErrors";
+import { AuthenticationError, JSONParseError } from "./customErrors";
 import jwt from "jsonwebtoken";
-import { broadcastToRoom } from "./broadcast";
-import { RoomConnections } from "./websocketServer";
+import { broadcastToRoom } from "./websocketServer/broadcast";
+import { RoomConnections } from "./websocketServer/createWebsocketServer";
 
 export const logAndThrowError = (error: unknown) => {
   console.error(error);

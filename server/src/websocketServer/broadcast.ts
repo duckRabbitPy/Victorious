@@ -1,6 +1,6 @@
 import { Effect } from "effect";
-import { GameState, ChatMessage, BroadCastType } from "../../shared/common";
-import { RoomConnections } from "./websocketServer";
+import { GameState, ChatMessage, BroadCastType } from "../../../shared/common";
+import { RoomConnections } from "./createWebsocketServer";
 
 export const broadcastToRoom = <
   T extends GameState | readonly ChatMessage[] | string

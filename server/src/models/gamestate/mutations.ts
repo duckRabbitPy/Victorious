@@ -1,7 +1,7 @@
 import * as Effect from "@effect/io/Effect";
 import { pipe } from "effect";
 
-import { PostgresError } from "../../controllers/customErrors";
+import { PostgresError } from "../../customErrors";
 import {
   ActorState,
   CardCount,

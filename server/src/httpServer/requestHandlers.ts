@@ -1,4 +1,16 @@
+import { RequestHandler } from "express";
 import * as Effect from "@effect/io/Effect";
+import { getOpenGameSessionsQuery } from "../models/gamestate/queries";
+
+import { safeParseNumber, safeParseNumberArray } from "../utils";
+import {
+  sendGameStateResponse,
+  sendOpenRoomsResponse,
+} from "./responseHandlers";
+import { createGameSessionQuery } from "../models/gamestate/mutations";
+import { safeParseGameState } from "../../../shared/common";
+import { Connection, ConnectionLive } from "../db/connection";
+
 import bcrypt from "bcrypt";
 import { pipe } from "effect";
 import jwt from "jsonwebtoken";
@@ -8,22 +20,69 @@ import {
   getUserIdByUsernameQuery,
   registerNewUserQuery,
   verifyUserQuery,
-} from "../../models/users";
+} from "../models/users";
 
-import { safeParseJWT, verifyJwt } from "../../utils";
-import { RequestHandler } from "express";
-import nodemailer from "nodemailer";
+import { safeParseJWT, verifyJwt } from "../utils";
 import {
   sendConfirmUserResponse,
   sendAuthenticatedUserResponse,
   sendLoginResponse,
   sendRegisterResponse,
-} from "../responseHandlers";
+} from "./responseHandlers";
 
-import { safeParseNonEmptyString } from "../../../../shared/common";
-import { SERVER_API_ENDPOINT } from "../../server";
+import { safeParseNonEmptyString } from "../../../shared/common";
 import { Pool } from "pg";
-import { Connection, ConnectionLive } from "../../db/connection";
+import { sendConfirmationEmail } from "./sendConfirmationEmail";
+
+export const createGameSession: RequestHandler = (req, res) => {
+  const createGameSession = Connection.pipe(
+    Effect.flatMap((connection) => connection.pool),
+    Effect.flatMap((pool) =>
+      Effect.all({
+        pool: Effect.succeed(pool),
+        room: safeParseNumber(req.body.room),
+      })
+    ),
+    Effect.flatMap(({ pool, room }) => createGameSessionQuery(room, pool)),
+    Effect.flatMap(safeParseGameState),
+    (dataOrError) =>
+      sendGameStateResponse({
+        dataOrError: dataOrError,
+        res,
+        successStatus: 201,
+      })
+  );
+
+  const runnable = Effect.provideService(
+    createGameSession,
+    Connection,
+    ConnectionLive
+  );
+
+  Effect.runPromise(runnable);
+};
+
+export const getOpenGameSessions: RequestHandler = (req, res) => {
+  const getOpenGameSessions = Connection.pipe(
+    Effect.flatMap((connection) => connection.pool),
+    Effect.flatMap((pool) => getOpenGameSessionsQuery(pool)),
+    Effect.flatMap((rooms) => safeParseNumberArray(rooms)),
+    (dataOrError) =>
+      sendOpenRoomsResponse({
+        dataOrError: dataOrError,
+        res,
+        successStatus: 200,
+      })
+  );
+
+  const runnable = Effect.provideService(
+    getOpenGameSessions,
+    Connection,
+    ConnectionLive
+  );
+
+  Effect.runPromise(runnable);
+};
 
 export const login: RequestHandler = (req, res) => {
   const login = Connection.pipe(
@@ -62,9 +121,19 @@ export const register: RequestHandler = (req, res) => {
     Effect.flatMap((pool) =>
       Effect.all({ username, email, password, pool: Effect.succeed(pool) })
     ),
-    Effect.flatMap(({ username, email, password, pool }) =>
-      registerUser(username, email, password, pool)
-    ),
+    Effect.flatMap(({ username, email, password, pool }) => {
+      const saltRounds = 10;
+      const hashedPassword = bcrypt.hashSync(password, saltRounds);
+
+      // todo: check if user already exists first
+      return pipe(
+        registerNewUserQuery(username, email, hashedPassword, pool),
+        Effect.flatMap(({ email, confirmation_token }) =>
+          sendConfirmationEmail({ email, confirmation_token })
+        ),
+        Effect.flatMap(() => Effect.succeed("Email sent"))
+      );
+    }),
     (dataOrError) =>
       sendRegisterResponse({
         dataOrError: dataOrError,
@@ -122,33 +191,6 @@ export const verify: RequestHandler = (req, res) => {
   return Effect.runPromise(runnable);
 };
 
-const registerUser = (
-  username: string,
-  email: string,
-  password: string,
-  pool: Pool
-) => {
-  const saltRounds = 10;
-  const hashedPassword = bcrypt.hashSync(password, saltRounds);
-
-  // todo: check if user already exists first
-
-  return pipe(
-    registerNewUserQuery(username, email, hashedPassword, pool),
-    Effect.flatMap(({ email, confirmation_token }) =>
-      sendConfirmationEmail({ email, confirmation_token })
-    ),
-    Effect.flatMap(() => Effect.succeed("Email sent"))
-  );
-};
-
-const comparePasswords = (password: string, hashedPassword: string) => {
-  return Effect.tryPromise({
-    try: () => bcrypt.compare(password, hashedPassword),
-    catch: (e) => new Error(`${e}`),
-  });
-};
-
 const createAuthToken = (userId: string, username: string) => {
   const secretKey = process.env.JWT_SECRET_KEY;
 
@@ -195,57 +237,16 @@ const authenticateUser = (username: string, password: string, pool: Pool) => {
       () => new AuthenticationError({ message: "User not registered" })
     ),
     Effect.flatMap((hashedPassword) =>
-      comparePasswords(password, hashedPassword)
+      Effect.tryPromise({
+        try: () => bcrypt.compare(password, hashedPassword),
+        catch: (e) => new Error(`${e}`),
+      })
     ),
     Effect.flatMap((passwordMatch) =>
       getAuthToken(username, passwordMatch, pool)
     )
   );
 };
-
-export const sendConfirmationEmail = ({
-  email,
-  confirmation_token,
-}: {
-  email: string;
-  confirmation_token: string;
-}) =>
-  Effect.tryPromise({
-    try: () => {
-      return new Promise((resolve, reject) => {
-        const transporter = nodemailer.createTransport({
-          service: "gmail",
-          host: "smtp.gmail.com",
-          port: 587,
-          secure: false,
-          auth: {
-            user: "duck.rabbit.python@gmail.com",
-            pass: `${process.env.GMAIL_APP_PASSWORD}`,
-          },
-        });
-
-        const mailOptions = {
-          from: process.env.SENDER_EMAIL,
-          to: email,
-          subject: "Confirm your email",
-          text: `Click the link to confirm your email: ${SERVER_API_ENDPOINT}/register/confirm/${confirmation_token}`,
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            console.log(error);
-            reject(error);
-          } else {
-            console.log("Email sent: " + info.response);
-            resolve(info.response);
-          }
-        });
-
-        transporter.close();
-      });
-    },
-    catch: () => new Error("Error sending confirmation email"),
-  });
 
 export const auth: RequestHandler = (req, res) => {
   // split on Bearer
