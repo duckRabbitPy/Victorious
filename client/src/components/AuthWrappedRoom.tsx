@@ -1,9 +1,12 @@
 import { Link } from "react-router-dom";
 import { useGetLoggedInUsername } from "../hooks/auth";
 import Room from "../pages/Room";
+import React, { useState } from "react";
+import { Backgrounds } from "../constants";
 
 const AuthWrappedRoom = () => {
   const { loggedInUsername } = useGetLoggedInUsername();
+  const [backgroundIndex, setBackgroundIndex] = useState(0);
 
   const imgStyle = {
     position: "fixed",
@@ -19,13 +22,14 @@ const AuthWrappedRoom = () => {
     return (
       <>
         <img
-          src={
-            "https://res.cloudinary.com/dkytnwn87/image/upload/v1703959203/dominion/background_vc3hhv.jpg"
-          }
+          src={Backgrounds[backgroundIndex]}
           alt="Background"
           style={imgStyle}
         />
-        <Room loggedInUsername={loggedInUsername} />
+        <Room
+          loggedInUsername={loggedInUsername}
+          setBackgroundIndex={setBackgroundIndex}
+        />
       </>
     );
   }

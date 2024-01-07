@@ -12,8 +12,16 @@ import { useGameState } from "../hooks/useGameState";
 import HistoryLog from "../components/HistoryLog";
 import OpponentHands from "../components/OpponentHands";
 import Spacer from "../components/Spacer";
+import React from "react";
+import { Backgrounds } from "../constants";
 
-const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
+const Room = ({
+  loggedInUsername,
+  setBackgroundIndex,
+}: {
+  loggedInUsername: string;
+  setBackgroundIndex: React.Dispatch<React.SetStateAction<number>>;
+}) => {
   const { gameState, socket, chatLog, errorMessage, setErrorMessage } =
     useGameState();
   const { "*": roomParam } = useParams();
@@ -43,6 +51,29 @@ const Room = ({ loggedInUsername }: { loggedInUsername: string }) => {
       )}
       <Link to="/">Back to home</Link>
       <div>Playing as : {loggedInUsername}</div>
+
+      <div style={{ display: "flex", gap: "1rem", color: "white" }}>
+        <button
+          onClick={() => {
+            setBackgroundIndex((i = 0) =>
+              i === 0 ? Backgrounds.length : i - 1
+            );
+          }}
+          style={{ fontSize: "small" }}
+        >
+          ←
+        </button>
+        <button
+          style={{ fontSize: "small" }}
+          onClick={() => {
+            setBackgroundIndex((i) =>
+              i === Backgrounds.length - 1 ? 0 : i + 1
+            );
+          }}
+        >
+          →
+        </button>
+      </div>
 
       <div
         style={{
