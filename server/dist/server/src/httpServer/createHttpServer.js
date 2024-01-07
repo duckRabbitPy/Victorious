@@ -38,7 +38,7 @@ function createHttpServer(app) {
     const isDev = process.env.NODE_ENV === "development";
     const rootPath = isDev
         ? process.cwd()
-        : path_1.default.resolve(__dirname, "../../../../");
+        : path_1.default.resolve(__dirname, "../../../../..");
     const clientDistPath = path_1.default.join(rootPath, "client/dist");
     app.use((0, cors_1.default)());
     app.use((0, cors_1.default)({
