@@ -34,7 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyUserQuery = exports.registerNewUserQuery = exports.getUserIdByUsernameQuery = exports.getHashedPasswordByUsernameQuery = void 0;
 const Effect = __importStar(require("@effect/io/Effect"));
-const customErrors_1 = require("../controllers/customErrors");
+const customErrors_1 = require("../customErrors");
 const utils_1 = require("../utils");
 const utils_2 = require("../../../shared/utils");
 const getHashedPasswordByUsernameQuery = (username, pool) => {

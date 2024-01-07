@@ -52,7 +52,7 @@ const getLatestGameSnapshotQuery = (room, pool) => {
 };
 exports.getLatestGameSnapshotQuery = getLatestGameSnapshotQuery;
 const Effect = __importStar(require("@effect/io/Effect"));
-const customErrors_1 = require("../../controllers/customErrors");
+const customErrors_1 = require("../../customErrors");
 const utils_1 = require("../../utils");
 // @query
 const getOpenGameSessionsQuery = (pool) => {

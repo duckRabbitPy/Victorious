@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const vitest_1 = require("vitest");
 const common_1 = require("../../../shared/common");
-const hand_1 = require("../controllers/transformers/hand");
+const hand_1 = require("../websocketServer/inMemoryMutation/hand");
 (0, vitest_1.describe)("common util testing", () => {
     (0, vitest_1.it)("subtract card count", () => {
         const cardCountA = {
