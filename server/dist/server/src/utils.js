@@ -26,14 +26,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendErrorMsgToClient = exports.verifyJwt = exports.parseClientMessage = exports.safeParseNumberArray = exports.safeParseUUID = exports.safeParseUUIDs = exports.safeParseJWT = exports.safeParseNumber = exports.tapPipeLine = exports.logAndThrowError = void 0;
+exports.parseJSONToClientMsg = exports.parseClientMessage = exports.sendErrorMsgToClient = exports.verifyJwt = exports.safeParseNumberArray = exports.safeParseUUID = exports.safeParseUUIDs = exports.safeParseJWT = exports.safeParseNumber = exports.tapPipeLine = exports.logAndThrowError = void 0;
 const Schema = __importStar(require("@effect/schema/Schema"));
 const common_1 = require("../../shared/common");
 const Effect = __importStar(require("@effect/io/Effect"));
 const effect_1 = require("effect");
-const customErrors_1 = require("./controllers/customErrors");
+const customErrors_1 = require("./customErrors");
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-const broadcast_1 = require("./broadcast");
+const broadcast_1 = require("./websocketServer/broadcast");
 const logAndThrowError = (error) => {
     console.error(error);
     throw error;
@@ -54,7 +54,6 @@ exports.safeParseJWT = Schema.parse(Schema.struct({
 exports.safeParseUUIDs = Schema.parse(Schema.array(Schema.UUID));
 exports.safeParseUUID = Schema.parse(Schema.UUID);
 exports.safeParseNumberArray = Schema.parse(Schema.array(Schema.number.pipe(Schema.positive(), Schema.int(), Schema.nonNaN())));
-exports.parseClientMessage = Schema.parse(common_1.ClientPayloadStruct);
 const verifyJwt = (token, secret) => {
     return (0, effect_1.pipe)((0, common_1.safeParseNonEmptyString)(secret), Effect.flatMap((secret) => {
         return Effect.tryPromise({
@@ -80,3 +79,11 @@ const sendErrorMsgToClient = (error, msg, roomConnections) => {
     return Effect.succeed((0, broadcast_1.broadcastToRoom)("error", errorMessage, msg.room, roomConnections));
 };
 exports.sendErrorMsgToClient = sendErrorMsgToClient;
+exports.parseClientMessage = Schema.parse(common_1.ClientPayloadStruct);
+const parseJSONToClientMsg = (msg) => (0, effect_1.pipe)(Effect.try({
+    try: () => JSON.parse(msg),
+    catch: (e) => new customErrors_1.JSONParseError({
+        message: `error parsing client message: ${e}`,
+    }),
+}), Effect.flatMap((msg) => (0, exports.parseClientMessage)(msg)));
+exports.parseJSONToClientMsg = parseJSONToClientMsg;
