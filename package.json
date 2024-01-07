@@ -35,8 +35,8 @@
     "start": "node server/dist/server/src/server.js",
     "regen": "rm -rf ./client/node_modules && cd ./client && yarn && npx vite",
     "dev:client": "npx vite",
-    "dev:server": "NODE_ENV=development nodemon --exec ts-node ./server/src/server.ts",
-    "test": "vitest run"
+    "dev:server": "NODE_ENV=development TEST_PASSWORD=test nodemon --exec ts-node ./server/src/server.ts",
+    "test": "TEST_PASSWORD=test vitest run"
   },
   "author": "",
   "license": "ISC",
