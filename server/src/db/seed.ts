@@ -1,22 +1,31 @@
-import { GameState, Phases, CardCount } from "../../../shared/common";
-import { pool } from "./connection";
+import * as Effect from "@effect/io/Effect";
+import {
+  GameState,
+  Phases,
+  CardCount,
+  ActorState,
+  GlobalState,
+} from "../../../shared/common";
+import { DBConnectionTest } from "./connection";
 
 type GameSnapshot = {
   game_snapshots: GameState[];
 };
 
+export const SEED_ROOM = 1;
+
 export const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
   game_snapshots: [
     {
-      id: 1,
-      room: 8393,
+      id: 1454425,
+      room: SEED_ROOM,
       turn: 0,
       game_over: false,
       mutation_index: 0,
-      session_id: "a3da0a35-13e4-44fe-ba4f-bb229b658aa9",
+      session_id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
       actor_state: [
         {
-          id: "g7kd0l89-39j4-4j3k-9j3k-3j4k3j4k3j4k",
+          id: "a47ac10b-58cc-4372-a567-0e02b2c3d479",
           name: "Player 1",
           hand: {
             copper: 0,
@@ -123,9 +132,8 @@ export const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
           },
           bonusTreasureValue: 0,
         },
-      ],
+      ] as ActorState[],
       global_state: {
-        playerUserIds: [],
         supply: {
           copper: 60,
           silver: 40,
@@ -143,20 +151,22 @@ export const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
           laboratory: 10,
         } as CardCount,
         history: [],
-      },
+      } as GlobalState,
     },
   ],
 };
 
 export const resetAndSeedDatabase = async () => {
-  const client = await pool.connect();
+  const client = await Effect.runPromise(
+    DBConnectionTest.pool.pipe(
+      Effect.flatMap((pool) => Effect.succeed(pool.connect()))
+    )
+  );
 
   try {
-    await client.query("DROP TABLE IF EXISTS game_snapshots");
-
-    await client.query("DROP TABLE IF EXISTS users");
-
-    await client.query("DROP TABLE IF EXISTS chat_log");
+    await client.query("DROP TABLE IF EXISTS chat_log CASCADE");
+    await client.query("DROP TABLE IF EXISTS users CASCADE");
+    await client.query("DROP TABLE IF EXISTS game_snapshots CASCADE");
 
     await client.query(`
         CREATE TABLE IF NOT EXISTS users (
@@ -196,15 +206,16 @@ export const resetAndSeedDatabase = async () => {
 
     // create new game snapshot
     await client.query(
-      `INSERT INTO game_snapshots (id,room, turn, actor_state, global_state) VALUES
-        ('b3da0a35-13e4-44fe-ba4f-bb229b658aa9', 8393, 0, 
-         ${JSON.stringify(
-           GAME_SNAPSHOT_SEED_VALUES.game_snapshots[0].actor_state
-         )},
-          ${JSON.stringify(
-            GAME_SNAPSHOT_SEED_VALUES.game_snapshots[0].global_state
-          )}
-      `
+      `INSERT INTO game_snapshots (id, room, turn, actor_state, global_state) VALUES
+        (1454425, $1, 0, 
+        $2::jsonb, $3::jsonb) RETURNING *`,
+      [
+        SEED_ROOM,
+        JSON.stringify([]),
+        JSON.stringify(
+          GAME_SNAPSHOT_SEED_VALUES.game_snapshots[0].global_state
+        ),
+      ]
     );
   } catch (error) {
     console.error("Error resetting and seeding the database:", error);

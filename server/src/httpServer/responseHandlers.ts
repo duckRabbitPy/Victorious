@@ -1,14 +1,13 @@
-// avoid ts warning
-/* eslint-disable no-unused-vars */
 import * as Effect from "@effect/io/Effect";
 import { ParseError } from "@effect/schema/ParseResult";
-import { AuthenticationError, PostgresError } from "./customErrors";
+import { AuthenticationError, PostgresError } from "../customErrors";
 import { Response } from "express";
 import { pipe } from "effect";
 import { GameState } from "../../../shared/common";
+import { DBConnection } from "../db/connection";
 
 type DataOrError<T> = Effect.Effect<
-  never,
+  DBConnection,
   ParseError | PostgresError | AuthenticationError | Error,
   T
 >;
@@ -40,8 +39,7 @@ const createResponseHandler =
               .status(successStatus)
               .json({ [label ?? "data"]: onSuccess(data) })
           ),
-      }),
-      Effect.runPromise
+      })
     );
 
 export const sendLoginResponse = createResponseHandler<string>(

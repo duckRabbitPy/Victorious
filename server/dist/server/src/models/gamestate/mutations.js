@@ -35,11 +35,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.writeNewGameStateToDB = exports.updateGameState = exports.addLivePlayerQuery = exports.createGameSessionQuery = void 0;
 const Effect = __importStar(require("@effect/io/Effect"));
 const effect_1 = require("effect");
-const connection_1 = require("../../db/connection");
 const customErrors_1 = require("../../controllers/customErrors");
 const common_1 = require("../../../../shared/common");
 const utils_1 = require("../../utils");
-const queries_1 = require("./queries");
 const setUpActorsForGame = ({ currentActorStateArray, newUserId, newUserName, }) => {
     const newActorState = [
         ...(currentActorStateArray.length > 0 ? currentActorStateArray : []),
@@ -104,20 +102,19 @@ const generatateGlobalState = () => {
             laboratory: 10,
         },
         history: [],
-        playerUserIds: [],
     };
     return JSON.stringify(startingState);
 };
 // @mutation
-const createGameSessionQuery = (room) => {
+const createGameSessionQuery = (room, pool) => {
     const turn = 0;
     const create = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const existingOpenRooms = yield connection_1.pool.query("SELECT room FROM game_snapshots WHERE room = $1 AND turn = 0 AND game_over = false;", [room]);
+            const existingOpenRooms = yield pool.query("SELECT room FROM game_snapshots WHERE room = $1 AND turn = 0 AND game_over = false;", [room]);
             if (existingOpenRooms.rows.length > 0) {
                 throw new Error(`There is already an open room ${room}`);
             }
-            const result = yield connection_1.pool.query(`INSERT INTO game_snapshots (room, turn, actor_state, global_state)
+            const result = yield pool.query(`INSERT INTO game_snapshots (room, turn, actor_state, global_state)
              VALUES ($1, $2, $3, $4) RETURNING *`, [room, turn, "[]", generatateGlobalState()]);
             return result.rows[0];
         }
@@ -132,25 +129,21 @@ const createGameSessionQuery = (room) => {
 };
 exports.createGameSessionQuery = createGameSessionQuery;
 // @mutation
-const addLivePlayerQuery = ({ userId, username, currentGameState, }) => {
+const addLivePlayerQuery = ({ userId, username, currentGameState, pool, }) => {
     const add = () => __awaiter(void 0, void 0, void 0, function* () {
-        var _a;
         try {
             const room = currentGameState.room;
             const { turn, actor_state, global_state, mutation_index, game_over, session_id, } = currentGameState;
-            const newMutationIndex = mutation_index + 1;
-            if ((_a = global_state.playerUserIds) === null || _a === void 0 ? void 0 : _a.includes(userId)) {
-                // no change in state if player already in game
-                const currState = yield Effect.runPromise((0, queries_1.getLatestGameSnapshotQuery)(room));
-                return currState;
+            if (currentGameState.actor_state.map((actor) => actor.id).includes(userId)) {
+                throw new Error(`User ${userId} already exists in room ${room}`);
             }
-            const newGlobalState = JSON.stringify(Object.assign(Object.assign({}, global_state), { playerUserIds: [...global_state.playerUserIds, userId] }));
+            const newMutationIndex = mutation_index + 1;
             const newActorState = setUpActorsForGame({
                 currentActorStateArray: actor_state,
                 newUserId: userId,
                 newUserName: username,
             });
-            const result = yield connection_1.pool.query(`
+            const result = yield pool.query(`
         WITH max_mutation AS (
             SELECT MAX(mutation_index) AS max_mutation_index
             FROM game_snapshots
@@ -164,7 +157,7 @@ const addLivePlayerQuery = ({ userId, username, currentGameState, }) => {
                 room,
                 turn,
                 newActorState,
-                newGlobalState,
+                global_state,
                 newMutationIndex,
                 game_over,
                 session_id,
@@ -177,17 +170,19 @@ const addLivePlayerQuery = ({ userId, username, currentGameState, }) => {
     });
     return Effect.tryPromise({
         try: () => add(),
-        catch: () => new customErrors_1.PostgresError({ message: "postgres query error" }),
+        catch: () => {
+            return new customErrors_1.PostgresError({ message: "postgres query error" });
+        },
     }).pipe(Effect.retryN(1));
 };
 exports.addLivePlayerQuery = addLivePlayerQuery;
 // @mutation
-const updateGameState = (newGameState) => {
+const updateGameState = (newGameState, pool) => {
     const { room, turn, actor_state, global_state, game_over, mutation_index, session_id, } = newGameState;
     const newMutationIndex = mutation_index + 1;
     const update = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const result = yield connection_1.pool.query(`
+            const result = yield pool.query(`
         WITH max_mutation AS (
             SELECT MAX(mutation_index) AS max_mutation_index
             FROM game_snapshots
@@ -218,5 +213,5 @@ const updateGameState = (newGameState) => {
     }).pipe(Effect.retryN(1));
 };
 exports.updateGameState = updateGameState;
-const writeNewGameStateToDB = (maybeValidGameState) => (0, effect_1.pipe)((0, common_1.safeParseGameState)(maybeValidGameState), Effect.flatMap(exports.updateGameState), Effect.flatMap(common_1.safeParseGameState));
+const writeNewGameStateToDB = (maybeValidGameState, pool) => (0, effect_1.pipe)((0, common_1.safeParseGameState)(maybeValidGameState), Effect.flatMap((gamestate) => (0, exports.updateGameState)(gamestate, pool)), Effect.flatMap(common_1.safeParseGameState));
 exports.writeNewGameStateToDB = writeNewGameStateToDB;

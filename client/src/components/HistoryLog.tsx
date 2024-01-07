@@ -25,6 +25,7 @@ const HistoryLog = ({ gameState }: { gameState: GameState }) => {
           color: "white",
         }}
       >
+        Game History:
         {historyLog}
       </ul>
     </div>

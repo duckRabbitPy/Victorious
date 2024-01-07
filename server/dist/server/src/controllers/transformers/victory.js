@@ -23,7 +23,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deduceVictoryPoints = void 0;
+exports.determineIfGameIsOver = exports.deduceVictoryPoints = void 0;
 const Effect = __importStar(require("@effect/io/Effect"));
 const common_1 = require("../../../../shared/common");
 const deduceVictoryPoints = (gameState) => {
@@ -35,3 +35,15 @@ const deduceVictoryPoints = (gameState) => {
         }) }));
 };
 exports.deduceVictoryPoints = deduceVictoryPoints;
+const determineIfGameIsOver = (gameState) => {
+    const provinceSupplyEmpty = gameState.global_state.supply.province === 0;
+    const threeSupplyPilesEmpty = Object.values(gameState.global_state.supply).filter((supply) => supply === 0).length >= 3;
+    const gameOver = provinceSupplyEmpty || threeSupplyPilesEmpty;
+    if (gameOver) {
+        return Effect.succeed(Object.assign(Object.assign({}, gameState), { gameOver: true }));
+    }
+    else {
+        return Effect.succeed(gameState);
+    }
+};
+exports.determineIfGameIsOver = determineIfGameIsOver;

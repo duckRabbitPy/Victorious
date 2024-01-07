@@ -1,10 +1,13 @@
 import * as Effect from "@effect/io/Effect";
-import { PostgresError } from "../controllers/customErrors";
-import { pool } from "../db/connection";
+import { PostgresError } from "../customErrors";
 import { logAndThrowError } from "../utils";
 import { uuidv4 } from "../../../shared/utils";
+import { Pool } from "pg";
 
-export const getHashedPasswordByUsernameQuery = (username: string) => {
+export const getHashedPasswordByUsernameQuery = (
+  username: string,
+  pool: Pool
+) => {
   const get = async () => {
     try {
       const result = await pool.query(
@@ -24,7 +27,7 @@ export const getHashedPasswordByUsernameQuery = (username: string) => {
   }).pipe(Effect.retryN(1));
 };
 
-export const getUserIdByUsernameQuery = (username: string) => {
+export const getUserIdByUsernameQuery = (username: string, pool: Pool) => {
   const get = async () => {
     try {
       const result = await pool.query(
@@ -47,7 +50,8 @@ export const getUserIdByUsernameQuery = (username: string) => {
 export const registerNewUserQuery = (
   username: string,
   email: string,
-  hashedPassword: string
+  hashedPassword: string,
+  pool: Pool
 ) => {
   const add = async () => {
     try {
@@ -68,7 +72,7 @@ export const registerNewUserQuery = (
   }).pipe(Effect.retryN(1));
 };
 
-export const verifyUserQuery = (confirmation_token: string) => {
+export const verifyUserQuery = (confirmation_token: string, pool: Pool) => {
   const confirm = async () => {
     try {
       const result = await pool.query(

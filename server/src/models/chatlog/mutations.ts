@@ -1,16 +1,19 @@
 import * as Effect from "@effect/io/Effect";
-import { pool } from "../../db/connection";
 import { logAndThrowError } from "../../utils";
+import { Pool } from "pg";
+import { UserInfo } from "../../websocketServer/createWebsocketServer";
 
 // @mutation
 export const updateChatLogQuery = ({
   sessionId,
   userInfo,
   chatMessage,
+  pool,
 }: {
   sessionId: string;
-  userInfo: { userId: string; username: string };
+  userInfo: UserInfo;
   chatMessage: string;
+  pool: Pool;
 }) => {
   const updateChatLog = async (
     userInfo: { userId: string; username: string },

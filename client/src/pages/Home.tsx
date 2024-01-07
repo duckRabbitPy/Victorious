@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useGetLoggedInUsername } from "../hooks/auth";
-import { API_ENDPOINT } from "../utils";
+import { API_ENDPOINT } from "../constants";
 
 export const Home = () => {
   const [room, setRoom] = useState<number | null>(null);

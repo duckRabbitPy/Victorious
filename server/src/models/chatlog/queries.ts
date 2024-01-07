@@ -1,8 +1,8 @@
+import { Pool } from "pg";
 import { logAndThrowError } from "../../utils";
 import * as Effect from "@effect/io/Effect";
-import { pool } from "../../db/connection";
 
-export const getLatestChatLogQuery = (sessionId: string) => {
+export const getLatestChatLogQuery = (sessionId: string, pool: Pool) => {
   const getLatestChatLog = async (sessionId: string) => {
     try {
       const result = await pool.query(

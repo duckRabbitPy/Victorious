@@ -41,7 +41,7 @@ const createResponseHandler = (onSuccess) => ({ dataOrError, res, successStatus,
     onSuccess: (data) => Effect.succeed(res
         .status(successStatus)
         .json({ [label !== null && label !== void 0 ? label : "data"]: onSuccess(data) })),
-}), Effect.runPromise);
+}));
 exports.sendLoginResponse = createResponseHandler((authToken) => authToken);
 exports.sendRegisterResponse = createResponseHandler((successMsg) => ({
     successMsg,

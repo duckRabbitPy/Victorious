@@ -38,47 +38,56 @@ const nodemailer_1 = __importDefault(require("nodemailer"));
 const responseHandlers_1 = require("../responseHandlers");
 const common_1 = require("../../../../shared/common");
 const server_1 = require("../../server");
+const connection_1 = require("../../db/connection");
 const login = (req, res) => {
-    const username = (0, common_1.safeParseNonEmptyString)(req.body.username);
-    const password = (0, common_1.safeParseNonEmptyString)(req.body.password);
-    const authToken = (0, effect_1.pipe)(Effect.all({ username, password }), Effect.flatMap(({ username, password }) => authenticateUser(username, password)));
-    return (0, responseHandlers_1.sendLoginResponse)({
+    const login = connection_1.Connection.pipe(Effect.flatMap((connection) => connection.pool), Effect.flatMap((pool) => Effect.all({
+        username: (0, common_1.safeParseNonEmptyString)(req.body.username),
+        password: (0, common_1.safeParseNonEmptyString)(req.body.password),
+        pool: Effect.succeed(pool),
+    })), Effect.flatMap(({ username, password, pool }) => authenticateUser(username, password, pool)), (authToken) => (0, responseHandlers_1.sendLoginResponse)({
         dataOrError: authToken,
         res,
         successStatus: 200,
         label: "authToken",
-    });
+    }));
+    const runnable = Effect.provideService(login, connection_1.Connection, connection_1.ConnectionLive);
+    return Effect.runPromise(runnable);
 };
 exports.login = login;
 const register = (req, res) => {
     const username = (0, common_1.safeParseNonEmptyString)(req.body.username);
     const email = (0, common_1.safeParseNonEmptyString)(req.body.email);
     const password = (0, common_1.safeParseNonEmptyString)(req.body.password);
-    const successMsgOrError = (0, effect_1.pipe)(Effect.all({ username, email, password }), Effect.flatMap(({ username, email, password }) => registerUser(username, email, password)));
-    return (0, responseHandlers_1.sendRegisterResponse)({
-        dataOrError: successMsgOrError,
+    const successMsgOrError = connection_1.Connection.pipe(Effect.flatMap((connection) => connection.pool), Effect.flatMap((pool) => Effect.all({ username, email, password, pool: Effect.succeed(pool) })), Effect.flatMap(({ username, email, password, pool }) => registerUser(username, email, password, pool)), (dataOrError) => (0, responseHandlers_1.sendRegisterResponse)({
+        dataOrError: dataOrError,
         res,
         successStatus: 201,
-        label: "message",
-    });
+        label: "successMsg",
+    }));
+    const runnable = Effect.provideService(successMsgOrError, connection_1.Connection, connection_1.ConnectionLive);
+    return Effect.runPromise(runnable);
 };
 exports.register = register;
 const verify = (req, res) => {
     const confirmation_token = (0, common_1.safeParseNonEmptyString)(req.params.confirmation_token);
-    const usernameOrError = (0, effect_1.pipe)(confirmation_token, Effect.flatMap((confirmation_token) => (0, users_1.verifyUserQuery)(confirmation_token)), Effect.flatMap((username) => Effect.succeed(`Verified ${username}. You can now log in with your account.`)));
-    return (0, responseHandlers_1.sendConfirmUserResponse)({
-        dataOrError: usernameOrError,
+    const usernameOrError = connection_1.Connection.pipe(Effect.flatMap((connection) => connection.pool), Effect.flatMap((pool) => Effect.all({
+        pool: Effect.succeed(pool),
+        confirmation_token: (0, common_1.safeParseNonEmptyString)(confirmation_token),
+    })), Effect.flatMap(({ confirmation_token, pool }) => (0, users_1.verifyUserQuery)(confirmation_token, pool)), Effect.flatMap((username) => Effect.succeed(`Verified ${username}. You can now log in with your account.`)), (dataOrError) => (0, responseHandlers_1.sendConfirmUserResponse)({
+        dataOrError: dataOrError,
         res,
-        successStatus: 201,
+        successStatus: 200,
         label: "message",
-    });
+    }));
+    const runnable = Effect.provideService(usernameOrError, connection_1.Connection, connection_1.ConnectionLive);
+    return Effect.runPromise(runnable);
 };
 exports.verify = verify;
-const registerUser = (username, email, password) => {
+const registerUser = (username, email, password, pool) => {
     const saltRounds = 10;
     const hashedPassword = bcrypt_1.default.hashSync(password, saltRounds);
     // todo: check if user already exists first
-    return (0, effect_1.pipe)((0, users_1.registerNewUserQuery)(username, email, hashedPassword), Effect.flatMap(({ email, confirmation_token }) => (0, exports.sendConfirmationEmail)({ email, confirmation_token })), Effect.flatMap(() => Effect.succeed("Email sent")));
+    return (0, effect_1.pipe)((0, users_1.registerNewUserQuery)(username, email, hashedPassword, pool), Effect.flatMap(({ email, confirmation_token }) => (0, exports.sendConfirmationEmail)({ email, confirmation_token })), Effect.flatMap(() => Effect.succeed("Email sent")));
 };
 const comparePasswords = (password, hashedPassword) => {
     return Effect.tryPromise({
@@ -99,7 +108,7 @@ const createAuthToken = (userId, username) => {
     const authToken = jsonwebtoken_1.default.sign(payload, secretKey, { expiresIn });
     return Effect.succeed(authToken);
 };
-const getAuthToken = (username, passwordMatch) => {
+const getAuthToken = (username, passwordMatch, pool) => {
     return (0, effect_1.pipe)(Effect.try({
         try: () => {
             if (!passwordMatch) {
@@ -109,10 +118,10 @@ const getAuthToken = (username, passwordMatch) => {
         catch: () => new customErrors_1.AuthenticationError({
             message: "Invalid username or password",
         }),
-    }), Effect.flatMap(() => (0, users_1.getUserIdByUsernameQuery)(username)), Effect.flatMap((userId) => createAuthToken(userId, username)));
+    }), Effect.flatMap(() => (0, users_1.getUserIdByUsernameQuery)(username, pool)), Effect.flatMap((userId) => createAuthToken(userId, username)));
 };
-const authenticateUser = (username, password) => {
-    return (0, effect_1.pipe)((0, users_1.getHashedPasswordByUsernameQuery)(username), Effect.flatMap((hashedPassword) => (0, common_1.safeParseNonEmptyString)(hashedPassword)), Effect.orElseFail(() => new customErrors_1.AuthenticationError({ message: "User not registered" })), Effect.flatMap((hashedPassword) => comparePasswords(password, hashedPassword)), Effect.flatMap((passwordMatch) => getAuthToken(username, passwordMatch)));
+const authenticateUser = (username, password, pool) => {
+    return (0, effect_1.pipe)((0, users_1.getHashedPasswordByUsernameQuery)(username, pool), Effect.flatMap((hashedPassword) => (0, common_1.safeParseNonEmptyString)(hashedPassword)), Effect.orElseFail(() => new customErrors_1.AuthenticationError({ message: "User not registered" })), Effect.flatMap((hashedPassword) => comparePasswords(password, hashedPassword)), Effect.flatMap((passwordMatch) => getAuthToken(username, passwordMatch, pool)));
 };
 const sendConfirmationEmail = ({ email, confirmation_token, }) => Effect.tryPromise({
     try: () => {

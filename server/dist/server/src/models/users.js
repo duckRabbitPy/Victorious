@@ -35,13 +35,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyUserQuery = exports.registerNewUserQuery = exports.getUserIdByUsernameQuery = exports.getHashedPasswordByUsernameQuery = void 0;
 const Effect = __importStar(require("@effect/io/Effect"));
 const customErrors_1 = require("../controllers/customErrors");
-const connection_1 = require("../db/connection");
 const utils_1 = require("../utils");
 const utils_2 = require("../../../shared/utils");
-const getHashedPasswordByUsernameQuery = (username) => {
+const getHashedPasswordByUsernameQuery = (username, pool) => {
     const get = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const result = yield connection_1.pool.query("SELECT password FROM users WHERE username = $1", [username]);
+            const result = yield pool.query("SELECT password FROM users WHERE username = $1", [username]);
             return result.rows[0].password;
         }
         catch (error) {
@@ -54,10 +53,10 @@ const getHashedPasswordByUsernameQuery = (username) => {
     }).pipe(Effect.retryN(1));
 };
 exports.getHashedPasswordByUsernameQuery = getHashedPasswordByUsernameQuery;
-const getUserIdByUsernameQuery = (username) => {
+const getUserIdByUsernameQuery = (username, pool) => {
     const get = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const result = yield connection_1.pool.query("SELECT user_id FROM users WHERE username = $1", [username]);
+            const result = yield pool.query("SELECT user_id FROM users WHERE username = $1", [username]);
             return result.rows[0].user_id;
         }
         catch (error) {
@@ -70,11 +69,11 @@ const getUserIdByUsernameQuery = (username) => {
     }).pipe(Effect.retryN(1));
 };
 exports.getUserIdByUsernameQuery = getUserIdByUsernameQuery;
-const registerNewUserQuery = (username, email, hashedPassword) => {
+const registerNewUserQuery = (username, email, hashedPassword, pool) => {
     const add = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const confirmation_token = (0, utils_2.uuidv4)();
-            const result = yield connection_1.pool.query("INSERT INTO users (username, password, email, confirmation_token) VALUES ($1, $2, $3, $4) RETURNING email, confirmation_token", [username, hashedPassword, email, confirmation_token]);
+            const result = yield pool.query("INSERT INTO users (username, password, email, confirmation_token) VALUES ($1, $2, $3, $4) RETURNING email, confirmation_token", [username, hashedPassword, email, confirmation_token]);
             return result.rows[0];
         }
         catch (error) {
@@ -87,10 +86,10 @@ const registerNewUserQuery = (username, email, hashedPassword) => {
     }).pipe(Effect.retryN(1));
 };
 exports.registerNewUserQuery = registerNewUserQuery;
-const verifyUserQuery = (confirmation_token) => {
+const verifyUserQuery = (confirmation_token, pool) => {
     const confirm = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const result = yield connection_1.pool.query("UPDATE users SET verified = true WHERE confirmation_token = $1 RETURNING username", [confirmation_token]);
+            const result = yield pool.query("UPDATE users SET verified = true WHERE confirmation_token = $1 RETURNING username", [confirmation_token]);
             return result.rows[0].username;
         }
         catch (error) {

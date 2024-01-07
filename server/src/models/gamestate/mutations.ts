@@ -1,8 +1,7 @@
 import * as Effect from "@effect/io/Effect";
 import { pipe } from "effect";
 
-import { pool } from "../../db/connection";
-import { PostgresError } from "../../controllers/customErrors";
+import { PostgresError } from "../../customErrors";
 import {
   ActorState,
   CardCount,
@@ -13,8 +12,8 @@ import {
   zeroCardCount,
 } from "../../../../shared/common";
 import { logAndThrowError } from "../../utils";
-
-import { getLatestGameSnapshotQuery } from "./queries";
+import { Pool } from "pg";
+import { UserInfo } from "../../websocketServer/createWebsocketServer";
 
 const setUpActorsForGame = ({
   currentActorStateArray,
@@ -71,33 +70,28 @@ const setUpActorsForGame = ({
   return JSON.stringify(newActorState);
 };
 
-const generatateGlobalState = () => {
-  const startingState: GlobalState = {
-    supply: {
-      copper: 2,
-      silver: 40,
-      gold: 30,
-      estate: 24,
-      duchy: 12,
-      province: 12,
-      village: 10,
-      smithy: 10,
-      market: 10,
-      councilRoom: 10,
-      mine: 10,
-      curse: 30,
-      festival: 10,
-      laboratory: 10,
-    },
-    history: [],
-    playerUserIds: [],
-  };
-
-  return JSON.stringify(startingState);
+const startingState: GlobalState = {
+  supply: {
+    copper: 60,
+    silver: 40,
+    gold: 30,
+    estate: 24,
+    duchy: 12,
+    province: 12,
+    village: 10,
+    smithy: 10,
+    market: 10,
+    councilRoom: 10,
+    mine: 10,
+    curse: 30,
+    festival: 10,
+    laboratory: 10,
+  },
+  history: [],
 };
 
 // @mutation
-export const createGameSessionQuery = (room: number) => {
+export const createGameSessionQuery = (room: number, pool: Pool) => {
   const turn = 0;
 
   const create = async () => {
@@ -114,11 +108,11 @@ export const createGameSessionQuery = (room: number) => {
       const result = await pool.query(
         `INSERT INTO game_snapshots (room, turn, actor_state, global_state)
              VALUES ($1, $2, $3, $4) RETURNING *`,
-        [room, turn, "[]", generatateGlobalState()]
+        [room, turn, "[]", JSON.stringify(startingState)]
       );
-
       return result.rows[0];
     } catch (error) {
+      console.log({ error });
       logAndThrowError(error);
     }
   };
@@ -131,13 +125,13 @@ export const createGameSessionQuery = (room: number) => {
 
 // @mutation
 export const addLivePlayerQuery = ({
-  userId,
-  username,
+  userInfo,
   currentGameState,
+  pool,
 }: {
-  userId: string;
-  username: string;
+  userInfo: UserInfo;
   currentGameState: GameState;
+  pool: Pool;
 }) => {
   const add = async () => {
     try {
@@ -150,25 +144,23 @@ export const addLivePlayerQuery = ({
         game_over,
         session_id,
       } = currentGameState;
-      const newMutationIndex = mutation_index + 1;
 
-      if (global_state.playerUserIds?.includes(userId)) {
-        // no change in state if player already in game
-        const currState = await Effect.runPromise(
-          getLatestGameSnapshotQuery(room)
+      if (
+        currentGameState.actor_state
+          .map((actor) => actor.id)
+          .includes(userInfo.userId)
+      ) {
+        throw new Error(
+          `User ${userInfo.username} already exists in room ${room}`
         );
-        return currState;
       }
 
-      const newGlobalState = JSON.stringify({
-        ...global_state,
-        playerUserIds: [...global_state.playerUserIds, userId],
-      });
+      const newMutationIndex = mutation_index + 1;
 
       const newActorState = setUpActorsForGame({
         currentActorStateArray: actor_state,
-        newUserId: userId,
-        newUserName: username,
+        newUserId: userInfo.userId,
+        newUserName: userInfo.username,
       });
 
       const result = await pool.query(
@@ -187,13 +179,13 @@ export const addLivePlayerQuery = ({
           room,
           turn,
           newActorState,
-          newGlobalState,
+          global_state,
           newMutationIndex,
           game_over,
           session_id,
         ]
       );
-      return result.rows[0];
+      return result.rows[0] as Partial<GameState>;
     } catch (error) {
       logAndThrowError(error);
     }
@@ -201,12 +193,14 @@ export const addLivePlayerQuery = ({
 
   return Effect.tryPromise({
     try: () => add(),
-    catch: () => new PostgresError({ message: "postgres query error" }),
+    catch: () => {
+      return new PostgresError({ message: "postgres query error" });
+    },
   }).pipe(Effect.retryN(1));
 };
 
 // @mutation
-export const updateGameState = (newGameState: GameState) => {
+export const updateGameState = (newGameState: GameState, pool: Pool) => {
   const {
     room,
     turn,
@@ -255,9 +249,12 @@ export const updateGameState = (newGameState: GameState) => {
   }).pipe(Effect.retryN(1));
 };
 
-export const writeNewGameStateToDB = (maybeValidGameState: unknown) =>
+export const writeNewGameStateToDB = (
+  maybeValidGameState: unknown,
+  pool: Pool
+) =>
   pipe(
     safeParseGameState(maybeValidGameState),
-    Effect.flatMap(updateGameState),
+    Effect.flatMap((gamestate) => updateGameState(gamestate, pool)),
     Effect.flatMap(safeParseGameState)
   );

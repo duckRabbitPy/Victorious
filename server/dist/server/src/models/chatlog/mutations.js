@@ -34,10 +34,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateChatLogQuery = void 0;
 const Effect = __importStar(require("@effect/io/Effect"));
-const connection_1 = require("../../db/connection");
 const utils_1 = require("../../utils");
 // @mutation
-const updateChatLogQuery = ({ sessionId, userInfo, chatMessage, }) => {
+const updateChatLogQuery = ({ sessionId, userInfo, chatMessage, pool, }) => {
     const updateChatLog = (userInfo, chatMessage) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const insertQuery = `
@@ -57,8 +56,8 @@ const updateChatLogQuery = ({ sessionId, userInfo, chatMessage, }) => {
                 userInfo.username,
                 chatMessage,
             ];
-            yield connection_1.pool.query(insertQuery, insertValues);
-            const result = yield connection_1.pool.query(selectQuery, [sessionId]);
+            yield pool.query(insertQuery, insertValues);
+            const result = yield pool.query(selectQuery, [sessionId]);
             return result.rows;
         }
         catch (error) {

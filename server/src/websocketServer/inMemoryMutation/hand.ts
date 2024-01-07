@@ -4,7 +4,6 @@ import {
   GameState,
   Phases,
   cardNamesToCount,
-  discardHand,
   hasActionCard,
   subtractCardCount,
   zeroCardCount,
@@ -64,7 +63,7 @@ export const dealToAllActors = (gameState: GameState) => {
         ...actor,
         hand: newHand,
         deck: remainingDeck,
-        discardPile: discardHand(newHand, discardPile),
+        discardPile: discardPile,
         phase: hasActionCard(newHand) ? Phases.Action : Phases.Buy,
       };
     }),
@@ -130,12 +129,23 @@ export const cleanUp = (gameState: GameState) => {
     ...gameState,
     actor_state: gameState.actor_state.map((actor, index) => {
       if (isUsersTurn(gameState, actor.name)) {
-        const newDeck = reshuffleDeck(actor.deck, actor.discardPile);
+        const toDiscardFromHand = Object.entries(actor.hand).reduce(
+          (acc, [cardName, count]) => {
+            return acc.concat(Array(count).fill(cardName));
+          },
+          [] as CardName[]
+        );
+
+        const newDeck = reshuffleDeck(
+          actor.deck,
+          actor.discardPile.concat(toDiscardFromHand)
+        );
         const { newCards, remainingDeck, discardPile } = dealCards(
           newDeck,
           5,
           actor.discardPile
         );
+
         return {
           ...actor,
           hand: cardNamesToCount(newCards),

@@ -35,11 +35,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getLatestChatLogQuery = void 0;
 const utils_1 = require("../../utils");
 const Effect = __importStar(require("@effect/io/Effect"));
-const connection_1 = require("../../db/connection");
-const getLatestChatLogQuery = (sessionId) => {
+const getLatestChatLogQuery = (sessionId, pool) => {
     const getLatestChatLog = (sessionId) => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const result = yield connection_1.pool.query(`
+            const result = yield pool.query(`
         SELECT username, message
         FROM chat_log
         WHERE session_id = $1

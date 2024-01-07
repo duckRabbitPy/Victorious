@@ -10,8 +10,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.resetAndSeedDatabase = exports.GAME_SNAPSHOT_SEED_VALUES = void 0;
+const pg_1 = require("pg");
 const common_1 = require("../../../shared/common");
-const connection_1 = require("./connection");
+const pool = new pg_1.Pool({
+    user: "postgres",
+    host: "localhost",
+    database: "dominion_pg_test",
+    password: "postgres",
+    port: 5432,
+});
 exports.GAME_SNAPSHOT_SEED_VALUES = {
     game_snapshots: [
         {
@@ -132,7 +139,6 @@ exports.GAME_SNAPSHOT_SEED_VALUES = {
                 },
             ],
             global_state: {
-                playerUserIds: [],
                 supply: {
                     copper: 60,
                     silver: 40,
@@ -155,7 +161,7 @@ exports.GAME_SNAPSHOT_SEED_VALUES = {
     ],
 };
 const resetAndSeedDatabase = () => __awaiter(void 0, void 0, void 0, function* () {
-    const client = yield connection_1.pool.connect();
+    const client = yield pool.connect();
     try {
         yield client.query("DROP TABLE IF EXISTS game_snapshots");
         yield client.query("DROP TABLE IF EXISTS users");
