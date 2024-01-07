@@ -1,4 +1,4 @@
-import * as Effect from "@effect/io/Effect";
+import { pipe, Effect } from "effect";
 import nodemailer from "nodemailer";
 import { SERVER_API_ENDPOINT } from "../server";
 

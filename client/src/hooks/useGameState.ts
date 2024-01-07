@@ -7,24 +7,23 @@ import {
   safeParseGameState,
   safeParseNonEmptyString,
 } from "../../../shared/common";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import { getInitialGameState, getInititalChatLog } from "../effects/effects";
-import * as Effect from "@effect/io/Effect";
 import { WEB_SOCKET_URL } from "../constants";
 
 const updateStateElseError = <T>({
-  effect,
+  dataOrError,
   updateState,
   errorMessage,
   setErrorMessage,
 }: {
-  effect: Effect.Effect<never, unknown, T>;
+  dataOrError: Effect.Effect<never, unknown, T>;
   updateState: React.Dispatch<React.SetStateAction<T | null>>;
   errorMessage: string;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) =>
   pipe(
-    effect,
+    dataOrError,
     Effect.mapBoth({
       onFailure: () => {
         setErrorMessage(errorMessage);
@@ -60,7 +59,7 @@ export const useGameState = () => {
       switch (eventData.broadcastType) {
         case "gameState": {
           updateStateElseError({
-            effect: safeParseGameState(eventData.gameState),
+            dataOrError: safeParseGameState(eventData.gameState),
             updateState: setGameState,
             errorMessage: "Failed to parse game state from server",
             setErrorMessage,
@@ -69,7 +68,7 @@ export const useGameState = () => {
         }
         case "chatLog": {
           updateStateElseError({
-            effect: safeParseChatLog(eventData.chatLog),
+            dataOrError: safeParseChatLog(eventData.chatLog),
             updateState: setChatLog,
             errorMessage: "Failed to parse chat log from server",
             setErrorMessage,
@@ -79,7 +78,7 @@ export const useGameState = () => {
 
         case "error": {
           updateStateElseError({
-            effect: safeParseNonEmptyString(eventData.error),
+            dataOrError: safeParseNonEmptyString(eventData.error),
             updateState: setErrorMessage,
             errorMessage: "Failed to parse error from server",
             setErrorMessage,

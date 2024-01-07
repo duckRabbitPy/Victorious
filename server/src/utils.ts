@@ -4,8 +4,7 @@ import {
   safeParseNonEmptyString,
   ClientPayload,
 } from "../../shared/common";
-import * as Effect from "@effect/io/Effect";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import { AuthenticationError, JSONParseError } from "./customErrors";
 import jwt from "jsonwebtoken";
 import { broadcastToRoom } from "./websocketServer/broadcast";

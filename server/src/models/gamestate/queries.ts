@@ -20,7 +20,7 @@ export const getLatestGameSnapshotQuery = (room: number, pool: Pool) => {
   }).pipe(Effect.retryN(1));
 };
 
-import * as Effect from "@effect/io/Effect";
+import { pipe, Effect } from "effect";
 import { PostgresError } from "../../customErrors";
 import { logAndThrowError } from "../../utils";
 import { Pool } from "pg";
