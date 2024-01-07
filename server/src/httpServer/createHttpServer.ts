@@ -11,7 +11,7 @@ export function createHttpServer(app: wsApplication) {
   const isDev = process.env.NODE_ENV === "development";
   const rootPath = isDev
     ? process.cwd()
-    : path.resolve(__dirname, "../../../../");
+    : path.resolve(__dirname, "../../../../..");
   const clientDistPath = path.join(rootPath, "client/dist");
 
   app.use(cors());
