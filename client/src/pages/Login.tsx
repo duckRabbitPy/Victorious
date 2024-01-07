@@ -36,7 +36,7 @@ export const Login = () => {
           refetchLoginStatus();
         } else {
           setErrorMessage(
-            "A login error occurred, are you sure you entered the correct username and password?"
+            "A login error occurred, are you sure you have registered and entered the correct username and password?"
           );
         }
       })
