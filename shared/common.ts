@@ -1,4 +1,4 @@
-import * as Schema from "@effect/schema/Schema";
+import * as S from "@effect/schema/Schema";
 
 const copper = {
   name: "copper",
@@ -104,43 +104,43 @@ const Mine = {
     "Trash a treasure card from your hand. Gain a treasure card costing up to 3 more; put it into your hand.",
 } as const;
 
-export const TreasureNames = Schema.union(
-  Schema.literal("copper"),
-  Schema.literal("silver"),
-  Schema.literal("gold")
+export const TreasureNames = S.union(
+  S.literal("copper"),
+  S.literal("silver"),
+  S.literal("gold")
 );
 
-export const VictoryNames = Schema.union(
-  Schema.literal("estate"),
-  Schema.literal("duchy"),
-  Schema.literal("province")
+export const VictoryNames = S.union(
+  S.literal("estate"),
+  S.literal("duchy"),
+  S.literal("province")
 );
 
-export const ActionNames = Schema.union(
-  Schema.literal("village"),
-  Schema.literal("smithy"),
-  Schema.literal("market"),
-  Schema.literal("councilRoom"),
-  Schema.literal("laboratory"),
-  Schema.literal("festival"),
-  Schema.literal("mine"),
-  Schema.literal("curse")
+export const ActionNames = S.union(
+  S.literal("village"),
+  S.literal("smithy"),
+  S.literal("market"),
+  S.literal("councilRoom"),
+  S.literal("laboratory"),
+  S.literal("festival"),
+  S.literal("mine"),
+  S.literal("curse")
 );
 
-const CardNames = Schema.union(TreasureNames, VictoryNames, ActionNames);
-const CardTypes = Schema.union(
-  Schema.literal("treasure"),
-  Schema.literal("victory"),
-  Schema.literal("action"),
-  Schema.literal("curse")
+const CardNames = S.union(TreasureNames, VictoryNames, ActionNames);
+const CardTypes = S.union(
+  S.literal("treasure"),
+  S.literal("victory"),
+  S.literal("action"),
+  S.literal("curse")
 );
 
-const CardStruct = Schema.struct({
+const CardStruct = S.struct({
   name: CardNames,
-  cost: Schema.number,
+  cost: S.number,
   type: CardTypes,
-  value: Schema.number,
-  description: Schema.string.pipe(Schema.optional),
+  value: S.number,
+  description: S.optional(S.string),
 });
 
 export const getAllCardNames = (): CardName[] => {
@@ -269,12 +269,12 @@ export const cardNameToCard = (cardName: CardName): Card => {
   }
 };
 
-export type CardName = Schema.To<typeof CardNames>;
-export type CardCount = Schema.To<typeof CardCountStruct>;
-export type Card = Schema.To<typeof CardStruct>;
-export const CardCountStruct = Schema.record(
-  Schema.union(TreasureNames, VictoryNames, ActionNames),
-  Schema.number
+export type CardName = S.Schema.To<typeof CardNames>;
+export type CardCount = S.Schema.To<typeof CardCountStruct>;
+export type Card = S.Schema.To<typeof CardStruct>;
+export const CardCountStruct = S.record(
+  S.union(TreasureNames, VictoryNames, ActionNames),
+  S.number
 );
 
 export enum Phases {
@@ -282,67 +282,63 @@ export enum Phases {
   Buy = "buy",
 }
 
-const ActorStateStruct = Schema.struct({
-  id: Schema.UUID,
-  name: Schema.string,
+const ActorStateStruct = S.struct({
+  id: S.UUID,
+  name: S.string,
   hand: CardCountStruct,
   cardsInPlay: CardCountStruct,
-  bonusTreasureValue: Schema.number,
-  actions: Schema.number,
-  buys: Schema.number,
-  victoryPoints: Schema.number,
-  discardPile: Schema.array(
-    Schema.union(TreasureNames, VictoryNames, ActionNames)
-  ),
-  deck: Schema.array(Schema.union(TreasureNames, VictoryNames, ActionNames)),
-  phase: Schema.enums(Phases),
+  bonusTreasureValue: S.number,
+  actions: S.number,
+  buys: S.number,
+  victoryPoints: S.number,
+  discardPile: S.array(S.union(TreasureNames, VictoryNames, ActionNames)),
+  deck: S.array(S.union(TreasureNames, VictoryNames, ActionNames)),
+  phase: S.enums(Phases),
 });
 
-const GlobalStateStruct = Schema.struct({
+const GlobalStateStruct = S.struct({
   supply: CardCountStruct,
-  history: Schema.array(Schema.string),
+  history: S.array(S.string),
 });
 
-export const GameStateStruct = Schema.struct({
-  id: Schema.number,
-  room: Schema.number,
-  turn: Schema.number,
-  session_id: Schema.UUID,
-  mutation_index: Schema.number,
-  actor_state: Schema.array(ActorStateStruct),
+export const GameStateStruct = S.struct({
+  id: S.number,
+  room: S.number,
+  turn: S.number,
+  session_id: S.UUID,
+  mutation_index: S.number,
+  actor_state: S.array(ActorStateStruct),
   global_state: GlobalStateStruct,
-  game_over: Schema.boolean,
+  game_over: S.boolean,
 });
 
-export const ChatMessageStruct = Schema.struct({
-  username: Schema.string,
-  message: Schema.string,
+export const ChatMessageStruct = S.struct({
+  username: S.string,
+  message: S.string,
 });
 
-export const BroadCastStruct = Schema.struct({
-  broadcastType: Schema.union(
-    Schema.literal("gameState"),
-    Schema.literal("chatLog"),
-    Schema.literal("error")
+export const BroadCastStruct = S.struct({
+  broadcastType: S.union(
+    S.literal("gameState"),
+    S.literal("chatLog"),
+    S.literal("error")
   ),
-  gameState: GameStateStruct.pipe(Schema.optional),
-  chatLog: Schema.array(ChatMessageStruct).pipe(Schema.optional),
-  error: Schema.string.pipe(Schema.optional),
+  gameState: S.optional(GameStateStruct),
+  chatLog: S.optional(S.array(ChatMessageStruct)),
+  error: S.optional(S.string),
 });
 
-export type ActorState = Schema.To<typeof ActorStateStruct>;
-export type GlobalState = Schema.To<typeof GlobalStateStruct>;
-export type GameState = Schema.To<typeof GameStateStruct>;
-export type ClientPayload = Schema.To<typeof ClientPayloadStruct>;
-export type ChatMessage = Schema.To<typeof ChatMessageStruct>;
+export type ActorState = S.Schema.To<typeof ActorStateStruct>;
+export type GlobalState = S.Schema.To<typeof GlobalStateStruct>;
+export type GameState = S.Schema.To<typeof GameStateStruct>;
+export type ClientPayload = S.Schema.To<typeof ClientPayloadStruct>;
+export type ChatMessage = S.Schema.To<typeof ChatMessageStruct>;
 
-export const safeParseNonEmptyString = Schema.parse(
-  Schema.string.pipe(Schema.minLength(1))
-);
-export const safeParseCardName = Schema.parse(CardNames);
-export const safeParseBroadCast = Schema.parse(BroadCastStruct);
-export const safeParseGameState = Schema.parse(GameStateStruct);
-export const safeParseChatLog = Schema.parse(Schema.array(ChatMessageStruct));
+export const safeParseNonEmptyString = S.parse(S.string.pipe(S.minLength(1)));
+export const safeParseCardName = S.parse(CardNames);
+export const safeParseBroadCast = S.parse(BroadCastStruct);
+export const safeParseGameState = S.parse(GameStateStruct);
+export const safeParseChatLog = S.parse(S.array(ChatMessageStruct));
 
 export type BroadCastType = "gameState" | "chatLog" | "error";
 
@@ -359,17 +355,13 @@ export enum SupportedEffects {
   sendChatMessage = "sendChatMessage",
 }
 
-export const ClientPayloadStruct = Schema.struct({
-  effect: Schema.enums(SupportedEffects),
-  cardName: Schema.union(TreasureNames, VictoryNames, ActionNames).pipe(
-    Schema.optional
-  ),
-  toDiscardFromHand: Schema.array(
-    Schema.union(TreasureNames, VictoryNames, ActionNames)
-  ),
-  room: Schema.number,
-  authToken: Schema.string,
-  chatMessage: Schema.string.pipe(Schema.optional),
+export const ClientPayloadStruct = S.struct({
+  effect: S.enums(SupportedEffects),
+  cardName: S.optional(S.union(TreasureNames, VictoryNames, ActionNames)),
+  toDiscardFromHand: S.array(S.union(TreasureNames, VictoryNames, ActionNames)),
+  room: S.number,
+  authToken: S.string,
+  chatMessage: S.optional(S.string),
 });
 
 export const zeroCardCount: CardCount = {

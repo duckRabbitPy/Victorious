@@ -1,7 +1,5 @@
-import * as Effect from "@effect/io/Effect";
 import WebSocket from "ws";
-
-import { Logger, pipe, LoggerLevel } from "effect";
+import { Logger, pipe, LogLevel, Effect } from "effect";
 import {
   parseClientMessage,
   parseJSONToClientMsg,
@@ -112,7 +110,7 @@ export function createWebsocketServer(app: wsApplication): void {
           );
           return sendErrorMsgToClient(error, msgOrUndefined, roomConnections);
         }),
-        Logger.withMinimumLogLevel(LoggerLevel.Error)
+        Logger.withMinimumLogLevel(LogLevel.Error)
       );
 
       const runnable = Effect.provideService(

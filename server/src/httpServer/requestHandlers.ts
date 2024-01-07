@@ -1,5 +1,5 @@
 import { RequestHandler } from "express";
-import * as Effect from "@effect/io/Effect";
+import { pipe, Effect } from "effect";
 import { getOpenGameSessionsQuery } from "../models/gamestate/queries";
 
 import { safeParseNumber, safeParseNumberArray } from "../utils";
@@ -12,7 +12,6 @@ import { safeParseGameState } from "../../../shared/common";
 import { DBConnection, DBConnectionLive } from "../db/connection";
 
 import bcrypt from "bcrypt";
-import { pipe } from "effect";
 import jwt from "jsonwebtoken";
 import { AuthenticationError } from "../customErrors";
 import {

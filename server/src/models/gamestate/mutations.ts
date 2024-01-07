@@ -1,6 +1,4 @@
-import * as Effect from "@effect/io/Effect";
-import { pipe } from "effect";
-
+import { pipe, Effect } from "effect";
 import { PostgresError } from "../../customErrors";
 import {
   ActorState,

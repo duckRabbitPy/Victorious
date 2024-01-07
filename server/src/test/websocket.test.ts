@@ -1,4 +1,4 @@
-import * as Effect from "@effect/io/Effect";
+import { pipe, Effect } from "effect";
 import { beforeAll, describe, expect, it } from "vitest";
 import { DBConnectionTest, DBConnection } from "../db/connection";
 import { TEST_ROOM, resetAndSeedDatabase, testUser1 } from "../db/seed";

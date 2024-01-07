@@ -1,4 +1,4 @@
-import * as Effect from "@effect/io/Effect";
+import { pipe, Effect } from "effect";
 import { logAndThrowError } from "../../utils";
 import { Pool } from "pg";
 import { UserInfo } from "../../websocketServer/createWebsocketServer";

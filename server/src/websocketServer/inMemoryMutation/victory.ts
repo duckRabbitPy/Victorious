@@ -1,4 +1,4 @@
-import * as Effect from "@effect/io/Effect";
+import { pipe, Effect } from "effect";
 import { GameState, cardNameToVictoryPoints } from "../../../../shared/common";
 
 export const deduceVictoryPoints = (gameState: GameState) => {

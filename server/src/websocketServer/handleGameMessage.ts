@@ -1,10 +1,9 @@
-import * as Effect from "@effect/io/Effect";
+import { pipe, Effect } from "effect";
 import {
   addLivePlayerQuery,
   writeNewGameStateToDB,
 } from "../models/gamestate/mutations";
 
-import { pipe } from "effect";
 import {
   ClientPayload,
   safeParseCardName,
