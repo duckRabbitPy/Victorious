@@ -104,3 +104,28 @@ export const parseJSONToClientMsg = (msg: unknown) =>
     }),
     Effect.flatMap((msg) => parseClientMessage(msg))
   );
+
+export const getUserInfoFromJWT = (authToken: string | undefined) =>
+  pipe(
+    safeParseNonEmptyString(authToken),
+    Effect.flatMap((authToken) =>
+      verifyJwt(authToken, process.env.JWT_SECRET_KEY)
+    ),
+    Effect.flatMap((decoded) => safeParseJWT(decoded)),
+    Effect.flatMap((decoded) =>
+      Effect.succeed({
+        userId: decoded.userId,
+        username: decoded.username,
+      })
+    )
+  );
+
+export const userNotInConnectionList = (
+  room: number,
+  authToken: string | undefined,
+  roomConnections: RoomConnections
+) =>
+  roomConnections.every(
+    (connection) =>
+      connection.room !== room || connection.uniqueUserAuthToken !== authToken
+  );

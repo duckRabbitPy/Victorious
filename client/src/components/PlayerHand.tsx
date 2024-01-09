@@ -134,10 +134,11 @@ const PlayerHand = ({
         };
 
         return (
-          <div key={cardName}>
+          <div>
             {new Array(count).fill(0).map((_, index) => {
               return (
                 <CardInHand
+                  key={`${cardName}-${index}`}
                   cardName={cardName}
                   onClick={onClick}
                   buttonStyle={buttonStyle}

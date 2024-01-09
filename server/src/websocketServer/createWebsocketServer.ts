@@ -1,11 +1,13 @@
 import WebSocket from "ws";
 import { Logger, pipe, LogLevel, Effect } from "effect";
 import {
+  getUserInfoFromJWT,
   parseClientMessage,
   parseJSONToClientMsg,
   safeParseJWT,
   sendErrorMsgToClient,
   tapPipeLine,
+  userNotInConnectionList,
   verifyJwt,
 } from "../utils";
 
@@ -28,41 +30,26 @@ export type UserInfo = {
 };
 
 export function createWebsocketServer(app: wsApplication): void {
-  // mutable state
-  const roomConnections: RoomConnections = [];
+  // !! mutable state
+  let roomConnections: RoomConnections = [];
 
-  // websocket
   app.ws("/", function (ws, req) {
     ws.on("message", function message(msg: unknown) {
-      // todo error handle if json parse fails
-      const clientMsg = parseClientMessage(JSON.parse(msg as string)).pipe(
-        Effect.runSync
-      );
-      const room = Number(clientMsg.room);
-      const authToken = clientMsg.authToken;
-      const decodedJwt = verifyJwt(authToken, process.env.JWT_SECRET_KEY);
+      const clientMsg = parseClientMessage(JSON.parse(msg as string))
+        .pipe(Effect.orElseSucceed(() => undefined))
+        .pipe(Effect.runSync);
 
-      const userInfoOrError = pipe(
-        decodedJwt,
-        Effect.flatMap((decoded) => safeParseJWT(decoded)),
-        Effect.flatMap((decoded) =>
-          Effect.succeed({
-            userId: decoded.userId,
-            username: decoded.username,
-          })
-        )
-      );
+      const room = Number(clientMsg?.room);
+      const userInfoOrError = getUserInfoFromJWT(clientMsg?.authToken);
 
       if (
-        !roomConnections.some((connection) => {
-          connection.room === room &&
-            connection.uniqueUserAuthToken === authToken;
-        })
+        clientMsg?.authToken &&
+        userNotInConnectionList(room, clientMsg?.authToken, roomConnections)
       ) {
         roomConnections.push({
           socket: ws,
           room,
-          uniqueUserAuthToken: authToken,
+          uniqueUserAuthToken: clientMsg.authToken,
         });
       }
 
@@ -76,6 +63,7 @@ export function createWebsocketServer(app: wsApplication): void {
               pool: Effect.succeed(pool),
             }),
             Effect.flatMap(({ pool, userInfo, msg }) => {
+              // handle chat related messages
               if (msg.effect === SupportedEffects.sendChatMessage) {
                 return pipe(
                   handleChatMessage({
@@ -88,6 +76,8 @@ export function createWebsocketServer(app: wsApplication): void {
                   )
                 );
               }
+
+              // handle game related messages
               return pipe(
                 handleGameMessage({
                   msg,
@@ -102,14 +92,9 @@ export function createWebsocketServer(app: wsApplication): void {
           )
         ),
         tapPipeLine,
-        Effect.catchAll((error) => {
-          const msgOrUndefined = pipe(
-            parseClientMessage(JSON.parse(msg as string)),
-            Effect.orElseSucceed(() => undefined),
-            Effect.runSync
-          );
-          return sendErrorMsgToClient(error, msgOrUndefined, roomConnections);
-        }),
+        Effect.catchAll((error) =>
+          sendErrorMsgToClient(error, clientMsg, roomConnections)
+        ),
         Logger.withMinimumLogLevel(LogLevel.Error)
       );
 
