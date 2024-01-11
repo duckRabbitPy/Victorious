@@ -104,6 +104,7 @@ export function createWebsocketServer(app: wsApplication): void {
           )
         ),
         tapPipeLine,
+        // todo: differentiate between errors that should be sent to client and errors that should be only be logged
         E.catchAll((error) =>
           sendErrorMsgToClient(error, clientMsg, roomConnections)
         ),
@@ -123,7 +124,7 @@ export function createWebsocketServer(app: wsApplication): void {
       console.log(
         `Client disconnected. Total connections: ${roomConnections.length}`
       );
-
+      // clean up roomConnections
       roomConnections = roomConnections.filter((connection) => {
         return connection.socket !== ws;
       });

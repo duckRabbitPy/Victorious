@@ -24,8 +24,13 @@ import { playAction } from "./evolve/actions";
 import { deduceVictoryPoints, determineIfGameIsOver } from "./evolve/victory";
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
-import { IllegalGameStateError, PostgresError } from "../customErrors";
+import {
+  CustomParseError,
+  IllegalGameStateError,
+  PostgresError,
+} from "../customErrors";
 import { ParseError } from "@effect/schema/ParseResult";
+import { checkClientStateIsUptoDate } from "../utils";
 
 type handleGameMessageProps = {
   msg: ClientPayload;
@@ -42,15 +47,27 @@ export const handleGameMessage = ({
   userInfo,
 }: handleGameMessageProps): E.Effect<
   never,
-  PostgresError | ParseError | IllegalGameStateError | Error,
+  PostgresError | ParseError | IllegalGameStateError | Error | CustomParseError,
   GameState
 > => {
   const currentGameState = pipe(
     getLatestGameSnapshotQuery(msg.room, pool),
-    E.flatMap(safeParseGameState)
+    E.flatMap(safeParseGameState),
+    E.flatMap((currentGameState) =>
+      checkClientStateIsUptoDate({
+        currentGameState,
+        msg,
+      })
+    )
   );
 
-  const cardName = pipe(safeParseCardName(msg.cardName));
+  const cardName = pipe(
+    safeParseCardName(msg.cardName),
+    E.orElseFail(
+      () =>
+        new CustomParseError({ message: "Invalid card name in client payload" })
+    )
+  );
   const toDiscardFromHand = msg.toDiscardFromHand;
 
   // todo: validate that next effect permitted given current game state, e.g pass mutation index from frontend and compare to mutation index in db

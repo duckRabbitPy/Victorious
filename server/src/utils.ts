@@ -3,9 +3,15 @@ import {
   ClientPayloadStruct,
   safeParseNonEmptyString,
   ClientPayload,
+  GameState,
 } from "../../shared/common";
 import { Effect as E, pipe } from "effect";
-import { AuthenticationError, JSONParseError } from "./customErrors";
+import {
+  AuthenticationError,
+  CustomParseError,
+  IllegalGameStateError,
+  JSONParseError,
+} from "./customErrors";
 import jwt from "jsonwebtoken";
 import { broadcastToRoom } from "./websocketServer/broadcast";
 import { RoomConnections } from "./websocketServer/createWebsocketServer";
@@ -104,10 +110,16 @@ export const parseJSONToClientMsg = (msg: unknown) =>
       try: () => JSON.parse(msg as string),
       catch: (e) =>
         new JSONParseError({
-          message: `error parsing client message: ${e}`,
+          message: `error parsing client string to json ${e}`,
         }),
     }),
-    E.flatMap((msg) => parseClientMessage(msg))
+    E.flatMap((msg) => parseClientMessage(msg)),
+    E.orElseFail(
+      () =>
+        new CustomParseError({
+          message: "Failed to parse client message to match type ClientPayload",
+        })
+    )
   );
 
 export const getUserInfoFromJWT = (authToken: string | undefined) =>
@@ -137,3 +149,24 @@ export const clientNotInConnectionList = (
     (connection) =>
       connection.room !== room || connection.uniqueUserAuthToken !== authToken
   );
+
+export const checkClientStateIsUptoDate = ({
+  msg,
+  currentGameState,
+}: {
+  msg: ClientPayload;
+  currentGameState: GameState;
+}) => {
+  if (
+    msg.mutationIndex > 0 &&
+    msg.mutationIndex < currentGameState.mutation_index
+  ) {
+    return E.fail(
+      new IllegalGameStateError({
+        message: `Client state is out of date. Expected mutation index ${currentGameState.mutation_index} but got ${msg.mutationIndex}`,
+      })
+    );
+  }
+
+  return E.succeed(currentGameState);
+};

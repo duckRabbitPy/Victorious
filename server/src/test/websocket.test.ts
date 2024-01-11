@@ -1,4 +1,4 @@
-import { pipe, Effect as E } from "effect";
+import { pipe, Effect as E, Effect } from "effect";
 import { beforeAll, describe, expect, it } from "vitest";
 import { DBConnectionTest, DBConnection } from "../db/connection";
 import {
@@ -9,7 +9,9 @@ import {
 } from "../db/seed";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
 import {
+  CardName,
   ClientPayload,
+  GameState,
   SupportedEffects,
   safeParseChatLog,
   safeParseGameState,
@@ -28,217 +30,119 @@ const getTestSession = E.provideService(
   DBConnectionTest
 );
 
-describe("add players, start game and buy card", () => {
+describe("gamestate tests", () => {
   beforeAll(async () => {
     await resetAndSeedDatabase();
   });
-  it("estate bug, buying cards should not increase number of estates", async () => {
-    // add player 1
-    const initialGamestate = await E.runPromise(getTestSession);
 
-    const room = initialGamestate.room;
-    const testMsg = {
-      authToken: testUser1.authToken,
-      effect: SupportedEffects.addLivePlayer,
-      room: room,
-      cardName: undefined,
-      userId: testUser1.userId,
-      toDiscardFromHand: [],
+  it("add players, start game, buy card, end turn", async () => {
+    // Fetch initial game state
+    const initialGameState = await E.runPromise(getTestSession);
+
+    const createTestMessage = (
+      effect: SupportedEffects,
+      userId: string,
+      cardName: CardName | undefined,
+      lastGameState: GameState | undefined
+    ): ClientPayload => ({
+      mutationIndex: lastGameState?.mutation_index || 0,
+      authToken:
+        userId === testUser1.userId ? testUser1.authToken : testUser2.authToken,
+      effect,
+      room: initialGameState.room,
+      cardName: cardName || undefined,
       chatMessage: undefined,
-    } as ClientPayload;
-
-    const addNewPlayerToGame = DBConnection.pipe(
-      E.flatMap((connection) => connection.pool),
-      E.flatMap((pool) =>
-        E.all({
-          pool: E.succeed(pool),
-          msg: E.succeed(testMsg),
-        })
-      ),
-      E.flatMap(({ msg, pool }) =>
-        handleGameMessage({
-          msg,
-          pool,
-          userInfo: {
-            userId: testUser1.userId,
-            username: testUser1.username,
-          },
-        })
-      ),
-      E.flatMap(safeParseGameState)
-    );
-
-    // add player 2
-    const testMsg2 = {
-      authToken: testUser2.authToken,
-      effect: SupportedEffects.addLivePlayer,
-      room,
-      cardName: undefined,
-      userId: testUser2.userId,
       toDiscardFromHand: [],
-      chatMessage: undefined,
-    } as ClientPayload;
+    });
 
-    const addNewPlayerToGame2 = DBConnection.pipe(
-      E.flatMap((connection) => connection.pool),
-      E.flatMap((pool) =>
-        E.all({
-          pool: E.succeed(pool),
-          msg: E.succeed(testMsg2),
+    const executeGameOperation = ({
+      effect,
+      userId,
+      cardName,
+      lastGameState,
+    }: {
+      lastGameState: GameState | undefined;
+      effect: SupportedEffects;
+      userId: string;
+      cardName?: CardName;
+    }) => {
+      const testMsg = createTestMessage(
+        effect,
+        userId,
+        cardName,
+        lastGameState
+      );
+      const operation = DBConnection.pipe(
+        E.flatMap((connection) => connection.pool),
+        E.flatMap((pool) =>
+          E.all({
+            pool: E.succeed(pool),
+            msg: E.succeed(testMsg),
+          })
+        ),
+        E.flatMap(({ msg, pool }) =>
+          handleGameMessage({
+            msg,
+            pool,
+            userInfo: {
+              userId,
+              username:
+                userId === testUser1.userId
+                  ? testUser1.username
+                  : testUser2.username,
+            },
+          })
+        ),
+        E.flatMap(safeParseGameState)
+      );
+
+      return E.provideService(operation, DBConnection, DBConnectionTest);
+    };
+
+    // Execute operations sequentially
+    const runnable = pipe(
+      executeGameOperation({
+        effect: SupportedEffects.addLivePlayer,
+        userId: testUser1.userId,
+        lastGameState: initialGameState,
+      }),
+      E.flatMap((gamestate) =>
+        executeGameOperation({
+          effect: SupportedEffects.addLivePlayer,
+          userId: testUser2.userId,
+          lastGameState: gamestate,
         })
       ),
-      E.flatMap(({ msg, pool }) =>
-        handleGameMessage({
-          msg,
-          pool,
-          userInfo: {
-            userId: testUser2.userId,
-            username: testUser2.username,
-          },
+      E.flatMap((gamestate) =>
+        executeGameOperation({
+          effect: SupportedEffects.startGame,
+          userId: testUser1.userId,
+          lastGameState: gamestate,
         })
       ),
-      E.flatMap(safeParseGameState)
-    );
-
-    // start game
-
-    const testMsg3 = {
-      authToken: testUser1.authToken,
-      effect: SupportedEffects.startGame,
-      room,
-      cardName: undefined,
-      userId: testUser1.userId,
-      toDiscardFromHand: [],
-      chatMessage: undefined,
-    } as ClientPayload;
-
-    const startGame = DBConnection.pipe(
-      E.flatMap((connection) => connection.pool),
-      E.flatMap((pool) =>
-        E.all({
-          pool: E.succeed(pool),
-          msg: E.succeed(testMsg3),
+      E.flatMap((gamestate) =>
+        executeGameOperation({
+          effect: SupportedEffects.buyCard,
+          userId: testUser1.userId,
+          cardName: "copper",
+          lastGameState: gamestate,
         })
       ),
-      E.flatMap(({ msg, pool }) =>
-        handleGameMessage({
-          msg,
-          pool,
-          userInfo: {
-            userId: testUser1.userId,
-            username: testUser1.username,
-          },
+      E.flatMap((gamestate) =>
+        executeGameOperation({
+          lastGameState: gamestate,
+          effect: SupportedEffects.incrementTurn,
+          userId: testUser1.userId,
         })
-      ),
-      E.flatMap(safeParseGameState)
+      )
     );
 
-    // buy card
-    const testMsg4 = {
-      authToken: testUser1.authToken,
-      effect: SupportedEffects.buyCard,
-      room,
-      cardName: "copper",
-      userId: testUser1.userId,
-      toDiscardFromHand: [],
-      chatMessage: undefined,
-    } as ClientPayload;
+    const newGameState = await Effect.runPromise(runnable);
 
-    const buyCard = DBConnection.pipe(
-      E.flatMap((connection) => connection.pool),
-      E.flatMap((pool) =>
-        E.all({
-          pool: E.succeed(pool),
-          msg: E.succeed(testMsg4),
-        })
-      ),
-      E.flatMap(({ msg, pool }) =>
-        handleGameMessage({
-          msg,
-          pool,
-          userInfo: {
-            userId: testUser1.userId,
-            username: testUser1.username,
-          },
-        })
-      ),
-      E.flatMap(safeParseGameState)
-    );
-
-    // End turn
-    const testMsg5 = {
-      authToken: testUser1.authToken,
-      effect: SupportedEffects.incrementTurn,
-      room,
-      cardName: undefined,
-      userId: testUser1.userId,
-      toDiscardFromHand: [],
-      chatMessage: undefined,
-    } as ClientPayload;
-
-    const incrementTurn = DBConnection.pipe(
-      E.flatMap((connection) => connection.pool),
-      E.flatMap((pool) =>
-        E.all({
-          pool: E.succeed(pool),
-          msg: E.succeed(testMsg5),
-        })
-      ),
-      E.flatMap(({ msg, pool }) =>
-        handleGameMessage({
-          msg,
-          pool,
-          userInfo: {
-            userId: testUser1.userId,
-            username: testUser1.username,
-          },
-        })
-      ),
-      E.flatMap(safeParseGameState)
-    );
-
-    const addPlayer1Runnable = E.provideService(
-      addNewPlayerToGame,
-      DBConnection,
-      DBConnectionTest
-    );
-    const addPlayer2Runnable = E.provideService(
-      addNewPlayerToGame2,
-      DBConnection,
-      DBConnectionTest
-    );
-
-    const startGameRunnable = E.provideService(
-      startGame,
-      DBConnection,
-      DBConnectionTest
-    );
-
-    const buyCardRunnable = E.provideService(
-      buyCard,
-      DBConnection,
-      DBConnectionTest
-    );
-
-    const incrementTurnRunnable = E.provideService(
-      incrementTurn,
-      DBConnection,
-      DBConnectionTest
-    );
-
-    const runAll = pipe(
-      addPlayer1Runnable,
-      E.flatMap(() => addPlayer2Runnable),
-      E.flatMap(() => startGameRunnable),
-      E.flatMap(() => buyCardRunnable),
-      E.flatMap(() => incrementTurnRunnable)
-    );
-
-    const newGameState = await E.runPromise(runAll);
-
+    // Assertions
     expect(newGameState.turn).toEqual(2);
     expect(newGameState.global_state.supply.copper).toEqual(59);
-    expect(newGameState.global_state.history).includes(
+    expect(newGameState.global_state.history).toContain(
       `${testUser1.username} purchased a copper`
     );
     expect(
@@ -255,47 +159,50 @@ describe("add players, start game and buy card", () => {
   });
 });
 
-it("send chat message", async () => {
-  const initialGamestate = await E.runPromise(getTestSession);
+describe("chat tests", () => {
+  it("send chat message", async () => {
+    const initialGamestate = await E.runPromise(getTestSession);
 
-  const room = initialGamestate.room;
-  const testMsg = {
-    authToken: testUser1.authToken,
-    effect: SupportedEffects.sendChatMessage,
-    room: room,
-    cardName: undefined,
-    userId: testUser1.userId,
-    toDiscardFromHand: [],
-    chatMessage: "test chat message",
-  } as ClientPayload;
+    const room = initialGamestate.room;
+    const testMsg = {
+      mutationIndex: initialGamestate.mutation_index,
+      authToken: testUser1.authToken,
+      effect: SupportedEffects.sendChatMessage,
+      room: room,
+      cardName: undefined,
+      userId: testUser1.userId,
+      toDiscardFromHand: [],
+      chatMessage: "test chat message",
+    } as ClientPayload;
 
-  const sendChatMessage = DBConnection.pipe(
-    E.flatMap((connection) => connection.pool),
-    E.flatMap((pool) =>
-      E.all({
-        pool: E.succeed(pool),
-        msg: E.succeed(testMsg),
-      })
-    ),
-    E.flatMap(({ msg, pool }) =>
-      handleChatMessage({
-        msg,
-        pool,
-        userInfo: {
-          userId: testUser1.userId,
-          username: testUser1.username,
-        },
-      })
-    ),
-    E.flatMap(safeParseChatLog)
-  );
-  const runnable = E.provideService(
-    sendChatMessage,
-    DBConnection,
-    DBConnectionTest
-  );
+    const sendChatMessage = DBConnection.pipe(
+      E.flatMap((connection) => connection.pool),
+      E.flatMap((pool) =>
+        E.all({
+          pool: E.succeed(pool),
+          msg: E.succeed(testMsg),
+        })
+      ),
+      E.flatMap(({ msg, pool }) =>
+        handleChatMessage({
+          msg,
+          pool,
+          userInfo: {
+            userId: testUser1.userId,
+            username: testUser1.username,
+          },
+        })
+      ),
+      E.flatMap(safeParseChatLog)
+    );
+    const runnable = E.provideService(
+      sendChatMessage,
+      DBConnection,
+      DBConnectionTest
+    );
 
-  expect((await E.runPromise(runnable))[0].message).toEqual(
-    testMsg.chatMessage
-  );
+    expect((await E.runPromise(runnable))[0].message).toEqual(
+      testMsg.chatMessage
+    );
+  });
 });
