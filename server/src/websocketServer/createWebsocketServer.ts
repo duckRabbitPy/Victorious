@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { Logger, pipe, LogLevel, Effect as E } from "effect";
+import { Logger, pipe, LogLevel, Effect as E, Effect } from "effect";
 import {
   getUserInfoFromJWT,
   parseJSONToClientMsg,
@@ -74,6 +74,9 @@ export function createWebsocketServer(app: wsApplication): void {
                       room: msg.room,
                       roomConnections,
                     })
+                  ),
+                  E.flatMap(() =>
+                    Effect.succeed("chat message sent successfully")
                   )
                 );
               }
@@ -92,7 +95,10 @@ export function createWebsocketServer(app: wsApplication): void {
                     room: msg.room,
                     roomConnections,
                   });
-                })
+                }),
+                E.flatMap(() =>
+                  Effect.succeed("game message sent successfully")
+                )
               );
             })
           )
@@ -117,6 +123,10 @@ export function createWebsocketServer(app: wsApplication): void {
       console.log(
         `Client disconnected. Total connections: ${roomConnections.length}`
       );
+
+      roomConnections = roomConnections.filter((connection) => {
+        return connection.socket !== ws;
+      });
     });
   });
 
