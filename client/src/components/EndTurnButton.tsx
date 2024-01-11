@@ -22,6 +22,7 @@ const EndTurnButton = ({ props }: { props: CoreProps }) => {
       onClick={() => {
         if (gameState.turn === 0) {
           startGame({
+            mutationIndex: gameState.mutation_index,
             socket,
             authToken,
             roomNumber,
@@ -29,6 +30,7 @@ const EndTurnButton = ({ props }: { props: CoreProps }) => {
           });
         } else {
           incrementTurn({
+            mutationIndex: gameState.mutation_index,
             socket,
             authToken,
             roomNumber,

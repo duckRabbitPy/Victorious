@@ -3,9 +3,15 @@ import {
   ClientPayloadStruct,
   safeParseNonEmptyString,
   ClientPayload,
+  GameState,
 } from "../../shared/common";
-import { Effect, pipe } from "effect";
-import { AuthenticationError, JSONParseError } from "./customErrors";
+import { Effect as E, pipe } from "effect";
+import {
+  AuthenticationError,
+  CustomParseError,
+  IllegalGameStateError,
+  JSONParseError,
+} from "./customErrors";
 import jwt from "jsonwebtoken";
 import { broadcastToRoom } from "./websocketServer/broadcast";
 import { RoomConnections } from "./websocketServer/createWebsocketServer";
@@ -16,15 +22,15 @@ export const logAndThrowError = (error: unknown) => {
 };
 
 export const tapPipeLine = <R, E, A>(
-  effect: Effect.Effect<R, E, A>
-): Effect.Effect<R, E, A> =>
+  effect: E.Effect<R, E, A>
+): E.Effect<R, E, A> =>
   pipe(
     effect,
-    Effect.tapBoth({
+    E.tapBoth({
       onFailure: (f) =>
-        Effect.logWarning(`Failed with: ${JSON.stringify(f, null, 2)}`),
+        E.logWarning(`Failed with: ${JSON.stringify(f, null, 2)}`),
       onSuccess: (s) =>
-        Effect.logInfo(`Success with: ${JSON.stringify(s, null, 2)}`),
+        E.logInfo(`Success with: ${JSON.stringify(s, null, 2)}`),
     })
   );
 
@@ -54,8 +60,8 @@ export const safeParseNumberArray = Schema.parse(
 export const verifyJwt = (token: string, secret: string | undefined) => {
   return pipe(
     safeParseNonEmptyString(secret),
-    Effect.flatMap((secret) => {
-      return Effect.tryPromise({
+    E.flatMap((secret) => {
+      return E.tryPromise({
         try: () =>
           new Promise((resolve, reject) => {
             jwt.verify(token, secret, (err: unknown, decoded: unknown) => {
@@ -80,14 +86,19 @@ export const sendErrorMsgToClient = <T>(
     console.error(
       "No room number provided, cannot send error message to client"
     );
-    return Effect.succeed(Effect.unit);
+    return E.succeed(E.unit);
   }
 
   const errorMessage =
     error instanceof Error ? error.message : "An unknown server error occured";
 
-  return Effect.succeed(
-    broadcastToRoom("error", errorMessage, msg.room, roomConnections)
+  return E.succeed(
+    broadcastToRoom({
+      broadcastType: "error",
+      payload: errorMessage,
+      roomConnections,
+      room: msg.room,
+    })
   );
 };
 
@@ -95,12 +106,67 @@ export const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
 export const parseJSONToClientMsg = (msg: unknown) =>
   pipe(
-    Effect.try({
+    E.try({
       try: () => JSON.parse(msg as string),
       catch: (e) =>
         new JSONParseError({
-          message: `error parsing client message: ${e}`,
+          message: `error parsing client string to json ${e}`,
         }),
     }),
-    Effect.flatMap((msg) => parseClientMessage(msg))
+    E.flatMap((msg) => parseClientMessage(msg)),
+    E.orElseFail(
+      () =>
+        new CustomParseError({
+          message: "Failed to parse client message to match type ClientPayload",
+        })
+    )
   );
+
+export const getUserInfoFromJWT = (authToken: string | undefined) =>
+  pipe(
+    safeParseNonEmptyString(authToken),
+    E.flatMap((authToken) => verifyJwt(authToken, process.env.JWT_SECRET_KEY)),
+    E.flatMap((decoded) => safeParseJWT(decoded)),
+    E.flatMap((decoded) =>
+      E.succeed({
+        userId: decoded.userId,
+        username: decoded.username,
+      })
+    )
+  );
+
+export const getClientMessage = (msg: unknown) =>
+  parseClientMessage(JSON.parse(msg as string))
+    .pipe(E.orElseSucceed(() => undefined))
+    .pipe(E.runSync);
+
+export const clientNotInConnectionList = (
+  room: number | undefined,
+  authToken: string | undefined,
+  roomConnections: RoomConnections
+) =>
+  roomConnections.every(
+    (connection) =>
+      connection.room !== room || connection.uniqueUserAuthToken !== authToken
+  );
+
+export const checkClientStateIsUptoDate = ({
+  msg,
+  currentGameState,
+}: {
+  msg: ClientPayload;
+  currentGameState: GameState;
+}) => {
+  if (
+    msg.mutationIndex > 0 &&
+    msg.mutationIndex < currentGameState.mutation_index
+  ) {
+    return E.fail(
+      new IllegalGameStateError({
+        message: `Client state is out of date. Expected mutation index ${currentGameState.mutation_index} but got ${msg.mutationIndex}`,
+      })
+    );
+  }
+
+  return E.succeed(currentGameState);
+};

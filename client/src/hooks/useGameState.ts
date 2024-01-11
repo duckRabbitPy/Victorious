@@ -7,7 +7,7 @@ import {
   safeParseGameState,
   safeParseNonEmptyString,
 } from "../../../shared/common";
-import { Effect, pipe } from "effect";
+import { Effect as E, pipe } from "effect";
 import { getInitialGameState, getInititalChatLog } from "../effects/effects";
 import { WEB_SOCKET_URL } from "../constants";
 
@@ -17,24 +17,24 @@ const updateStateElseError = <T>({
   errorMessage,
   setErrorMessage,
 }: {
-  dataOrError: Effect.Effect<never, unknown, T>;
+  dataOrError: E.Effect<never, unknown, T>;
   updateState: React.Dispatch<React.SetStateAction<T | null>>;
   errorMessage: string;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) =>
   pipe(
     dataOrError,
-    Effect.mapBoth({
+    E.mapBoth({
       onFailure: () => {
         setErrorMessage(errorMessage);
-        return Effect.unit;
+        return E.unit;
       },
       onSuccess: (newState) => {
         updateState(newState);
-        return Effect.unit;
+        return E.unit;
       },
     }),
-    Effect.runSync
+    E.runSync
   );
 
 export const useGameState = () => {
@@ -48,11 +48,14 @@ export const useGameState = () => {
 
   useEffect(() => {
     const newSocket = new WebSocket(WEB_SOCKET_URL);
-    console.log("Using prod websocket:", import.meta.env.MODE);
+    console.log(
+      `Using websocket url ${WEB_SOCKET_URL}`,
+      `env ${import.meta.env.MODE}`
+    );
 
     newSocket.addEventListener("message", (event) => {
       const eventData = safeParseBroadCast(JSON.parse(event.data)).pipe(
-        Effect.runSync
+        E.runSync
       );
       console.log("Received message from server:", eventData);
 

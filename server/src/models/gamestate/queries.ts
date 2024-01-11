@@ -1,3 +1,8 @@
+import { Effect as E } from "effect";
+import { PostgresError } from "../../customErrors";
+import { logAndThrowError } from "../../utils";
+import { Pool } from "pg";
+
 // @query
 export const getLatestGameSnapshotQuery = (room: number, pool: Pool) => {
   const get = async () => {
@@ -14,16 +19,11 @@ export const getLatestGameSnapshotQuery = (room: number, pool: Pool) => {
     }
   };
 
-  return Effect.tryPromise({
+  return E.tryPromise({
     try: () => get(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(Effect.retryN(1));
+  }).pipe(E.retryN(1));
 };
-
-import { pipe, Effect } from "effect";
-import { PostgresError } from "../../customErrors";
-import { logAndThrowError } from "../../utils";
-import { Pool } from "pg";
 
 // @query
 export const getOpenGameSessionsQuery = (pool: Pool) => {
@@ -39,8 +39,8 @@ export const getOpenGameSessionsQuery = (pool: Pool) => {
     }
   };
 
-  return Effect.tryPromise({
+  return E.tryPromise({
     try: () => get(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(Effect.retryN(1));
+  }).pipe(E.retryN(1));
 };

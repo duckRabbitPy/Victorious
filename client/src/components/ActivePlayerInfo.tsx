@@ -57,6 +57,7 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
             id="player-ready"
             onClick={() =>
               addNewPlayer({
+                mutationIndex: 0,
                 socket,
                 authToken,
                 roomNumber,

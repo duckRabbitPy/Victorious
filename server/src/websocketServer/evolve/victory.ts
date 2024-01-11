@@ -1,8 +1,8 @@
-import { pipe, Effect } from "effect";
+import { Effect as E } from "effect";
 import { GameState, cardNameToVictoryPoints } from "../../../../shared/common";
 
 export const deduceVictoryPoints = (gameState: GameState) => {
-  return Effect.succeed({
+  return E.succeed({
     ...gameState,
     actor_state: gameState.actor_state.map((actor) => {
       const victoryPoints = actor.deck.reduce((acc, cardName) => {
@@ -26,11 +26,11 @@ export const determineIfGameIsOver = (gameState: GameState) => {
   const gameOver = provinceSupplyEmpty || threeSupplyPilesEmpty;
 
   if (gameOver) {
-    return Effect.succeed({
+    return E.succeed({
       ...gameState,
       gameOver: true,
     });
   } else {
-    return Effect.succeed(gameState);
+    return E.succeed(gameState);
   }
 };

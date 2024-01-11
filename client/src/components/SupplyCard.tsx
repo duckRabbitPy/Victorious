@@ -66,6 +66,7 @@ export const SupplyCard = ({
         onClick={() => {
           canBuy &&
             buyCard({
+              mutationIndex: gameState.mutation_index,
               socket,
               authToken,
               roomNumber,

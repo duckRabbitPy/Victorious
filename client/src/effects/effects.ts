@@ -11,8 +11,10 @@ const prepareMessage = ({
   cardName,
   toDiscardFromHand,
   chatMessage,
+  mutationIndex,
 }: ClientPayload) => {
   return JSON.stringify({
+    mutationIndex,
     effect,
     authToken,
     room,
@@ -37,8 +39,10 @@ export const getInitialGameState = ({
     setErrorMessage?.("Socket or auth token is null");
     return;
   }
+
   socket.send(
     prepareMessage({
+      mutationIndex: -1,
       effect: SupportedEffects.getCurrentGameState,
       room: roomNumber,
       authToken,
@@ -51,11 +55,13 @@ export const addNewPlayer = ({
   socket,
   authToken,
   roomNumber,
+  mutationIndex,
   setErrorMessage,
 }: {
   socket: WebSocket | null;
   authToken: string | null;
   roomNumber: number;
+  mutationIndex: number;
   setErrorMessage: (message: string | null) => void;
 }) => {
   if (!socket) {
@@ -69,6 +75,7 @@ export const addNewPlayer = ({
 
   socket.send(
     prepareMessage({
+      mutationIndex,
       effect: SupportedEffects.addLivePlayer,
       authToken,
       room: roomNumber,
@@ -81,11 +88,13 @@ export const incrementTurn = ({
   socket,
   authToken,
   roomNumber,
+  mutationIndex,
   setErrorMessage,
 }: {
   socket: WebSocket | null;
   authToken: string | null;
   roomNumber: number;
+  mutationIndex: number;
   setErrorMessage: (message: string | null) => void;
 }) => {
   if (!socket) {
@@ -99,6 +108,7 @@ export const incrementTurn = ({
 
   socket.send(
     prepareMessage({
+      mutationIndex,
       effect: SupportedEffects.incrementTurn,
       authToken,
       room: roomNumber,
@@ -113,6 +123,7 @@ export const buyCard = ({
   authToken,
   roomNumber,
   cardName,
+  mutationIndex,
   toDiscardFromHand,
   setErrorMessage,
 }: {
@@ -120,6 +131,7 @@ export const buyCard = ({
   authToken: string | null;
   roomNumber: number;
   cardName: CardName;
+  mutationIndex: number;
   toDiscardFromHand: CardName[];
   setErrorMessage: (message: string | null) => void;
 }) => {
@@ -133,6 +145,7 @@ export const buyCard = ({
   }
   socket.send(
     prepareMessage({
+      mutationIndex,
       effect: SupportedEffects.buyCard,
       authToken,
       room: roomNumber,
@@ -147,12 +160,14 @@ export const playTreasure = ({
   authToken,
   roomNumber,
   cardName,
+  mutationIndex,
   setErrorMessage,
 }: {
   socket: WebSocket | null;
   authToken: string | null;
   roomNumber: number;
   cardName: CardName;
+  mutationIndex: number;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
   if (!socket) {
@@ -168,6 +183,7 @@ export const playTreasure = ({
     prepareMessage({
       effect: SupportedEffects.playTreasure,
       authToken,
+      mutationIndex,
       room: roomNumber,
       cardName,
       toDiscardFromHand: [],
@@ -179,11 +195,13 @@ export const resetPlayedTreasures = ({
   socket,
   authToken,
   roomNumber,
+  mutationIndex,
   setErrorMessage,
 }: {
   socket: WebSocket | null;
   authToken: string | null;
   roomNumber: number;
+  mutationIndex: number;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
   if (!socket) {
@@ -200,6 +218,7 @@ export const resetPlayedTreasures = ({
       effect: SupportedEffects.resetPlayedTreasures,
       authToken,
       room: roomNumber,
+      mutationIndex,
       toDiscardFromHand: [],
     })
   );
@@ -210,12 +229,14 @@ export const playAction = ({
   authToken,
   roomNumber,
   cardName,
+  mutationIndex,
   setErrorMessage,
 }: {
   socket: WebSocket | null;
   authToken: string | null;
   roomNumber: number;
   cardName: CardName;
+  mutationIndex: number;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
   if (!socket) {
@@ -233,6 +254,7 @@ export const playAction = ({
       authToken,
       room: roomNumber,
       cardName,
+      mutationIndex,
       toDiscardFromHand: [cardName],
     })
   );
@@ -242,11 +264,13 @@ export const startGame = ({
   socket,
   authToken,
   roomNumber,
+  mutationIndex,
   setErrorMessage,
 }: {
   socket: WebSocket | null;
   authToken: string | null;
   roomNumber: number;
+  mutationIndex: number;
   setErrorMessage: (message: string | null) => void;
 }) => {
   if (!socket) {
@@ -260,6 +284,7 @@ export const startGame = ({
 
   socket.send(
     prepareMessage({
+      mutationIndex,
       effect: SupportedEffects.startGame,
       authToken,
       room: roomNumber,
@@ -286,6 +311,7 @@ export const getInititalChatLog = ({
 
   socket.send(
     prepareMessage({
+      mutationIndex: -1,
       effect: SupportedEffects.getCurrentChatLog,
       room: roomNumber,
       authToken,
@@ -324,6 +350,7 @@ export const sendChatMessage = ({
 
   socket.send(
     prepareMessage({
+      mutationIndex: -1,
       effect: SupportedEffects.sendChatMessage,
       authToken,
       room: roomNumber,

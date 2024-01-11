@@ -1,4 +1,4 @@
-import { pipe, Effect } from "effect";
+import { Effect as E } from "effect";
 import { logAndThrowError } from "../../utils";
 import { Pool } from "pg";
 import { UserInfo } from "../../websocketServer/createWebsocketServer";
@@ -48,8 +48,8 @@ export const updateChatLogQuery = ({
     }
   };
 
-  return Effect.tryPromise({
+  return E.tryPromise({
     try: () => updateChatLog(userInfo, chatMessage),
     catch: (e) => new Error(`error updating chat log: ${e}`),
-  }).pipe(Effect.retryN(1));
+  }).pipe(E.retryN(1));
 };

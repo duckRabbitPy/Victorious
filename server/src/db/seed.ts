@@ -1,4 +1,4 @@
-import { pipe, Effect } from "effect";
+import { Effect as E } from "effect";
 import {
   GameState,
   Phases,
@@ -7,7 +7,6 @@ import {
   GlobalState,
 } from "../../../shared/common";
 import { DBConnectionTest } from "./connection";
-import test from "node:test";
 
 type GameSnapshot = {
   game_snapshots: GameState[];
@@ -180,10 +179,8 @@ export const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
 };
 
 export const resetAndSeedDatabase = async () => {
-  const client = await Effect.runPromise(
-    DBConnectionTest.pool.pipe(
-      Effect.flatMap((pool) => Effect.succeed(pool.connect()))
-    )
+  const client = await E.runPromise(
+    DBConnectionTest.pool.pipe(E.flatMap((pool) => E.succeed(pool.connect())))
   );
 
   try {

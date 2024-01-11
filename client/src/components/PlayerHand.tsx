@@ -113,6 +113,7 @@ const PlayerHand = ({
             getCardTypeByName(cardName) === "treasure"
           ) {
             playTreasure({
+              mutationIndex: gameState.mutation_index,
               socket,
               authToken,
               roomNumber,
@@ -124,6 +125,7 @@ const PlayerHand = ({
             getCardTypeByName(cardName) === "action"
           ) {
             playAction({
+              mutationIndex: gameState.mutation_index,
               socket,
               authToken,
               roomNumber,
@@ -134,10 +136,11 @@ const PlayerHand = ({
         };
 
         return (
-          <div key={cardName}>
+          <div>
             {new Array(count).fill(0).map((_, index) => {
               return (
                 <CardInHand
+                  key={`${cardName}-${index}`}
                   cardName={cardName}
                   onClick={onClick}
                   buttonStyle={buttonStyle}
@@ -179,6 +182,7 @@ const PlayerHand = ({
             }}
             onClick={() => {
               resetPlayedTreasures({
+                mutationIndex: gameState.mutation_index,
                 socket,
                 authToken,
                 roomNumber,

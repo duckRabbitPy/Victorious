@@ -1,6 +1,7 @@
-import { pipe, Effect } from "effect";
+import { pipe, Effect as E } from "effect";
 
 import {
+  ChatMessage,
   ClientPayload,
   safeParseChatLog,
   safeParseGameState,
@@ -10,28 +11,36 @@ import { updateChatLogQuery } from "../models/chatlog/mutations";
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
 import { UserInfo } from "./createWebsocketServer";
+import { ParseError } from "@effect/schema/ParseResult";
+import { PostgresError } from "../customErrors";
+
+type handleChatMessageProps = {
+  msg: ClientPayload;
+  userInfo: UserInfo;
+  pool: Pool;
+};
 
 export const handleChatMessage = ({
   msg,
   userInfo,
   pool,
-}: {
-  msg: ClientPayload;
-  userInfo: UserInfo;
-  pool: Pool;
-}) => {
+}: handleChatMessageProps): E.Effect<
+  never,
+  PostgresError | ParseError | Error,
+  readonly ChatMessage[]
+> => {
   const currentGameState = pipe(
     getLatestGameSnapshotQuery(msg.room, pool),
-    Effect.flatMap(safeParseGameState)
+    E.flatMap(safeParseGameState)
   );
 
   const chatMessage = safeParseNonEmptyString(msg.chatMessage);
   return pipe(
-    Effect.all({
+    E.all({
       chatMessage,
       currentGameState,
     }),
-    Effect.flatMap(({ chatMessage, currentGameState }) =>
+    E.flatMap(({ chatMessage, currentGameState }) =>
       updateChatLogQuery({
         sessionId: currentGameState.session_id,
         userInfo,
@@ -39,6 +48,6 @@ export const handleChatMessage = ({
         pool,
       })
     ),
-    Effect.flatMap(safeParseChatLog)
+    E.flatMap(safeParseChatLog)
   );
 };

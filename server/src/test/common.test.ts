@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { subtractCardCount } from "../../../shared/common";
-import { dealCards } from "../websocketServer/inMemoryMutation/hand";
+import { dealCards } from "../websocketServer/evolve/hand";
 
 describe("common util testing", () => {
   it("subtract card count", () => {

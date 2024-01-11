@@ -356,6 +356,7 @@ export enum SupportedEffects {
 }
 
 export const ClientPayloadStruct = S.struct({
+  mutationIndex: S.number,
   effect: S.enums(SupportedEffects),
   cardName: S.optional(S.union(TreasureNames, VictoryNames, ActionNames)),
   toDiscardFromHand: S.array(S.union(TreasureNames, VictoryNames, ActionNames)),

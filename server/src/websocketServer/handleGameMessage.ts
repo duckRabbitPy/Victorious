@@ -1,4 +1,4 @@
-import { pipe, Effect } from "effect";
+import { pipe, Effect as E } from "effect";
 import {
   addLivePlayerQuery,
   writeNewGameStateToDB,
@@ -6,6 +6,7 @@ import {
 
 import {
   ClientPayload,
+  GameState,
   safeParseCardName,
   safeParseGameState,
   SupportedEffects,
@@ -15,36 +16,58 @@ import {
   dealToAllActors,
   playTreasure,
   resetPlayedTreasures,
-} from "./inMemoryMutation/hand";
+} from "./evolve/hand";
 
-import { buyCard, resetBuysAndActions } from "./inMemoryMutation/buys";
-import { incrementTurn } from "./inMemoryMutation/turn";
-import { playAction } from "./inMemoryMutation/actions";
-import {
-  deduceVictoryPoints,
-  determineIfGameIsOver,
-} from "./inMemoryMutation/victory";
+import { buyCard, resetBuysAndActions } from "./evolve/buys";
+import { incrementTurn } from "./evolve/turn";
+import { playAction } from "./evolve/actions";
+import { deduceVictoryPoints, determineIfGameIsOver } from "./evolve/victory";
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
+import {
+  CustomParseError,
+  IllegalGameStateError,
+  PostgresError,
+} from "../customErrors";
+import { ParseError } from "@effect/schema/ParseResult";
+import { checkClientStateIsUptoDate } from "../utils";
 
-export const handleGameMessage = ({
-  msg,
-  pool,
-  userInfo,
-}: {
+type handleGameMessageProps = {
   msg: ClientPayload;
   pool: Pool;
   userInfo: {
     userId: string;
     username: string;
   };
-}) => {
+};
+
+export const handleGameMessage = ({
+  msg,
+  pool,
+  userInfo,
+}: handleGameMessageProps): E.Effect<
+  never,
+  PostgresError | ParseError | IllegalGameStateError | Error | CustomParseError,
+  GameState
+> => {
   const currentGameState = pipe(
     getLatestGameSnapshotQuery(msg.room, pool),
-    Effect.flatMap(safeParseGameState)
+    E.flatMap(safeParseGameState),
+    E.flatMap((currentGameState) =>
+      checkClientStateIsUptoDate({
+        currentGameState,
+        msg,
+      })
+    )
   );
 
-  const cardName = pipe(safeParseCardName(msg.cardName));
+  const cardName = pipe(
+    safeParseCardName(msg.cardName),
+    E.orElseFail(
+      () =>
+        new CustomParseError({ message: "Invalid card name in client payload" })
+    )
+  );
   const toDiscardFromHand = msg.toDiscardFromHand;
 
   // todo: validate that next effect permitted given current game state, e.g pass mutation index from frontend and compare to mutation index in db
@@ -59,44 +82,44 @@ export const handleGameMessage = ({
     case SupportedEffects.addLivePlayer: {
       return pipe(
         currentGameState,
-        Effect.flatMap((currentGameState) =>
+        E.flatMap((currentGameState) =>
           addLivePlayerQuery({
             userInfo,
             currentGameState,
             pool,
           })
         ),
-        Effect.flatMap(safeParseGameState)
+        E.flatMap(safeParseGameState)
       );
     }
 
     case SupportedEffects.startGame: {
       return pipe(
         currentGameState,
-        Effect.flatMap((currentGameState) => dealToAllActors(currentGameState)),
-        Effect.flatMap(resetBuysAndActions),
-        Effect.flatMap(incrementTurn),
-        Effect.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
+        E.flatMap((currentGameState) => dealToAllActors(currentGameState)),
+        E.flatMap(resetBuysAndActions),
+        E.flatMap(incrementTurn),
+        E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
       );
     }
 
     case SupportedEffects.incrementTurn: {
       return pipe(
         currentGameState,
-        Effect.flatMap((currentGameState) => cleanUp(currentGameState)),
-        Effect.flatMap(incrementTurn),
-        Effect.flatMap(resetBuysAndActions),
-        Effect.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
+        E.flatMap((currentGameState) => cleanUp(currentGameState)),
+        E.flatMap(incrementTurn),
+        E.flatMap(resetBuysAndActions),
+        E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
       );
     }
 
     case SupportedEffects.buyCard: {
       return pipe(
-        Effect.all({
+        E.all({
           currentGameState,
           cardName,
         }),
-        Effect.flatMap(({ currentGameState, cardName }) =>
+        E.flatMap(({ currentGameState, cardName }) =>
           buyCard({
             gameState: currentGameState,
             userId: userInfo.userId,
@@ -104,48 +127,46 @@ export const handleGameMessage = ({
             toDiscardFromHand,
           })
         ),
-        Effect.flatMap(deduceVictoryPoints),
-        Effect.flatMap(determineIfGameIsOver),
-        Effect.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
+        E.flatMap(deduceVictoryPoints),
+        E.flatMap(determineIfGameIsOver),
+        E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
       );
     }
 
     case SupportedEffects.playTreasure: {
       return pipe(
-        Effect.all({
+        E.all({
           currentGameState,
           cardName,
         }),
-        Effect.flatMap(({ currentGameState, cardName }) =>
+        E.flatMap(({ currentGameState, cardName }) =>
           playTreasure({
             gameState: currentGameState,
             userId: userInfo.userId,
             cardName,
           })
         ),
-        Effect.flatMap(deduceVictoryPoints),
-        Effect.flatMap(determineIfGameIsOver),
-        Effect.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
+        E.flatMap(deduceVictoryPoints),
+        E.flatMap(determineIfGameIsOver),
+        E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
       );
     }
 
     case SupportedEffects.resetPlayedTreasures: {
       return pipe(
         currentGameState,
-        Effect.flatMap((currentGameState) =>
-          resetPlayedTreasures(currentGameState)
-        ),
-        Effect.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
+        E.flatMap((currentGameState) => resetPlayedTreasures(currentGameState)),
+        E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
       );
     }
 
     case SupportedEffects.playAction: {
       return pipe(
-        Effect.all({
+        E.all({
           currentGameState,
           cardName,
         }),
-        Effect.flatMap(({ currentGameState, cardName }) =>
+        E.flatMap(({ currentGameState, cardName }) =>
           playAction({
             gameState: currentGameState,
             userId: userInfo.userId,
@@ -153,9 +174,9 @@ export const handleGameMessage = ({
             toDiscardFromHand,
           })
         ),
-        Effect.flatMap(deduceVictoryPoints),
-        Effect.flatMap(determineIfGameIsOver),
-        Effect.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
+        E.flatMap(deduceVictoryPoints),
+        E.flatMap(determineIfGameIsOver),
+        E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
       );
     }
 
