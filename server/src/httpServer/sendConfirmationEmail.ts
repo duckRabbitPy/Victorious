@@ -1,4 +1,4 @@
-import { pipe, Effect } from "effect";
+import { pipe, Effect as E } from "effect";
 import nodemailer from "nodemailer";
 import { SERVER_API_ENDPOINT } from "../server";
 
@@ -9,7 +9,7 @@ export const sendConfirmationEmail = ({
   email: string;
   confirmation_token: string;
 }) =>
-  Effect.tryPromise({
+  E.tryPromise({
     try: () => {
       return new Promise((resolve, reject) => {
         const transporter = nodemailer.createTransport({

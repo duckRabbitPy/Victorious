@@ -1,4 +1,4 @@
-import { pipe, Effect } from "effect";
+import { Effect as E } from "effect";
 import {
   CardName,
   GameState,
@@ -50,7 +50,7 @@ export const dealToAllActors = (gameState: GameState) => {
 
   const shuffledDecks = decks.map((deck) => shuffleDeck(deck));
 
-  return Effect.succeed({
+  return E.succeed({
     ...gameState,
     actor_state: gameState.actor_state.map((actor, index) => {
       const { newCards, remainingDeck, discardPile } = dealCards(
@@ -100,14 +100,14 @@ export const playTreasure = ({
     return actor;
   });
 
-  return Effect.succeed({
+  return E.succeed({
     ...gameState,
     actor_state: newActorState,
   });
 };
 
 export const resetPlayedTreasures = (gameState: GameState) => {
-  return Effect.succeed({
+  return E.succeed({
     ...gameState,
     actor_state: gameState.actor_state.map((actor) => {
       return {
@@ -125,7 +125,7 @@ export const resetPlayedTreasures = (gameState: GameState) => {
 };
 
 export const cleanUp = (gameState: GameState) => {
-  return Effect.succeed({
+  return E.succeed({
     ...gameState,
     actor_state: gameState.actor_state.map((actor, index) => {
       if (isUsersTurn(gameState, actor.name)) {

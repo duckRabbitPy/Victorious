@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect as E } from "effect";
 import { GameState, ChatMessage, BroadCastType } from "../../../shared/common";
 import { RoomConnections } from "./createWebsocketServer";
 
@@ -37,5 +37,5 @@ export const broadcastToRoom = <
     };
   });
 
-  return Effect.unit;
+  return E.unit;
 };

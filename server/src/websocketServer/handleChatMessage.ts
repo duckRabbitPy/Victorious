@@ -20,17 +20,15 @@ type handleChatMessageProps = {
   pool: Pool;
 };
 
-type handleChatMessageResult = E.Effect<
-  never,
-  PostgresError | ParseError | Error,
-  readonly ChatMessage[]
->;
-
 export const handleChatMessage = ({
   msg,
   userInfo,
   pool,
-}: handleChatMessageProps): handleChatMessageResult => {
+}: handleChatMessageProps): E.Effect<
+  never,
+  PostgresError | ParseError | Error,
+  readonly ChatMessage[]
+> => {
   const currentGameState = pipe(
     getLatestGameSnapshotQuery(msg.room, pool),
     E.flatMap(safeParseGameState)

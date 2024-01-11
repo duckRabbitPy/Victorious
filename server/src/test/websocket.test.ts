@@ -1,4 +1,4 @@
-import { pipe, Effect } from "effect";
+import { pipe, Effect as E } from "effect";
 import { beforeAll, describe, expect, it } from "vitest";
 import { DBConnectionTest, DBConnection } from "../db/connection";
 import {
@@ -17,12 +17,12 @@ import {
 import { handleGameMessage } from "../websocketServer/handleGameMessage";
 import { handleChatMessage } from "../websocketServer/handleChatMessage";
 
-const getTestSession = Effect.provideService(
+const getTestSession = E.provideService(
   DBConnection.pipe(
-    Effect.flatMap((connection) => connection.pool),
-    Effect.flatMap((pool) => getLatestGameSnapshotQuery(TEST_ROOM, pool)),
-    Effect.flatMap((gameState) => Effect.succeed(gameState)),
-    Effect.flatMap(safeParseGameState)
+    E.flatMap((connection) => connection.pool),
+    E.flatMap((pool) => getLatestGameSnapshotQuery(TEST_ROOM, pool)),
+    E.flatMap((gameState) => E.succeed(gameState)),
+    E.flatMap(safeParseGameState)
   ),
   DBConnection,
   DBConnectionTest
@@ -34,7 +34,7 @@ describe("add players, start game and buy card", () => {
   });
   it("estate bug, buying cards should not increase number of estates", async () => {
     // add player 1
-    const initialGamestate = await Effect.runPromise(getTestSession);
+    const initialGamestate = await E.runPromise(getTestSession);
 
     const room = initialGamestate.room;
     const testMsg = {
@@ -48,14 +48,14 @@ describe("add players, start game and buy card", () => {
     } as ClientPayload;
 
     const addNewPlayerToGame = DBConnection.pipe(
-      Effect.flatMap((connection) => connection.pool),
-      Effect.flatMap((pool) =>
-        Effect.all({
-          pool: Effect.succeed(pool),
-          msg: Effect.succeed(testMsg),
+      E.flatMap((connection) => connection.pool),
+      E.flatMap((pool) =>
+        E.all({
+          pool: E.succeed(pool),
+          msg: E.succeed(testMsg),
         })
       ),
-      Effect.flatMap(({ msg, pool }) =>
+      E.flatMap(({ msg, pool }) =>
         handleGameMessage({
           msg,
           pool,
@@ -65,7 +65,7 @@ describe("add players, start game and buy card", () => {
           },
         })
       ),
-      Effect.flatMap(safeParseGameState)
+      E.flatMap(safeParseGameState)
     );
 
     // add player 2
@@ -80,14 +80,14 @@ describe("add players, start game and buy card", () => {
     } as ClientPayload;
 
     const addNewPlayerToGame2 = DBConnection.pipe(
-      Effect.flatMap((connection) => connection.pool),
-      Effect.flatMap((pool) =>
-        Effect.all({
-          pool: Effect.succeed(pool),
-          msg: Effect.succeed(testMsg2),
+      E.flatMap((connection) => connection.pool),
+      E.flatMap((pool) =>
+        E.all({
+          pool: E.succeed(pool),
+          msg: E.succeed(testMsg2),
         })
       ),
-      Effect.flatMap(({ msg, pool }) =>
+      E.flatMap(({ msg, pool }) =>
         handleGameMessage({
           msg,
           pool,
@@ -97,7 +97,7 @@ describe("add players, start game and buy card", () => {
           },
         })
       ),
-      Effect.flatMap(safeParseGameState)
+      E.flatMap(safeParseGameState)
     );
 
     // start game
@@ -113,14 +113,14 @@ describe("add players, start game and buy card", () => {
     } as ClientPayload;
 
     const startGame = DBConnection.pipe(
-      Effect.flatMap((connection) => connection.pool),
-      Effect.flatMap((pool) =>
-        Effect.all({
-          pool: Effect.succeed(pool),
-          msg: Effect.succeed(testMsg3),
+      E.flatMap((connection) => connection.pool),
+      E.flatMap((pool) =>
+        E.all({
+          pool: E.succeed(pool),
+          msg: E.succeed(testMsg3),
         })
       ),
-      Effect.flatMap(({ msg, pool }) =>
+      E.flatMap(({ msg, pool }) =>
         handleGameMessage({
           msg,
           pool,
@@ -130,7 +130,7 @@ describe("add players, start game and buy card", () => {
           },
         })
       ),
-      Effect.flatMap(safeParseGameState)
+      E.flatMap(safeParseGameState)
     );
 
     // buy card
@@ -145,14 +145,14 @@ describe("add players, start game and buy card", () => {
     } as ClientPayload;
 
     const buyCard = DBConnection.pipe(
-      Effect.flatMap((connection) => connection.pool),
-      Effect.flatMap((pool) =>
-        Effect.all({
-          pool: Effect.succeed(pool),
-          msg: Effect.succeed(testMsg4),
+      E.flatMap((connection) => connection.pool),
+      E.flatMap((pool) =>
+        E.all({
+          pool: E.succeed(pool),
+          msg: E.succeed(testMsg4),
         })
       ),
-      Effect.flatMap(({ msg, pool }) =>
+      E.flatMap(({ msg, pool }) =>
         handleGameMessage({
           msg,
           pool,
@@ -162,7 +162,7 @@ describe("add players, start game and buy card", () => {
           },
         })
       ),
-      Effect.flatMap(safeParseGameState)
+      E.flatMap(safeParseGameState)
     );
 
     // End turn
@@ -177,14 +177,14 @@ describe("add players, start game and buy card", () => {
     } as ClientPayload;
 
     const incrementTurn = DBConnection.pipe(
-      Effect.flatMap((connection) => connection.pool),
-      Effect.flatMap((pool) =>
-        Effect.all({
-          pool: Effect.succeed(pool),
-          msg: Effect.succeed(testMsg5),
+      E.flatMap((connection) => connection.pool),
+      E.flatMap((pool) =>
+        E.all({
+          pool: E.succeed(pool),
+          msg: E.succeed(testMsg5),
         })
       ),
-      Effect.flatMap(({ msg, pool }) =>
+      E.flatMap(({ msg, pool }) =>
         handleGameMessage({
           msg,
           pool,
@@ -194,33 +194,33 @@ describe("add players, start game and buy card", () => {
           },
         })
       ),
-      Effect.flatMap(safeParseGameState)
+      E.flatMap(safeParseGameState)
     );
 
-    const addPlayer1Runnable = Effect.provideService(
+    const addPlayer1Runnable = E.provideService(
       addNewPlayerToGame,
       DBConnection,
       DBConnectionTest
     );
-    const addPlayer2Runnable = Effect.provideService(
+    const addPlayer2Runnable = E.provideService(
       addNewPlayerToGame2,
       DBConnection,
       DBConnectionTest
     );
 
-    const startGameRunnable = Effect.provideService(
+    const startGameRunnable = E.provideService(
       startGame,
       DBConnection,
       DBConnectionTest
     );
 
-    const buyCardRunnable = Effect.provideService(
+    const buyCardRunnable = E.provideService(
       buyCard,
       DBConnection,
       DBConnectionTest
     );
 
-    const incrementTurnRunnable = Effect.provideService(
+    const incrementTurnRunnable = E.provideService(
       incrementTurn,
       DBConnection,
       DBConnectionTest
@@ -228,13 +228,13 @@ describe("add players, start game and buy card", () => {
 
     const runAll = pipe(
       addPlayer1Runnable,
-      Effect.flatMap(() => addPlayer2Runnable),
-      Effect.flatMap(() => startGameRunnable),
-      Effect.flatMap(() => buyCardRunnable),
-      Effect.flatMap(() => incrementTurnRunnable)
+      E.flatMap(() => addPlayer2Runnable),
+      E.flatMap(() => startGameRunnable),
+      E.flatMap(() => buyCardRunnable),
+      E.flatMap(() => incrementTurnRunnable)
     );
 
-    const newGameState = await Effect.runPromise(runAll);
+    const newGameState = await E.runPromise(runAll);
 
     expect(newGameState.turn).toEqual(2);
     expect(newGameState.global_state.supply.copper).toEqual(59);
@@ -256,7 +256,7 @@ describe("add players, start game and buy card", () => {
 });
 
 it("send chat message", async () => {
-  const initialGamestate = await Effect.runPromise(getTestSession);
+  const initialGamestate = await E.runPromise(getTestSession);
 
   const room = initialGamestate.room;
   const testMsg = {
@@ -270,14 +270,14 @@ it("send chat message", async () => {
   } as ClientPayload;
 
   const sendChatMessage = DBConnection.pipe(
-    Effect.flatMap((connection) => connection.pool),
-    Effect.flatMap((pool) =>
-      Effect.all({
-        pool: Effect.succeed(pool),
-        msg: Effect.succeed(testMsg),
+    E.flatMap((connection) => connection.pool),
+    E.flatMap((pool) =>
+      E.all({
+        pool: E.succeed(pool),
+        msg: E.succeed(testMsg),
       })
     ),
-    Effect.flatMap(({ msg, pool }) =>
+    E.flatMap(({ msg, pool }) =>
       handleChatMessage({
         msg,
         pool,
@@ -287,15 +287,15 @@ it("send chat message", async () => {
         },
       })
     ),
-    Effect.flatMap(safeParseChatLog)
+    E.flatMap(safeParseChatLog)
   );
-  const runnable = Effect.provideService(
+  const runnable = E.provideService(
     sendChatMessage,
     DBConnection,
     DBConnectionTest
   );
 
-  expect((await Effect.runPromise(runnable))[0].message).toEqual(
+  expect((await E.runPromise(runnable))[0].message).toEqual(
     testMsg.chatMessage
   );
 });

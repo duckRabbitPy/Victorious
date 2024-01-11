@@ -1,4 +1,4 @@
-import { pipe, Effect } from "effect";
+import { pipe, Effect as E } from "effect";
 import { PostgresError } from "../../customErrors";
 import {
   ActorState,
@@ -115,10 +115,10 @@ export const createGameSessionQuery = (room: number, pool: Pool) => {
     }
   };
 
-  return Effect.tryPromise({
+  return E.tryPromise({
     try: () => create(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(Effect.retryN(1));
+  }).pipe(E.retryN(1));
 };
 
 // @mutation
@@ -189,12 +189,12 @@ export const addLivePlayerQuery = ({
     }
   };
 
-  return Effect.tryPromise({
+  return E.tryPromise({
     try: () => add(),
     catch: () => {
       return new PostgresError({ message: "postgres query error" });
     },
-  }).pipe(Effect.retryN(1));
+  }).pipe(E.retryN(1));
 };
 
 // @mutation
@@ -241,10 +241,10 @@ export const updateGameState = (newGameState: GameState, pool: Pool) => {
     }
   };
 
-  return Effect.tryPromise({
+  return E.tryPromise({
     try: () => update(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(Effect.retryN(1));
+  }).pipe(E.retryN(1));
 };
 
 export const writeNewGameStateToDB = (
@@ -253,6 +253,6 @@ export const writeNewGameStateToDB = (
 ) =>
   pipe(
     safeParseGameState(maybeValidGameState),
-    Effect.flatMap((gamestate) => updateGameState(gamestate, pool)),
-    Effect.flatMap(safeParseGameState)
+    E.flatMap((gamestate) => updateGameState(gamestate, pool)),
+    E.flatMap(safeParseGameState)
   );

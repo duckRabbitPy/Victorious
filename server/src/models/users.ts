@@ -1,4 +1,4 @@
-import { pipe, Effect } from "effect";
+import { pipe, Effect as E } from "effect";
 import { PostgresError } from "../customErrors";
 import { logAndThrowError } from "../utils";
 import { uuidv4 } from "../../../shared/utils";
@@ -21,10 +21,10 @@ export const getHashedPasswordByUsernameQuery = (
     }
   };
 
-  return Effect.tryPromise({
+  return E.tryPromise({
     try: () => get(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(Effect.retryN(1));
+  }).pipe(E.retryN(1));
 };
 
 export const getUserIdByUsernameQuery = (username: string, pool: Pool) => {
@@ -41,10 +41,10 @@ export const getUserIdByUsernameQuery = (username: string, pool: Pool) => {
     }
   };
 
-  return Effect.tryPromise({
+  return E.tryPromise({
     try: () => get(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(Effect.retryN(1));
+  }).pipe(E.retryN(1));
 };
 
 export const registerNewUserQuery = (
@@ -66,10 +66,10 @@ export const registerNewUserQuery = (
     }
   };
 
-  return Effect.tryPromise({
+  return E.tryPromise({
     try: () => add(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(Effect.retryN(1));
+  }).pipe(E.retryN(1));
 };
 
 export const verifyUserQuery = (confirmation_token: string, pool: Pool) => {
@@ -86,8 +86,8 @@ export const verifyUserQuery = (confirmation_token: string, pool: Pool) => {
     }
   };
 
-  return Effect.tryPromise({
+  return E.tryPromise({
     try: () => confirm(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(Effect.retryN(1));
+  }).pipe(E.retryN(1));
 };

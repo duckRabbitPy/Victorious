@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 import { logAndThrowError } from "../../utils";
-import { pipe, Effect } from "effect";
+import { Effect as E } from "effect";
 
 export const getLatestChatLogQuery = (sessionId: string, pool: Pool) => {
   const getLatestChatLog = async (sessionId: string) => {
@@ -20,8 +20,8 @@ export const getLatestChatLogQuery = (sessionId: string, pool: Pool) => {
     }
   };
 
-  return Effect.tryPromise({
+  return E.tryPromise({
     try: () => getLatestChatLog(sessionId),
     catch: (e) => new Error(`error getting latest chat log: ${e}`),
-  }).pipe(Effect.retryN(1));
+  }).pipe(E.retryN(1));
 };

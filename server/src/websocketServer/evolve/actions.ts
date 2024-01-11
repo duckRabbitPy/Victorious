@@ -1,4 +1,4 @@
-import { pipe, Effect } from "effect";
+import { Effect as E } from "effect";
 import {
   CardName,
   GameState,
@@ -223,5 +223,5 @@ export const playAction = ({
     }),
   };
 
-  return Effect.succeed(GameStateWithLatestPhase);
+  return E.succeed(GameStateWithLatestPhase);
 };

@@ -1,4 +1,4 @@
-import { pipe, Effect } from "effect";
+import { pipe, Effect as E } from "effect";
 import { ParseError } from "@effect/schema/ParseResult";
 import {
   AuthenticationError,
@@ -9,7 +9,7 @@ import { Response } from "express";
 import { GameState } from "../../../shared/common";
 import { DBConnection } from "../db/connection";
 
-type DataOrError<T> = Effect.Effect<
+type DataOrError<T> = E.Effect<
   DBConnection,
   | ParseError
   | PostgresError
@@ -30,7 +30,7 @@ const createResponseHandler =
   <T>(onSuccess: (data: T) => unknown) =>
   ({ dataOrError, res, successStatus, label }: SendResponseProps<T>) =>
     pipe(
-      Effect.matchCauseEffect(dataOrError, {
+      E.matchCauseEffect(dataOrError, {
         onFailure: (cause) => {
           console.error(JSON.stringify(cause));
           switch (cause._tag) {
@@ -38,10 +38,10 @@ const createResponseHandler =
             case "Interrupt":
               respondWithError(res, 500, "Internal server error");
           }
-          return Effect.succeed(res.status(500).json("Internal Server error"));
+          return E.succeed(res.status(500).json("Internal Server error"));
         },
         onSuccess: (data) =>
-          Effect.succeed(
+          E.succeed(
             res
               .status(successStatus)
               .json({ [label ?? "data"]: onSuccess(data) })
@@ -88,7 +88,7 @@ const respondWithError = (
   additionalInfo?: string
 ) =>
   pipe(
-    Effect.succeed(
+    E.succeed(
       res.status(status).json({
         message: `Fail: ${message}`,
         info: additionalInfo,

@@ -4,7 +4,7 @@ import {
   safeParseNonEmptyString,
   ClientPayload,
 } from "../../shared/common";
-import { Effect, pipe } from "effect";
+import { Effect as E, pipe } from "effect";
 import { AuthenticationError, JSONParseError } from "./customErrors";
 import jwt from "jsonwebtoken";
 import { broadcastToRoom } from "./websocketServer/broadcast";
@@ -16,15 +16,15 @@ export const logAndThrowError = (error: unknown) => {
 };
 
 export const tapPipeLine = <R, E, A>(
-  effect: Effect.Effect<R, E, A>
-): Effect.Effect<R, E, A> =>
+  effect: E.Effect<R, E, A>
+): E.Effect<R, E, A> =>
   pipe(
     effect,
-    Effect.tapBoth({
+    E.tapBoth({
       onFailure: (f) =>
-        Effect.logWarning(`Failed with: ${JSON.stringify(f, null, 2)}`),
+        E.logWarning(`Failed with: ${JSON.stringify(f, null, 2)}`),
       onSuccess: (s) =>
-        Effect.logInfo(`Success with: ${JSON.stringify(s, null, 2)}`),
+        E.logInfo(`Success with: ${JSON.stringify(s, null, 2)}`),
     })
   );
 
@@ -54,8 +54,8 @@ export const safeParseNumberArray = Schema.parse(
 export const verifyJwt = (token: string, secret: string | undefined) => {
   return pipe(
     safeParseNonEmptyString(secret),
-    Effect.flatMap((secret) => {
-      return Effect.tryPromise({
+    E.flatMap((secret) => {
+      return E.tryPromise({
         try: () =>
           new Promise((resolve, reject) => {
             jwt.verify(token, secret, (err: unknown, decoded: unknown) => {
@@ -80,13 +80,13 @@ export const sendErrorMsgToClient = <T>(
     console.error(
       "No room number provided, cannot send error message to client"
     );
-    return Effect.succeed(Effect.unit);
+    return E.succeed(E.unit);
   }
 
   const errorMessage =
     error instanceof Error ? error.message : "An unknown server error occured";
 
-  return Effect.succeed(
+  return E.succeed(
     broadcastToRoom({
       broadcastType: "error",
       payload: errorMessage,
@@ -100,25 +100,23 @@ export const parseClientMessage = Schema.parse(ClientPayloadStruct);
 
 export const parseJSONToClientMsg = (msg: unknown) =>
   pipe(
-    Effect.try({
+    E.try({
       try: () => JSON.parse(msg as string),
       catch: (e) =>
         new JSONParseError({
           message: `error parsing client message: ${e}`,
         }),
     }),
-    Effect.flatMap((msg) => parseClientMessage(msg))
+    E.flatMap((msg) => parseClientMessage(msg))
   );
 
 export const getUserInfoFromJWT = (authToken: string | undefined) =>
   pipe(
     safeParseNonEmptyString(authToken),
-    Effect.flatMap((authToken) =>
-      verifyJwt(authToken, process.env.JWT_SECRET_KEY)
-    ),
-    Effect.flatMap((decoded) => safeParseJWT(decoded)),
-    Effect.flatMap((decoded) =>
-      Effect.succeed({
+    E.flatMap((authToken) => verifyJwt(authToken, process.env.JWT_SECRET_KEY)),
+    E.flatMap((decoded) => safeParseJWT(decoded)),
+    E.flatMap((decoded) =>
+      E.succeed({
         userId: decoded.userId,
         username: decoded.username,
       })
@@ -127,8 +125,8 @@ export const getUserInfoFromJWT = (authToken: string | undefined) =>
 
 export const getClientMessage = (msg: unknown) =>
   parseClientMessage(JSON.parse(msg as string))
-    .pipe(Effect.orElseSucceed(() => undefined))
-    .pipe(Effect.runSync);
+    .pipe(E.orElseSucceed(() => undefined))
+    .pipe(E.runSync);
 
 export const clientNotInConnectionList = (
   room: number | undefined,
