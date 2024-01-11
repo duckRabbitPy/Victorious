@@ -4,12 +4,17 @@ import { RoomConnections } from "./createWebsocketServer";
 
 export const broadcastToRoom = <
   T extends GameState | readonly ChatMessage[] | string
->(
-  broadcastType: BroadCastType,
-  payload: T,
-  room: number,
-  roomConnections: RoomConnections
-) => {
+>({
+  broadcastType,
+  payload,
+  roomConnections,
+  room,
+}: {
+  broadcastType: BroadCastType;
+  payload: T;
+  roomConnections: RoomConnections;
+  room: number;
+}) => {
   roomConnections.forEach((connection) => {
     if (connection.room !== room) return;
 

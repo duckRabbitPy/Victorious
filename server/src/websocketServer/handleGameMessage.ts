@@ -6,6 +6,7 @@ import {
 
 import {
   ClientPayload,
+  GameState,
   safeParseCardName,
   safeParseGameState,
   SupportedEffects,
@@ -26,19 +27,29 @@ import {
 } from "./inMemoryMutation/victory";
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
+import { IllegalGameStateError, PostgresError } from "../customErrors";
+import { ParseError } from "@effect/schema/ParseResult";
 
-export const handleGameMessage = ({
-  msg,
-  pool,
-  userInfo,
-}: {
+type handleGameMessageProps = {
   msg: ClientPayload;
   pool: Pool;
   userInfo: {
     userId: string;
     username: string;
   };
-}) => {
+};
+
+type handleGameMessageResult = Effect.Effect<
+  never,
+  PostgresError | IllegalGameStateError | ParseError,
+  GameState
+>;
+
+export const handleGameMessage = ({
+  msg,
+  pool,
+  userInfo,
+}: handleGameMessageProps): handleGameMessageResult => {
   const currentGameState = pipe(
     getLatestGameSnapshotQuery(msg.room, pool),
     Effect.flatMap(safeParseGameState)

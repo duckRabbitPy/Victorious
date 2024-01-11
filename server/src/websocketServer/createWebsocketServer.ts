@@ -17,6 +17,7 @@ import { SupportedEffects } from "../../../shared/common";
 import { handleChatMessage } from "./handleChatMessage";
 import { handleGameMessage } from "./handleGameMessage";
 import { broadcastToRoom } from "./broadcast";
+import { b } from "vitest/dist/suite-WwpgKT7k";
 
 export type RoomConnections = {
   socket: WebSocket;
@@ -29,26 +30,29 @@ export type UserInfo = {
   username: string;
 };
 
+const getClientMessage = (msg: unknown) =>
+  parseClientMessage(JSON.parse(msg as string))
+    .pipe(Effect.orElseSucceed(() => undefined))
+    .pipe(Effect.runSync);
+
 export function createWebsocketServer(app: wsApplication): void {
   // !! mutable state
   let roomConnections: RoomConnections = [];
 
   app.ws("/", function (ws, req) {
     ws.on("message", function message(msg: unknown) {
-      const clientMsg = parseClientMessage(JSON.parse(msg as string))
-        .pipe(Effect.orElseSucceed(() => undefined))
-        .pipe(Effect.runSync);
+      const clientMsg = getClientMessage(msg);
 
-      const room = Number(clientMsg?.room);
-      const userInfoOrError = getUserInfoFromJWT(clientMsg?.authToken);
+      const userNotInList = userNotInConnectionList(
+        clientMsg?.room,
+        clientMsg?.authToken,
+        roomConnections
+      );
 
-      if (
-        clientMsg?.authToken &&
-        userNotInConnectionList(room, clientMsg?.authToken, roomConnections)
-      ) {
+      if (userNotInList && clientMsg?.authToken) {
         roomConnections.push({
           socket: ws,
-          room,
+          room: clientMsg.room,
           uniqueUserAuthToken: clientMsg.authToken,
         });
       }
@@ -59,7 +63,7 @@ export function createWebsocketServer(app: wsApplication): void {
           pipe(
             Effect.all({
               msg: parseJSONToClientMsg(msg),
-              userInfo: userInfoOrError,
+              userInfo: getUserInfoFromJWT(clientMsg?.authToken),
               pool: Effect.succeed(pool),
             }),
             Effect.flatMap(({ pool, userInfo, msg }) => {
@@ -72,26 +76,37 @@ export function createWebsocketServer(app: wsApplication): void {
                     pool,
                   }),
                   Effect.flatMap((chatLog) =>
-                    broadcastToRoom("chatLog", chatLog, room, roomConnections)
+                    broadcastToRoom({
+                      broadcastType: "chatLog",
+                      payload: chatLog,
+                      room: msg.room,
+                      roomConnections,
+                    })
                   )
                 );
               }
 
               // handle game related messages
-              return pipe(
-                handleGameMessage({
-                  msg,
-                  userInfo,
-                  pool,
-                }),
-                Effect.flatMap((gameState) =>
-                  broadcastToRoom("gameState", gameState, room, roomConnections)
+              return Effect.succeed(
+                pipe(
+                  handleGameMessage({
+                    msg,
+                    userInfo,
+                    pool,
+                  }),
+                  Effect.flatMap((gameState) => {
+                    return broadcastToRoom({
+                      broadcastType: "gameState",
+                      payload: gameState,
+                      room: msg.room,
+                      roomConnections,
+                    });
+                  })
                 )
               );
             })
           )
         ),
-        tapPipeLine,
         Effect.catchAll((error) =>
           sendErrorMsgToClient(error, clientMsg, roomConnections)
         ),

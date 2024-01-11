@@ -1,13 +1,21 @@
 import { pipe, Effect } from "effect";
 import { ParseError } from "@effect/schema/ParseResult";
-import { AuthenticationError, PostgresError } from "../customErrors";
+import {
+  AuthenticationError,
+  IllegalGameStateError,
+  PostgresError,
+} from "../customErrors";
 import { Response } from "express";
 import { GameState } from "../../../shared/common";
 import { DBConnection } from "../db/connection";
 
 type DataOrError<T> = Effect.Effect<
   DBConnection,
-  ParseError | PostgresError | AuthenticationError | Error,
+  | ParseError
+  | PostgresError
+  | AuthenticationError
+  | IllegalGameStateError
+  | Error,
   T
 >;
 

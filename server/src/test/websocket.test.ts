@@ -241,6 +241,17 @@ describe("add players, start game and buy card", () => {
     expect(newGameState.global_state.history).includes(
       `${testUser1.username} purchased a copper`
     );
+    expect(
+      newGameState.actor_state[0].hand.estate +
+        newGameState.actor_state[0].deck.reduce(
+          (acc, card) => (card === "estate" ? acc + 1 : acc),
+          0
+        ) +
+        newGameState.actor_state[0].discardPile.reduce(
+          (acc, card) => (card === "estate" ? acc + 1 : acc),
+          0
+        )
+    ).toEqual(3);
   });
 });
 

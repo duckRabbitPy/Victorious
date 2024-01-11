@@ -3,12 +3,15 @@ import {
   CardName,
   GameState,
   Phases,
+  cardNameToCard,
   cardNamesToCount,
+  getTreasureValue,
   hasActionCard,
   subtractCardCount,
   zeroCardCount,
 } from "../../../../shared/common";
 import { indefiniteArticle } from "../../../../shared/utils";
+import { IllegalGameStateError } from "../../customErrors";
 
 export const resetBuysAndActions = (gameState: GameState) => {
   return Effect.succeed({
@@ -36,7 +39,32 @@ export const buyCard = ({
   cardName: CardName;
   toDiscardFromHand: readonly CardName[];
 }) => {
-  // todo effect.fail card not available
+  if (gameState.global_state.supply[cardName] < 1) {
+    return Effect.fail(
+      new IllegalGameStateError({
+        message: `Cannot buy ${cardName} because supply is empty`,
+      })
+    );
+  }
+
+  if (gameState.actor_state.filter((a) => a.id === userId)[0].buys < 1) {
+    return Effect.fail(
+      new IllegalGameStateError({
+        message: `Cannot buy ${cardName} because no buys remaining`,
+      })
+    );
+  }
+
+  if (
+    getTreasureValue(cardNamesToCount(toDiscardFromHand)) <
+    cardNameToCard(cardName).cost
+  ) {
+    return Effect.fail(
+      new IllegalGameStateError({
+        message: `Cannot buy ${cardName} because insufficient treasure value`,
+      })
+    );
+  }
 
   const newActorState = gameState.actor_state.map((actor) => {
     // todo effect.fail if not enough buys
@@ -72,9 +100,64 @@ export const buyCard = ({
     history: [...gameState.global_state.history, latestTransaction],
   };
 
-  return Effect.succeed({
-    ...gameState,
-    global_state: newGlobalState,
-    actor_state: newActorState,
-  });
+  return pipe(
+    Effect.succeed(gameState),
+    Effect.flatMap((initGameState) =>
+      validateCanBuyCard({
+        gameState: initGameState,
+        userId,
+        cardName,
+        toDiscardFromHand,
+      })
+    ),
+    Effect.flatMap((validGamestate) => {
+      const newGamestate = {
+        ...validGamestate,
+        actor_state: newActorState,
+        global_state: newGlobalState,
+      };
+      return Effect.succeed(newGamestate);
+    })
+  );
+};
+
+export const validateCanBuyCard = ({
+  gameState,
+  userId,
+  cardName,
+  toDiscardFromHand,
+}: {
+  gameState: GameState;
+  userId: string;
+  cardName: CardName;
+  toDiscardFromHand: readonly CardName[];
+}) => {
+  if (gameState.global_state.supply[cardName] < 1) {
+    return Effect.fail(
+      new IllegalGameStateError({
+        message: `Cannot buy ${cardName} because supply is empty`,
+      })
+    );
+  }
+
+  if (gameState.actor_state.filter((a) => a.id === userId)[0].buys < 1) {
+    return Effect.fail(
+      new IllegalGameStateError({
+        message: `Cannot buy ${cardName} because no buys remaining`,
+      })
+    );
+  }
+
+  if (
+    getTreasureValue(cardNamesToCount(toDiscardFromHand)) <
+    cardNameToCard(cardName).cost
+  ) {
+    return Effect.fail(
+      new IllegalGameStateError({
+        message: `Cannot buy ${cardName} because insufficient treasure value`,
+      })
+    );
+  }
+
+  return Effect.succeed(gameState);
 };

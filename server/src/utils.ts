@@ -87,7 +87,12 @@ export const sendErrorMsgToClient = <T>(
     error instanceof Error ? error.message : "An unknown server error occured";
 
   return Effect.succeed(
-    broadcastToRoom("error", errorMessage, msg.room, roomConnections)
+    broadcastToRoom({
+      broadcastType: "error",
+      payload: errorMessage,
+      roomConnections,
+      room: msg.room,
+    })
   );
 };
 
@@ -121,7 +126,7 @@ export const getUserInfoFromJWT = (authToken: string | undefined) =>
   );
 
 export const userNotInConnectionList = (
-  room: number,
+  room: number | undefined,
   authToken: string | undefined,
   roomConnections: RoomConnections
 ) =>
