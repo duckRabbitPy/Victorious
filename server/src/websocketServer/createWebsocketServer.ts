@@ -1,14 +1,12 @@
 import WebSocket from "ws";
-import { Logger, pipe, LogLevel, Effect } from "effect";
+import { Logger, pipe, LogLevel, Effect as E } from "effect";
 import {
   getUserInfoFromJWT,
-  parseClientMessage,
   parseJSONToClientMsg,
-  safeParseJWT,
   sendErrorMsgToClient,
+  clientNotInConnectionList,
+  getClientMessage,
   tapPipeLine,
-  userNotInConnectionList,
-  verifyJwt,
 } from "../utils";
 
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
@@ -17,7 +15,6 @@ import { SupportedEffects } from "../../../shared/common";
 import { handleChatMessage } from "./handleChatMessage";
 import { handleGameMessage } from "./handleGameMessage";
 import { broadcastToRoom } from "./broadcast";
-import { b } from "vitest/dist/suite-WwpgKT7k";
 
 export type RoomConnections = {
   socket: WebSocket;
@@ -30,11 +27,6 @@ export type UserInfo = {
   username: string;
 };
 
-const getClientMessage = (msg: unknown) =>
-  parseClientMessage(JSON.parse(msg as string))
-    .pipe(Effect.orElseSucceed(() => undefined))
-    .pipe(Effect.runSync);
-
 export function createWebsocketServer(app: wsApplication): void {
   // !! mutable state
   let roomConnections: RoomConnections = [];
@@ -43,13 +35,13 @@ export function createWebsocketServer(app: wsApplication): void {
     ws.on("message", function message(msg: unknown) {
       const clientMsg = getClientMessage(msg);
 
-      const userNotInList = userNotInConnectionList(
+      const clientNotInList = clientNotInConnectionList(
         clientMsg?.room,
         clientMsg?.authToken,
         roomConnections
       );
 
-      if (userNotInList && clientMsg?.authToken) {
+      if (clientNotInList && clientMsg?.authToken) {
         roomConnections.push({
           socket: ws,
           room: clientMsg.room,
@@ -58,15 +50,15 @@ export function createWebsocketServer(app: wsApplication): void {
       }
 
       const processMessage = DBConnection.pipe(
-        Effect.flatMap((connection) => connection.pool),
-        Effect.flatMap((pool) =>
+        E.flatMap((connection) => connection.pool),
+        E.flatMap((pool) =>
           pipe(
-            Effect.all({
+            E.all({
               msg: parseJSONToClientMsg(msg),
               userInfo: getUserInfoFromJWT(clientMsg?.authToken),
-              pool: Effect.succeed(pool),
+              pool: E.succeed(pool),
             }),
-            Effect.flatMap(({ pool, userInfo, msg }) => {
+            E.flatMap(({ pool, userInfo, msg }) => {
               // handle chat related messages
               if (msg.effect === SupportedEffects.sendChatMessage) {
                 return pipe(
@@ -75,7 +67,7 @@ export function createWebsocketServer(app: wsApplication): void {
                     userInfo,
                     pool,
                   }),
-                  Effect.flatMap((chatLog) =>
+                  E.flatMap((chatLog) =>
                     broadcastToRoom({
                       broadcastType: "chatLog",
                       payload: chatLog,
@@ -87,39 +79,38 @@ export function createWebsocketServer(app: wsApplication): void {
               }
 
               // handle game related messages
-              return Effect.succeed(
-                pipe(
-                  handleGameMessage({
-                    msg,
-                    userInfo,
-                    pool,
-                  }),
-                  Effect.flatMap((gameState) => {
-                    return broadcastToRoom({
-                      broadcastType: "gameState",
-                      payload: gameState,
-                      room: msg.room,
-                      roomConnections,
-                    });
-                  })
-                )
+              return pipe(
+                handleGameMessage({
+                  msg,
+                  userInfo,
+                  pool,
+                }),
+                E.flatMap((gameState) => {
+                  return broadcastToRoom({
+                    broadcastType: "gameState",
+                    payload: gameState,
+                    room: msg.room,
+                    roomConnections,
+                  });
+                })
               );
             })
           )
         ),
-        Effect.catchAll((error) =>
+        tapPipeLine,
+        E.catchAll((error) =>
           sendErrorMsgToClient(error, clientMsg, roomConnections)
         ),
-        Logger.withMinimumLogLevel(LogLevel.Error)
+        Logger.withMinimumLogLevel(LogLevel.All)
       );
 
-      const runnable = Effect.provideService(
+      const runnable = E.provideService(
         processMessage,
         DBConnection,
         DBConnectionLive
       );
 
-      Effect.runPromise(runnable);
+      E.runPromise(runnable);
     });
 
     ws.on("close", () => {

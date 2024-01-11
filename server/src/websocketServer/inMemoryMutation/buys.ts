@@ -100,25 +100,11 @@ export const buyCard = ({
     history: [...gameState.global_state.history, latestTransaction],
   };
 
-  return pipe(
-    Effect.succeed(gameState),
-    Effect.flatMap((initGameState) =>
-      validateCanBuyCard({
-        gameState: initGameState,
-        userId,
-        cardName,
-        toDiscardFromHand,
-      })
-    ),
-    Effect.flatMap((validGamestate) => {
-      const newGamestate = {
-        ...validGamestate,
-        actor_state: newActorState,
-        global_state: newGlobalState,
-      };
-      return Effect.succeed(newGamestate);
-    })
-  );
+  return Effect.succeed({
+    ...gameState,
+    actor_state: newActorState,
+    global_state: newGlobalState,
+  });
 };
 
 export const validateCanBuyCard = ({

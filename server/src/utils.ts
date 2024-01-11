@@ -125,7 +125,12 @@ export const getUserInfoFromJWT = (authToken: string | undefined) =>
     )
   );
 
-export const userNotInConnectionList = (
+export const getClientMessage = (msg: unknown) =>
+  parseClientMessage(JSON.parse(msg as string))
+    .pipe(Effect.orElseSucceed(() => undefined))
+    .pipe(Effect.runSync);
+
+export const clientNotInConnectionList = (
   room: number | undefined,
   authToken: string | undefined,
   roomConnections: RoomConnections

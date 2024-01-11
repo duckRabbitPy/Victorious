@@ -41,7 +41,7 @@ type handleGameMessageProps = {
 
 type handleGameMessageResult = Effect.Effect<
   never,
-  PostgresError | IllegalGameStateError | ParseError,
+  PostgresError | ParseError | IllegalGameStateError | Error,
   GameState
 >;
 

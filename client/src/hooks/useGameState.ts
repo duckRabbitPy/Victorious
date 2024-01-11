@@ -48,7 +48,10 @@ export const useGameState = () => {
 
   useEffect(() => {
     const newSocket = new WebSocket(WEB_SOCKET_URL);
-    console.log("Using prod websocket:", import.meta.env.MODE);
+    console.log(
+      `Using websocket url ${WEB_SOCKET_URL}`,
+      `env ${import.meta.env.MODE}`
+    );
 
     newSocket.addEventListener("message", (event) => {
       const eventData = safeParseBroadCast(JSON.parse(event.data)).pipe(
