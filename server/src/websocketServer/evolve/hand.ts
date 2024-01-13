@@ -4,41 +4,47 @@ import {
   GameState,
   Phases,
   cardNamesToCount,
+  countToCardNamesArray,
   hasActionCard,
   subtractCardCount,
   zeroCardCount,
 } from "../../../../shared/common";
 import { isUsersTurn } from "../../../../shared/utils";
 
-export const dealCards = (
-  deck: readonly CardName[],
-  number: number,
-  discardPile: readonly CardName[],
-  toDiscardFromHand: readonly CardName[]
-): {
-  newCards: readonly CardName[];
-  remainingDeck: readonly CardName[];
+export const dealCards = ({
+  deck,
+  numberOfCardsToDraw,
+  discardPile,
+}: {
+  deck: readonly CardName[];
+  numberOfCardsToDraw: number;
   discardPile: readonly CardName[];
-} => {
-  if (deck.length < number) {
-    const lastCards = deck.slice(0, deck.length);
+}) => {
+  if (deck.length < numberOfCardsToDraw) {
+    const lastCardsInDeck = deck.slice(0, deck.length);
+    const numberOfCardsLeftInDeck = deck.length;
 
-    const newDeck = reshuffleDeck({
-      deck: deck.slice(deck.length),
-      discardPile,
-      toDiscardFromHand,
-    });
+    const restOfDeck = shuffleDeck([
+      ...deck.slice(deck.length),
+      ...discardPile,
+    ]);
+
+    const newCardsToHand = restOfDeck.slice(
+      0,
+      numberOfCardsToDraw - numberOfCardsLeftInDeck
+    );
 
     return {
-      newCards: lastCards.concat(newDeck.slice(0, number - lastCards.length)),
-      remainingDeck: newDeck.slice(number - lastCards.length),
-      discardPile: [],
+      newCardsIntoHand: lastCardsInDeck.concat(newCardsToHand),
+      newDeck: restOfDeck.slice(numberOfCardsToDraw - numberOfCardsLeftInDeck),
+      newDiscardPile: [],
     };
   }
+
   return {
-    newCards: deck.slice(0, number),
-    remainingDeck: deck.slice(number),
-    discardPile: discardPile.concat(toDiscardFromHand),
+    newCardsIntoHand: deck.slice(0, numberOfCardsToDraw),
+    newDeck: deck.slice(numberOfCardsToDraw, deck.length),
+    newDiscardPile: discardPile,
   };
 };
 
@@ -59,34 +65,21 @@ export const dealToAllActors = (gameState: GameState) => {
   return E.succeed({
     ...gameState,
     actor_state: gameState.actor_state.map((actor, index) => {
-      const { newCards, remainingDeck, discardPile } = dealCards(
-        shuffledDecks[index],
-        5,
-        actor.discardPile,
-        []
-      );
-      const newHand = cardNamesToCount(newCards);
+      const { newCardsIntoHand, newDeck, newDiscardPile } = dealCards({
+        deck: shuffledDecks[index],
+        numberOfCardsToDraw: 5,
+        discardPile: actor.discardPile,
+      });
+      const newHand = cardNamesToCount(newCardsIntoHand);
       return {
         ...actor,
         hand: newHand,
-        deck: remainingDeck,
-        discardPile: discardPile,
+        deck: newDeck,
+        discardPile: newDiscardPile,
         phase: hasActionCard(newHand) ? Phases.Action : Phases.Buy,
       };
     }),
   });
-};
-
-export const reshuffleDeck = ({
-  deck,
-  discardPile,
-  toDiscardFromHand,
-}: {
-  deck: readonly CardName[];
-  discardPile: readonly CardName[];
-  toDiscardFromHand: readonly CardName[];
-}) => {
-  return shuffleDeck(deck.concat(discardPile).concat(toDiscardFromHand));
 };
 
 export const playTreasure = ({
@@ -148,19 +141,20 @@ export const cleanUp = (gameState: GameState) => {
           [] as CardName[]
         );
 
-        // attempt deal if out of cards then reshuffle and deal
-        const { newCards, remainingDeck, discardPile } = dealCards(
-          actor.deck,
-          5,
-          actor.discardPile,
-          toDiscardFromHand
-        );
+        const { newCardsIntoHand, newDeck, newDiscardPile } = dealCards({
+          deck: actor.deck,
+          numberOfCardsToDraw: 5,
+          discardPile: actor.discardPile
+            .concat(toDiscardFromHand)
+            .concat(countToCardNamesArray(actor.cardsInPlay)),
+        });
 
         return {
           ...actor,
-          hand: cardNamesToCount(newCards),
-          deck: remainingDeck,
-          discardPile,
+          hand: cardNamesToCount(newCardsIntoHand),
+          deck: newDeck,
+          cardsInPlay: zeroCardCount,
+          discardPile: newDiscardPile,
         };
       } else return gameState.actor_state[index];
     }),
