@@ -1,6 +1,7 @@
 import { CoreProps } from "../types";
 import { isUsersTurn } from "../../../shared/utils";
 import { addNewPlayer } from "../effects/effects";
+import CopyRoomLinkButton from "./CopyRoomLinkButton";
 
 const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
   const {
@@ -42,10 +43,12 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
                 }`}</li>
               ))}
             </ol>
+
             <div>
               {gameState.actor_state.length < 2 && (
                 <p>Waiting for players to join...</p>
               )}
+              <CopyRoomLinkButton />
             </div>
           </>
         }

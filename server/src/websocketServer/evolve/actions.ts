@@ -39,7 +39,8 @@ export const applyAction = (
           const { newCards, remainingDeck, discardPile } = dealCards(
             actor.deck,
             3,
-            actor.discardPile
+            actor.discardPile,
+            []
           );
 
           return {
@@ -63,7 +64,8 @@ export const applyAction = (
         const { newCards, remainingDeck, discardPile } = dealCards(
           actor.deck,
           1,
-          actor.discardPile
+          actor.discardPile,
+          []
         );
         if (actor.id === userId) {
           return {
@@ -90,7 +92,8 @@ export const applyAction = (
         const { newCards, remainingDeck, discardPile } = dealCards(
           actor.deck,
           2,
-          actor.discardPile
+          actor.discardPile,
+          []
         );
         if (actor.id === userId) {
           return {
@@ -138,7 +141,8 @@ export const applyAction = (
         const { newCards, remainingDeck, discardPile } = dealCards(
           actor.deck,
           4,
-          actor.discardPile
+          actor.discardPile,
+          []
         );
         if (actor.id === userId) {
           return {

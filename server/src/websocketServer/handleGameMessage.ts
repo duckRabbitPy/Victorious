@@ -30,7 +30,7 @@ import {
   PostgresError,
 } from "../customErrors";
 import { ParseError } from "@effect/schema/ParseResult";
-import { checkClientStateIsUptoDate } from "../utils";
+import { checkClientStateIsUptoDate, checkNotAlreadyInRoom } from "../utils";
 
 type handleGameMessageProps = {
   msg: ClientPayload;
@@ -70,8 +70,6 @@ export const handleGameMessage = ({
   );
   const toDiscardFromHand = msg.toDiscardFromHand;
 
-  // todo: validate that next effect permitted given current game state, e.g pass mutation index from frontend and compare to mutation index in db
-
   switch (msg.effect) {
     // read only operation
     case SupportedEffects.getCurrentGameState: {
@@ -82,6 +80,9 @@ export const handleGameMessage = ({
     case SupportedEffects.addLivePlayer: {
       return pipe(
         currentGameState,
+        E.flatMap((currentGameState) =>
+          checkNotAlreadyInRoom({ currentGameState, userInfo })
+        ),
         E.flatMap((currentGameState) =>
           addLivePlayerQuery({
             userInfo,

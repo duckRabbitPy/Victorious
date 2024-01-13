@@ -34,7 +34,7 @@ export function createWebsocketServer(app: wsApplication): void {
   app.ws("/", function (ws, req) {
     ws.on("message", function message(msg: unknown) {
       const clientMsg = getClientMessage(msg);
-
+      console.log("clientMsg", msg);
       const clientNotInList = clientNotInConnectionList(
         clientMsg?.room,
         clientMsg?.authToken,

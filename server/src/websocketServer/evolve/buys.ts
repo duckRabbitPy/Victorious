@@ -8,6 +8,7 @@ import {
   getTreasureValue,
   hasActionCard,
   subtractCardCount,
+  sumCardCounts,
   zeroCardCount,
 } from "../../../../shared/common";
 import { indefiniteArticle } from "../../../../shared/utils";
@@ -56,8 +57,12 @@ export const buyCard = ({
   }
 
   if (
-    getTreasureValue(cardNamesToCount(toDiscardFromHand)) <
-    cardNameToCard(cardName).cost
+    getTreasureValue(
+      sumCardCounts(
+        cardNamesToCount(toDiscardFromHand),
+        gameState.actor_state.filter((a) => a.id === userId)[0].cardsInPlay
+      )
+    ) < cardNameToCard(cardName).cost
   ) {
     return E.fail(
       new IllegalGameStateError({
@@ -67,8 +72,8 @@ export const buyCard = ({
   }
 
   const newActorState = gameState.actor_state.map((actor) => {
-    const remainingBuys = actor.buys - 1;
     if (actor.id === userId) {
+      const remainingBuys = actor.buys - 1;
       return {
         ...actor,
         deck: [...actor.deck, cardName],
@@ -104,45 +109,4 @@ export const buyCard = ({
     actor_state: newActorState,
     global_state: newGlobalState,
   });
-};
-
-export const validateCanBuyCard = ({
-  gameState,
-  userId,
-  cardName,
-  toDiscardFromHand,
-}: {
-  gameState: GameState;
-  userId: string;
-  cardName: CardName;
-  toDiscardFromHand: readonly CardName[];
-}) => {
-  if (gameState.global_state.supply[cardName] < 1) {
-    return E.fail(
-      new IllegalGameStateError({
-        message: `Cannot buy ${cardName} because supply is empty`,
-      })
-    );
-  }
-
-  if (gameState.actor_state.filter((a) => a.id === userId)[0].buys < 1) {
-    return E.fail(
-      new IllegalGameStateError({
-        message: `Cannot buy ${cardName} because no buys remaining`,
-      })
-    );
-  }
-
-  if (
-    getTreasureValue(cardNamesToCount(toDiscardFromHand)) <
-    cardNameToCard(cardName).cost
-  ) {
-    return E.fail(
-      new IllegalGameStateError({
-        message: `Cannot buy ${cardName} because insufficient treasure value`,
-      })
-    );
-  }
-
-  return E.succeed(gameState);
 };
