@@ -14,7 +14,10 @@ import {
 } from "./customErrors";
 import jwt from "jsonwebtoken";
 import { broadcastToRoom } from "./websocketServer/broadcast";
-import { RoomConnections } from "./websocketServer/createWebsocketServer";
+import {
+  RoomConnections,
+  UserInfo,
+} from "./websocketServer/createWebsocketServer";
 
 export const logAndThrowError = (error: unknown) => {
   console.error(error);
@@ -164,6 +167,28 @@ export const checkClientStateIsUptoDate = ({
     return E.fail(
       new IllegalGameStateError({
         message: `Client state is out of date. Expected mutation index ${currentGameState.mutation_index} but got ${msg.mutationIndex}`,
+      })
+    );
+  }
+
+  return E.succeed(currentGameState);
+};
+
+export const checkNotAlreadyInRoom = ({
+  currentGameState,
+  userInfo,
+}: {
+  currentGameState: GameState;
+  userInfo: UserInfo;
+}) => {
+  if (
+    currentGameState.actor_state
+      .map((actor) => actor.id)
+      .includes(userInfo.userId)
+  ) {
+    return E.fail(
+      new IllegalGameStateError({
+        message: `User ${userInfo.username} already exists in room ${currentGameState.room}`,
       })
     );
   }

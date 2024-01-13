@@ -13,7 +13,8 @@ import { isUsersTurn } from "../../../../shared/utils";
 export const dealCards = (
   deck: readonly CardName[],
   number: number,
-  discardPile: readonly CardName[]
+  discardPile: readonly CardName[],
+  toDiscardFromHand: readonly CardName[]
 ): {
   newCards: readonly CardName[];
   remainingDeck: readonly CardName[];
@@ -21,7 +22,12 @@ export const dealCards = (
 } => {
   if (deck.length < number) {
     const lastCards = deck.slice(0, deck.length);
-    const newDeck = reshuffleDeck(deck.slice(deck.length), discardPile);
+
+    const newDeck = reshuffleDeck({
+      deck: deck.slice(deck.length),
+      discardPile,
+      toDiscardFromHand,
+    });
 
     return {
       newCards: lastCards.concat(newDeck.slice(0, number - lastCards.length)),
@@ -32,7 +38,7 @@ export const dealCards = (
   return {
     newCards: deck.slice(0, number),
     remainingDeck: deck.slice(number),
-    discardPile,
+    discardPile: discardPile.concat(toDiscardFromHand),
   };
 };
 
@@ -56,7 +62,8 @@ export const dealToAllActors = (gameState: GameState) => {
       const { newCards, remainingDeck, discardPile } = dealCards(
         shuffledDecks[index],
         5,
-        actor.discardPile
+        actor.discardPile,
+        []
       );
       const newHand = cardNamesToCount(newCards);
       return {
@@ -70,11 +77,16 @@ export const dealToAllActors = (gameState: GameState) => {
   });
 };
 
-export const reshuffleDeck = (
-  deck: readonly CardName[],
-  discardPile: readonly CardName[]
-) => {
-  return shuffleDeck(deck.concat(discardPile));
+export const reshuffleDeck = ({
+  deck,
+  discardPile,
+  toDiscardFromHand,
+}: {
+  deck: readonly CardName[];
+  discardPile: readonly CardName[];
+  toDiscardFromHand: readonly CardName[];
+}) => {
+  return shuffleDeck(deck.concat(discardPile).concat(toDiscardFromHand));
 };
 
 export const playTreasure = ({
@@ -136,14 +148,12 @@ export const cleanUp = (gameState: GameState) => {
           [] as CardName[]
         );
 
-        const newDeck = reshuffleDeck(
-          actor.deck,
-          actor.discardPile.concat(toDiscardFromHand)
-        );
+        // attempt deal if out of cards then reshuffle and deal
         const { newCards, remainingDeck, discardPile } = dealCards(
-          newDeck,
+          actor.deck,
           5,
-          actor.discardPile
+          actor.discardPile,
+          toDiscardFromHand
         );
 
         return {

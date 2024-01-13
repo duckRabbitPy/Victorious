@@ -96,6 +96,7 @@ const Room = ({
           <div>
             {gameState.actor_state.length > 1 && gameState.turn < 1 && (
               <StartGameButton
+                gameState={gameState}
                 coreRoomInfo={coreRoomInfo}
                 setErrorMessage={setErrorMessage}
               />

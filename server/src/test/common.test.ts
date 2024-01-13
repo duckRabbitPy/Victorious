@@ -118,7 +118,7 @@ describe("common util testing", () => {
       newCards,
       remainingDeck,
       discardPile: newDiscardPile,
-    } = dealCards(deck, 3, discardPile);
+    } = dealCards(deck, 3, discardPile, []);
 
     expect(newCards).toEqual(["smithy", "silver", "copper"]);
     expect(remainingDeck).toEqual(["copper", "copper"]);
