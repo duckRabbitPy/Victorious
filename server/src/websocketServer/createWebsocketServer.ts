@@ -27,14 +27,13 @@ export type UserInfo = {
   username: string;
 };
 
-export function createWebsocketServer(app: wsApplication): void {
+export function createWebsocketServer(app: wsApplication) {
   // !! mutable state
   let roomConnections: RoomConnections = [];
 
-  app.ws("/", function (ws, req) {
-    ws.on("message", function message(msg: unknown) {
+  app.ws("/", (ws, req) => {
+    ws.on("message", (msg: unknown) => {
       const clientMsg = getClientMessage(msg);
-      console.log("clientMsg", msg);
       const clientNotInList = clientNotInConnectionList(
         clientMsg?.room,
         clientMsg?.authToken,
