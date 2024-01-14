@@ -93,7 +93,13 @@ export const Home = () => {
               gap: "2rem",
             }}
           >
-            <input type="text" id="room" placeholder="Enter room number" />
+            <input
+              id="room"
+              placeholder="Enter room number"
+              type="number"
+              max={99999999}
+              style={{ width: "12ch" }}
+            />
             <button type="submit">Create room</button>
           </form>
           <div style={{ padding: "1rem" }}>

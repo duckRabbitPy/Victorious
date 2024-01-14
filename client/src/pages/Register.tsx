@@ -5,8 +5,10 @@ import { API_ENDPOINT } from "../constants";
 export const Register = () => {
   const [emailSent, setEmailSent] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
   const login = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
     const username = e.currentTarget.username.value;
     const email = e.currentTarget.email.value;
     const password = e.currentTarget.password.value;
@@ -37,6 +39,9 @@ export const Register = () => {
       .catch((error) => {
         setErrorMessage("An error occurred, please try again.");
         console.error("Error:", error);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   };
   return (
@@ -58,7 +63,9 @@ export const Register = () => {
           <input type="text" id="username" placeholder="Enter username" />
           <input type="text" id="email" placeholder="Enter email" />
           <input type="password" id="password" placeholder="Enter password" />
-          <button type="submit">Register</button>
+          <button type="submit" disabled={loading}>
+            {loading ? "Registering..." : "Register"}
+          </button>
         </form>
         {emailSent && <p style={{ color: "green" }}>Email sent!</p>}
         {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
