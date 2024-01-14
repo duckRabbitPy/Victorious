@@ -8,6 +8,7 @@ import {
 import { Effect as E, pipe } from "effect";
 import {
   AuthenticationError,
+  ServerError,
   CustomParseError,
   IllegalGameStateError,
   JSONParseError,
@@ -18,6 +19,7 @@ import {
   RoomConnections,
   UserInfo,
 } from "./websocketServer/createWebsocketServer";
+import { ParseError } from "@effect/schema/ParseResult";
 
 export const logAndThrowError = (error: unknown) => {
   console.error(error);
@@ -80,8 +82,8 @@ export const verifyJwt = (token: string, secret: string | undefined) => {
   );
 };
 
-export const sendErrorMsgToClient = <T>(
-  error: T,
+export const sendErrorMsgToClient = (
+  error: ServerError | ParseError,
   msg: ClientPayload | undefined,
   roomConnections: RoomConnections
 ) => {
@@ -93,7 +95,7 @@ export const sendErrorMsgToClient = <T>(
   }
 
   const errorMessage =
-    error instanceof Error ? error.message : "An unknown server error occured";
+    "message" in error ? error.message : "An unknown server error occured";
 
   return E.succeed(
     broadcastToRoom({

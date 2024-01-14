@@ -12,7 +12,7 @@ import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
 import { UserInfo } from "./createWebsocketServer";
 import { ParseError } from "@effect/schema/ParseResult";
-import { PostgresError } from "../customErrors";
+import { CustomParseError, PostgresError } from "../customErrors";
 
 type handleChatMessageProps = {
   msg: ClientPayload;
@@ -26,7 +26,7 @@ export const handleChatMessage = ({
   pool,
 }: handleChatMessageProps): E.Effect<
   never,
-  PostgresError | ParseError | Error,
+  PostgresError | ParseError | Error | CustomParseError,
   readonly ChatMessage[]
 > => {
   const currentGameState = pipe(
@@ -34,7 +34,16 @@ export const handleChatMessage = ({
     E.flatMap(safeParseGameState)
   );
 
-  const chatMessage = safeParseNonEmptyString(msg.chatMessage);
+  const chatMessage = pipe(
+    safeParseNonEmptyString(msg.chatMessage),
+    E.orElseFail(
+      () =>
+        new CustomParseError({
+          message: "Chat message must be a non-empty string",
+        })
+    )
+  );
+
   return pipe(
     E.all({
       chatMessage,

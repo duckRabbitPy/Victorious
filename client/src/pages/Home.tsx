@@ -32,7 +32,7 @@ export const Home = () => {
         if (json.data?.gameState?.room) {
           setRoom(json.data?.gameState?.room);
         } else {
-          setErrorMessage("Error: room creation failed");
+          setErrorMessage(json?.message || "Error: room creation failed");
         }
       })
       .catch(() => {
