@@ -3,6 +3,32 @@ import { logAndThrowError } from "../../utils";
 import { Pool } from "pg";
 import { UserInfo } from "../../websocketServer/createWebsocketServer";
 
+export const getLatestChatLogQuery = ({
+  sessionId,
+  pool,
+}: {
+  sessionId: string;
+  pool: Pool;
+}) => {
+  const get = async () => {
+    try {
+      const result = await pool.query(
+        "SELECT username, message FROM chat_log WHERE session_id = $1 ORDER BY created_at ASC;",
+        [sessionId]
+      );
+
+      return result.rows;
+    } catch (error) {
+      logAndThrowError(error);
+    }
+  };
+
+  return E.tryPromise({
+    try: () => get(),
+    catch: () => new Error("postgres query error"),
+  }).pipe(E.retryN(1));
+};
+
 // @mutation
 export const updateChatLogQuery = ({
   sessionId,

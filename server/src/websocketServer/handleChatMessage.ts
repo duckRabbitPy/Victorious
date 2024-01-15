@@ -7,24 +7,52 @@ import {
   safeParseGameState,
   safeParseNonEmptyString,
 } from "../../../shared/common";
-import { updateChatLogQuery } from "../models/chatlog/mutations";
+import {
+  getLatestChatLogQuery,
+  updateChatLogQuery,
+} from "../models/chatlog/mutations";
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
 import { UserInfo } from "./createWebsocketServer";
 import { ParseError } from "@effect/schema/ParseResult";
 import { CustomParseError, PostgresError } from "../customErrors";
 
-type handleChatMessageProps = {
+type HandleChatMessageProps = {
   msg: ClientPayload;
   userInfo: UserInfo;
   pool: Pool;
+};
+
+type GetCurrentChatLogProps = {
+  msg: ClientPayload;
+  pool: Pool;
+};
+
+export const getCurrentChatLog = ({ msg, pool }: GetCurrentChatLogProps) => {
+  const currentGameState = pipe(
+    getLatestGameSnapshotQuery(msg.room, pool),
+    E.flatMap(safeParseGameState)
+  );
+
+  return pipe(
+    E.all({
+      currentGameState,
+    }),
+    E.flatMap(({ currentGameState }) =>
+      getLatestChatLogQuery({
+        sessionId: currentGameState.session_id,
+        pool,
+      })
+    ),
+    E.flatMap(safeParseChatLog)
+  );
 };
 
 export const handleChatMessage = ({
   msg,
   userInfo,
   pool,
-}: handleChatMessageProps): E.Effect<
+}: HandleChatMessageProps): E.Effect<
   never,
   PostgresError | ParseError | Error | CustomParseError,
   readonly ChatMessage[]
@@ -33,7 +61,7 @@ export const handleChatMessage = ({
     getLatestGameSnapshotQuery(msg.room, pool),
     E.flatMap(safeParseGameState)
   );
-
+  console.log("currentGameState", currentGameState);
   const chatMessage = pipe(
     safeParseNonEmptyString(msg.chatMessage),
     E.orElseFail(

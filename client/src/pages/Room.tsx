@@ -52,81 +52,82 @@ const Room = ({
       <Link to="/">Back to home</Link>
       <div>Playing as : {loggedInUsername}</div>
 
-      <div style={{ display: "flex", gap: "1rem", color: "white" }}>
-        <button
-          onClick={() => {
-            setBackgroundIndex((i = 0) =>
-              i === 0 ? Backgrounds.length : i - 1
-            );
-          }}
-          style={{ fontSize: "small" }}
-        >
-          ←
-        </button>
-        <button
-          style={{ fontSize: "small" }}
-          onClick={() => {
-            setBackgroundIndex((i) =>
-              i === Backgrounds.length - 1 ? 0 : i + 1
-            );
-          }}
-        >
-          →
-        </button>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          gap: "1rem",
-        }}
-      >
-        <div>
-          {!gameStarted && (
-            <ActivePlayerInfo
-              props={{
-                gameState,
-                coreRoomInfo,
-                coreUserInfo,
-                setErrorMessage,
-              }}
-            />
-          )}
+      {gameState.game_over ? (
+        <>
           <div>
-            {gameState.actor_state.length > 1 && gameState.turn < 1 && (
-              <StartGameButton
-                gameState={gameState}
-                coreRoomInfo={coreRoomInfo}
-                setErrorMessage={setErrorMessage}
-              />
-            )}
-          </div>
-
-          {gameStarted && (
+            <h1 style={{ margin: 0 }}>Game over!</h1>
+            {gameState.actor_state
+              .slice()
+              .sort((a, b) => a.victoryPoints - b.victoryPoints)
+              .map((actor) => actor.name)[0] === loggedInUsername
+              ? "You win!"
+              : "You lose!"}
             <div
               style={{
                 display: "flex",
                 flexDirection: "column",
-                justifyItems: "space-between",
                 gap: "1rem",
+                color: "white",
+                backgroundColor: `rgba(28, 26, 27, 0.66)`,
               }}
             >
-              <OpponentHands
-                gameState={gameState}
-                loggedInUsername={loggedInUsername}
-              />
-              <TurnInfo coreUserInfo={coreUserInfo} gameState={gameState} />
-              <Supply
-                props={{
-                  gameState,
-                  coreRoomInfo,
-                  coreUserInfo,
-                  setErrorMessage,
-                }}
-              />
-              {isUsersTurn(gameState, loggedInUsername) && (
-                <EndTurnButton
+              <div>
+                <h2>Final scores:</h2>
+                <div>
+                  {gameState.actor_state.map((actor) => (
+                    <div key={actor.name}>
+                      {actor.name}: {actor.victoryPoints}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ marginBottom: "1rem", color: "lightgreen" }}>
+                <h2 style={{ margin: 0 }}>Winner:</h2>
+                {
+                  gameState.actor_state
+                    .slice()
+                    .sort((a, b) => a.victoryPoints - b.victoryPoints)
+                    .map((actor) => actor.name)[0]
+                }
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div style={{ display: "flex", gap: "1rem", color: "white" }}>
+            <button
+              onClick={() => {
+                setBackgroundIndex((i = 0) =>
+                  i === 0 ? Backgrounds.length : i - 1
+                );
+              }}
+              style={{ fontSize: "small" }}
+            >
+              ←
+            </button>
+            <button
+              style={{ fontSize: "small" }}
+              onClick={() => {
+                setBackgroundIndex((i) =>
+                  i === Backgrounds.length - 1 ? 0 : i + 1
+                );
+              }}
+            >
+              →
+            </button>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: "1rem",
+            }}
+          >
+            <div>
+              {!gameStarted && (
+                <ActivePlayerInfo
                   props={{
                     gameState,
                     coreRoomInfo,
@@ -135,29 +136,75 @@ const Room = ({
                   }}
                 />
               )}
+              <div>
+                {gameState.actor_state.length > 1 && gameState.turn < 1 && (
+                  <StartGameButton
+                    gameState={gameState}
+                    coreRoomInfo={coreRoomInfo}
+                    setErrorMessage={setErrorMessage}
+                  />
+                )}
+              </div>
+
+              {gameStarted && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyItems: "space-between",
+                    gap: "1rem",
+                  }}
+                >
+                  <OpponentHands
+                    gameState={gameState}
+                    loggedInUsername={loggedInUsername}
+                  />
+                  <TurnInfo coreUserInfo={coreUserInfo} gameState={gameState} />
+                  <Supply
+                    props={{
+                      gameState,
+                      coreRoomInfo,
+                      coreUserInfo,
+                      setErrorMessage,
+                    }}
+                  />
+                  {isUsersTurn(gameState, loggedInUsername) && (
+                    <EndTurnButton
+                      props={{
+                        gameState,
+                        coreRoomInfo,
+                        coreUserInfo,
+                        setErrorMessage,
+                      }}
+                    />
+                  )}
+                </div>
+              )}
+
+              <Spacer />
+
+              <PlayerHand
+                coreRoomInfo={coreRoomInfo}
+                coreUserInfo={coreUserInfo}
+                gameState={gameState}
+                setErrorMessage={setErrorMessage}
+              />
             </div>
-          )}
 
-          <Spacer />
+            <div
+              style={{ display: "flex", gap: "1rem", flexDirection: "column" }}
+            >
+              {gameStarted && <HistoryLog gameState={gameState} />}
 
-          <PlayerHand
-            coreRoomInfo={coreRoomInfo}
-            coreUserInfo={coreUserInfo}
-            gameState={gameState}
-            setErrorMessage={setErrorMessage}
-          />
-        </div>
-
-        <div style={{ display: "flex", gap: "1rem", flexDirection: "column" }}>
-          {gameStarted && <HistoryLog gameState={gameState} />}
-
-          <ChatLog
-            chatLog={chatLog}
-            setErrorMessage={setErrorMessage}
-            socket={socket}
-          />
-        </div>
-      </div>
+              <ChatLog
+                chatLog={chatLog}
+                setErrorMessage={setErrorMessage}
+                socket={socket}
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       <GameStateDebugDisplay gameState={gameState} />
     </div>
