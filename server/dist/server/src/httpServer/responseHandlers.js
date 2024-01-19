@@ -2,19 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendAuthenticatedUserResponse = exports.sendOpenRoomsResponse = exports.sendGameStateResponse = exports.sendConfirmUserResponse = exports.sendRegisterResponse = exports.sendLoginResponse = void 0;
 const effect_1 = require("effect");
-const createResponseHandler = (onSuccess) => ({ dataOrError, res, successStatus, label }) => (0, effect_1.pipe)(effect_1.Effect.matchCauseEffect(dataOrError, {
-    onFailure: (cause) => {
-        console.error(JSON.stringify(cause));
-        switch (cause._tag) {
-            case "Die":
-            case "Interrupt":
-                respondWithError(res, 500, "Internal server error");
-        }
-        return effect_1.Effect.succeed(res.status(500).json("Internal Server error"));
-    },
-    onSuccess: (data) => effect_1.Effect.succeed(res
-        .status(successStatus)
-        .json({ [label !== null && label !== void 0 ? label : "data"]: onSuccess(data) })),
+const createResponseHandler = (onSuccess) => ({ dataOrError, res, successStatus, label }) => (0, effect_1.pipe)(dataOrError, effect_1.Effect.flatMap((data) => {
+    return effect_1.Effect.succeed(res.status(successStatus).json({ [label !== null && label !== void 0 ? label : "data"]: onSuccess(data) }));
+}), effect_1.Effect.catchAll((error) => {
+    const errorMessage = "message" in error
+        ? error.message
+        : "An unknown server error occured";
+    console.log("error", error);
+    return respondWithError(res, 500, errorMessage);
 }));
 exports.sendLoginResponse = createResponseHandler((authToken) => authToken);
 exports.sendRegisterResponse = createResponseHandler((successMsg) => ({

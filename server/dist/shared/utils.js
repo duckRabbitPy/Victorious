@@ -1,16 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sortBy = exports.groupBy = exports.isUsersTurn = exports.indefiniteArticle = exports.uuidv4 = void 0;
-function uuidv4() {
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+const uuidv4 = () => {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
         const r = (Math.random() * 16) | 0, v = c == "x" ? r : (r & 0x3) | 0x8;
         return v.toString(16);
     });
-}
+};
 exports.uuidv4 = uuidv4;
-function indefiniteArticle(str) {
-    return ["a", "e", "i", "o", "u"].includes(str[0].toLowerCase()) ? "an" : "a";
-}
+const indefiniteArticle = (str) => ["a", "e", "i", "o", "u"].includes(str[0].toLowerCase()) ? "an" : "a";
 exports.indefiniteArticle = indefiniteArticle;
 const isUsersTurn = (gameState, userName) => {
     if (gameState.turn === 0) {

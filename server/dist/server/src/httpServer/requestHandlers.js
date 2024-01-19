@@ -22,7 +22,9 @@ const sendConfirmationEmail_1 = require("./sendConfirmationEmail");
 const createGameSession = (req, res) => {
     const createGameSession = connection_1.DBConnection.pipe(effect_1.Effect.flatMap((connection) => connection.pool), effect_1.Effect.flatMap((pool) => effect_1.Effect.all({
         pool: effect_1.Effect.succeed(pool),
-        room: (0, utils_1.safeParseNumber)(req.body.room),
+        room: (0, utils_1.safeParseNumber)(req.body.room).pipe(effect_1.Effect.orElseFail(() => new customErrors_1.CustomParseError({
+            message: "Room number must be a positive integer",
+        }))),
     })), effect_1.Effect.flatMap(({ pool, room }) => (0, mutations_1.createGameSessionQuery)(room, pool)), effect_1.Effect.flatMap(common_1.safeParseGameState), (dataOrError) => (0, responseHandlers_1.sendGameStateResponse)({
         dataOrError: dataOrError,
         res,

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const vitest_1 = require("vitest");
 const common_1 = require("../../../shared/common");
-const hand_1 = require("../websocketServer/inMemoryMutation/hand");
+const hand_1 = require("../websocketServer/evolve/hand");
 (0, vitest_1.describe)("common util testing", () => {
     (0, vitest_1.it)("subtract card count", () => {
         const cardCountA = {
@@ -107,9 +107,13 @@ const hand_1 = require("../websocketServer/inMemoryMutation/hand");
     (0, vitest_1.it)("deal more cards than in deck", () => {
         const deck = ["smithy", "silver"];
         const discardPile = ["copper", "copper", "copper"];
-        const { newCards, remainingDeck, discardPile: newDiscardPile, } = (0, hand_1.dealCards)(deck, 3, discardPile);
-        (0, vitest_1.expect)(newCards).toEqual(["smithy", "silver", "copper"]);
-        (0, vitest_1.expect)(remainingDeck).toEqual(["copper", "copper"]);
+        const { newCardsIntoHand, newDeck, newDiscardPile } = (0, hand_1.dealCards)({
+            deck,
+            discardPile,
+            numberOfCardsToDraw: 3,
+        });
+        (0, vitest_1.expect)(newCardsIntoHand).toEqual(["smithy", "silver", "copper"]);
+        (0, vitest_1.expect)(newDeck).toEqual(["copper", "copper"]);
         (0, vitest_1.expect)(newDiscardPile).toEqual([]);
     });
 });

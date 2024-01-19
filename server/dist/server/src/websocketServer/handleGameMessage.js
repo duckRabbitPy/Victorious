@@ -4,17 +4,21 @@ exports.handleGameMessage = void 0;
 const effect_1 = require("effect");
 const mutations_1 = require("../models/gamestate/mutations");
 const common_1 = require("../../../shared/common");
-const hand_1 = require("./inMemoryMutation/hand");
-const buys_1 = require("./inMemoryMutation/buys");
-const turn_1 = require("./inMemoryMutation/turn");
-const actions_1 = require("./inMemoryMutation/actions");
-const victory_1 = require("./inMemoryMutation/victory");
+const hand_1 = require("./evolve/hand");
+const buys_1 = require("./evolve/buys");
+const turn_1 = require("./evolve/turn");
+const actions_1 = require("./evolve/actions");
+const victory_1 = require("./evolve/victory");
 const queries_1 = require("../models/gamestate/queries");
+const customErrors_1 = require("../customErrors");
+const utils_1 = require("../utils");
 const handleGameMessage = ({ msg, pool, userInfo, }) => {
-    const currentGameState = (0, effect_1.pipe)((0, queries_1.getLatestGameSnapshotQuery)(msg.room, pool), effect_1.Effect.flatMap(common_1.safeParseGameState));
-    const cardName = (0, effect_1.pipe)((0, common_1.safeParseCardName)(msg.cardName));
+    const currentGameState = (0, effect_1.pipe)((0, queries_1.getLatestGameSnapshotQuery)(msg.room, pool), effect_1.Effect.flatMap(common_1.safeParseGameState), effect_1.Effect.flatMap((currentGameState) => (0, utils_1.checkClientStateIsUptoDate)({
+        currentGameState,
+        msg,
+    })));
+    const cardName = (0, effect_1.pipe)((0, common_1.safeParseCardName)(msg.cardName), effect_1.Effect.orElseFail(() => new customErrors_1.CustomParseError({ message: "Invalid card name in client payload" })));
     const toDiscardFromHand = msg.toDiscardFromHand;
-    // todo: validate that next effect permitted given current game state, e.g pass mutation index from frontend and compare to mutation index in db
     switch (msg.effect) {
         // read only operation
         case common_1.SupportedEffects.getCurrentGameState: {
@@ -22,7 +26,7 @@ const handleGameMessage = ({ msg, pool, userInfo, }) => {
         }
         // mutation operations
         case common_1.SupportedEffects.addLivePlayer: {
-            return (0, effect_1.pipe)(currentGameState, effect_1.Effect.flatMap((currentGameState) => (0, mutations_1.addLivePlayerQuery)({
+            return (0, effect_1.pipe)(currentGameState, effect_1.Effect.flatMap((currentGameState) => (0, utils_1.checkNotAlreadyInRoom)({ currentGameState, userInfo })), effect_1.Effect.flatMap((currentGameState) => (0, mutations_1.addLivePlayerQuery)({
                 userInfo,
                 currentGameState,
                 pool,

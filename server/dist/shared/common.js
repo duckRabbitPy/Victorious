@@ -311,6 +311,7 @@ var SupportedEffects;
     SupportedEffects["sendChatMessage"] = "sendChatMessage";
 })(SupportedEffects || (exports.SupportedEffects = SupportedEffects = {}));
 exports.ClientPayloadStruct = S.struct({
+    mutationIndex: S.number,
     effect: S.enums(SupportedEffects),
     cardName: S.optional(S.union(exports.TreasureNames, exports.VictoryNames, exports.ActionNames)),
     toDiscardFromHand: S.array(S.union(exports.TreasureNames, exports.VictoryNames, exports.ActionNames)),

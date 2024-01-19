@@ -10,6 +10,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const common_1 = require("../../../../shared/common");
 dotenv_1.default.config();
+// not currently used
 const tokenMiddleware = (req, res, next) => {
     const token = req.headers["Authorization"];
     const secretKey = (0, effect_1.pipe)((0, common_1.safeParseNonEmptyString)(process.env.JWT_SECRET_KEY), effect_1.Effect.orElseFail(() => effect_1.Effect.succeed("NOT_CORRECT_KEY")), effect_1.Effect.runSync);
