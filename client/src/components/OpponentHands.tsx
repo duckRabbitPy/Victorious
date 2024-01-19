@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { GameState } from "../../../shared/common";
 import { isUsersTurn } from "../../../shared/utils";
+import { THEME_COLORS } from "../constants";
 
 const OpponentHands = ({
   gameState,
@@ -8,6 +10,7 @@ const OpponentHands = ({
   gameState: GameState;
   loggedInUsername: string;
 }) => {
+  const [cardImgLoaded, setCardImgLoaded] = useState(false);
   const opponents = gameState.actor_state.filter((actor) => {
     return actor.name !== loggedInUsername;
   });
@@ -36,7 +39,7 @@ const OpponentHands = ({
             style={{
               border: "1px black solid",
               boxSizing: "border-box",
-              background: "rgba(255, 255, 255, 0.7)",
+              background: THEME_COLORS.translucentStraw,
               minWidth: "100%",
             }}
           >
@@ -57,8 +60,13 @@ const OpponentHands = ({
                 .map((_, index) => (
                   <img
                     src={
-                      "https://res.cloudinary.com/dkytnwn87/image/upload/v1704141742/dominion/Leonardo_Diffusion_XL_back_of_playing_card_dark_blue_regal_0_unuaad.jpg"
+                      cardImgLoaded
+                        ? "https://res.cloudinary.com/dkytnwn87/image/upload/v1704141742/dominion/Leonardo_Diffusion_XL_back_of_playing_card_dark_blue_regal_0_unuaad.jpg"
+                        : "https://res.cloudinary.com/dkytnwn87/image/upload/v1705697183/dominion/Low_res_Leonardo_Diffusion_XL_back_of_playing_card_dark_blue_regal_0_unuaad_1_uowxin.jpg"
                     }
+                    onLoad={() => {
+                      setCardImgLoaded(true);
+                    }}
                     key={index}
                     style={{
                       height: isUsersTurn(gameState, loggedInUsername)

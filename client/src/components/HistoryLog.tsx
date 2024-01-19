@@ -1,4 +1,5 @@
 import { GameState } from "../../../shared/common";
+import { THEME_COLORS } from "../constants";
 
 const HistoryLog = ({ gameState }: { gameState: GameState }) => {
   const history = gameState.global_state.history;
@@ -13,7 +14,7 @@ const HistoryLog = ({ gameState }: { gameState: GameState }) => {
         width: "400px",
         maxHeight: "300px",
         overflowY: "scroll",
-        backgroundColor: "rgba(28, 26, 27, 0.66)",
+        backgroundColor: THEME_COLORS.translucentBlack,
         border: "2px solid black",
       }}
     >

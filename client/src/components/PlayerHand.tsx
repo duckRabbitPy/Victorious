@@ -7,6 +7,7 @@ import {
   getTreasureValue,
 } from "../../../shared/common";
 import { isUsersTurn } from "../../../shared/utils";
+import { THEME_COLORS } from "../constants";
 import {
   playAction,
   playTreasure,
@@ -65,7 +66,7 @@ const PlayerHand = ({
   return (
     <div
       style={{
-        backgroundColor: "rgba(28, 26, 27, 0.66)",
+        backgroundColor: THEME_COLORS.translucentBlack,
         border: "2px solid black",
         color: "white",
       }}

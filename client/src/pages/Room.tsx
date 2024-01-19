@@ -13,7 +13,9 @@ import HistoryLog from "../components/HistoryLog";
 import OpponentHands from "../components/OpponentHands";
 import Spacer from "../components/Spacer";
 import React from "react";
-import { Backgrounds } from "../constants";
+import { Backgrounds, THEME_COLORS } from "../constants";
+import { BiSolidCastle } from "react-icons/bi";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 const Room = ({
   loggedInUsername,
@@ -22,6 +24,7 @@ const Room = ({
   loggedInUsername: string;
   setBackgroundIndex: React.Dispatch<React.SetStateAction<number>>;
 }) => {
+  const debug = false;
   const { gameState, socket, chatLog, errorMessage, setErrorMessage } =
     useGameState();
   const { "*": roomParam } = useParams();
@@ -49,7 +52,21 @@ const Room = ({
           <button onClick={() => setErrorMessage(null)}>clear</button>
         </>
       )}
-      <Link to="/">Back to home</Link>
+      <Link
+        to="/"
+        style={{
+          backgroundColor: THEME_COLORS.translucentStraw,
+          maxWidth: "fit-content",
+          display: "flex",
+          alignItems: "center",
+          gap: "1rem",
+          padding: "0.5rem",
+          borderRadius: "0.5rem",
+          alignSelf: "flex-end",
+        }}
+      >
+        Back to home <BiSolidCastle />
+      </Link>
       <div>Playing as : {loggedInUsername}</div>
 
       {gameState.game_over ? (
@@ -97,24 +114,32 @@ const Room = ({
         <>
           <div style={{ display: "flex", gap: "1rem", color: "white" }}>
             <button
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
               onClick={() => {
                 setBackgroundIndex((i = 0) =>
                   i === 0 ? Backgrounds.length : i - 1
                 );
               }}
-              style={{ fontSize: "small" }}
             >
-              ←
+              <FaArrowLeft />
             </button>
             <button
-              style={{ fontSize: "small" }}
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
               onClick={() => {
                 setBackgroundIndex((i) =>
                   i === Backgrounds.length - 1 ? 0 : i + 1
                 );
               }}
             >
-              →
+              <FaArrowRight />
             </button>
           </div>
 
@@ -206,7 +231,7 @@ const Room = ({
         </>
       )}
 
-      <GameStateDebugDisplay gameState={gameState} />
+      {debug && <GameStateDebugDisplay gameState={gameState} />}
     </div>
   );
 };

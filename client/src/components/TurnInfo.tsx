@@ -1,5 +1,6 @@
 import { GameState, Phases } from "../../../shared/common";
 import { isUsersTurn } from "../../../shared/utils";
+import { THEME_COLORS } from "../constants";
 import { CoreUserInfo } from "../types";
 
 type Props = {
@@ -23,7 +24,7 @@ const TurnInfo = ({
     <div
       style={{
         border: "1px black solid",
-        background: "rgba(255, 255, 255, 0.7)",
+        background: THEME_COLORS.translucentStraw,
         padding: "1rem",
       }}
     >
