@@ -9,9 +9,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateChatLogQuery = void 0;
+exports.updateChatLogQuery = exports.getLatestChatLogQuery = void 0;
 const effect_1 = require("effect");
 const utils_1 = require("../../utils");
+const getLatestChatLogQuery = ({ sessionId, pool, }) => {
+    const get = () => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const result = yield pool.query("SELECT username, message FROM chat_log WHERE session_id = $1 ORDER BY created_at ASC;", [sessionId]);
+            return result.rows;
+        }
+        catch (error) {
+            (0, utils_1.logAndThrowError)(error);
+        }
+    });
+    return effect_1.Effect.tryPromise({
+        try: () => get(),
+        catch: () => new Error("postgres query error"),
+    }).pipe(effect_1.Effect.retryN(1));
+};
+exports.getLatestChatLogQuery = getLatestChatLogQuery;
 // @mutation
 const updateChatLogQuery = ({ sessionId, userInfo, chatMessage, pool, }) => {
     const updateChatLog = (userInfo, chatMessage) => __awaiter(void 0, void 0, void 0, function* () {

@@ -108,11 +108,6 @@ const addLivePlayerQuery = ({ userInfo, currentGameState, pool, }) => {
         try {
             const room = currentGameState.room;
             const { turn, actor_state, global_state, mutation_index, game_over, session_id, } = currentGameState;
-            if (currentGameState.actor_state
-                .map((actor) => actor.id)
-                .includes(userInfo.userId)) {
-                throw new Error(`User ${userInfo.username} already exists in room ${room}`);
-            }
             const newMutationIndex = mutation_index + 1;
             const newActorState = setUpActorsForGame({
                 currentActorStateArray: actor_state,

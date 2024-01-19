@@ -10,6 +10,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getOpenGameSessionsQuery = exports.getLatestGameSnapshotQuery = void 0;
+const effect_1 = require("effect");
+const customErrors_1 = require("../../customErrors");
+const utils_1 = require("../../utils");
 // @query
 const getLatestGameSnapshotQuery = (room, pool) => {
     const get = () => __awaiter(void 0, void 0, void 0, function* () {
@@ -28,9 +31,6 @@ const getLatestGameSnapshotQuery = (room, pool) => {
     }).pipe(effect_1.Effect.retryN(1));
 };
 exports.getLatestGameSnapshotQuery = getLatestGameSnapshotQuery;
-const effect_1 = require("effect");
-const customErrors_1 = require("../../customErrors");
-const utils_1 = require("../../utils");
 // @query
 const getOpenGameSessionsQuery = (pool) => {
     const get = () => __awaiter(void 0, void 0, void 0, function* () {

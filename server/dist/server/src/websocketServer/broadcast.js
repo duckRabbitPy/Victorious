@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.broadcastToRoom = void 0;
 const effect_1 = require("effect");
-const broadcastToRoom = (broadcastType, payload, room, roomConnections) => {
+const broadcastToRoom = ({ broadcastType, payload, roomConnections, room, }) => {
     roomConnections.forEach((connection) => {
         if (connection.room !== room)
             return;
