@@ -5,7 +5,13 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+
+  background: rgb(252, 243, 223);
+  background: radial-gradient(
+    circle,
+    rgba(252, 243, 223, 0.3290870488322718) 0%,
+    rgba(189, 200, 207, 1) 100%
+  );
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -23,6 +29,9 @@ a:hover {
 }
 
 body {
+  font-family: "Spicy Rice", sans-serif;
+  font-size: 1.2em;
+  letter-spacing: 0.02em;
   margin: 0;
   display: flex;
   place-items: center;
@@ -31,7 +40,8 @@ body {
 }
 
 h1 {
-  font-size: 3.2em;
+  font-family: "Spicy Rice", sans-serif;
+  font-size: 4.2em;
   line-height: 1.1;
 }
 

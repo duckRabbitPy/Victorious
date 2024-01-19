@@ -1,9 +1,11 @@
 import { Data } from "effect";
 
+export interface ServerError {
+  message: string;
+}
+
 export class PostgresError extends Data.TaggedClass("PostgresError")<{
   message: string;
-  clientErrorMsg?: string;
-  serverErrorMsg?: string;
 }> {}
 
 export class AuthenticationError extends Data.TaggedClass(

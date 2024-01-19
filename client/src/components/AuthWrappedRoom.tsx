@@ -6,6 +6,7 @@ import { Backgrounds } from "../constants";
 
 const AuthWrappedRoom = () => {
   const { loggedInUsername } = useGetLoggedInUsername();
+  const [backgroundLoaded, setBackgroundLoaded] = useState(false);
   const [backgroundIndex, setBackgroundIndex] = useState(0);
 
   const imgStyle = {
@@ -22,9 +23,16 @@ const AuthWrappedRoom = () => {
     return (
       <>
         <img
-          src={Backgrounds[backgroundIndex]}
+          src={
+            backgroundLoaded
+              ? Backgrounds[backgroundIndex]
+              : "https://res.cloudinary.com/dkytnwn87/image/upload/v1705696761/dominion/low_res_background_dke6mb.jpg"
+          }
           alt="Background"
           style={imgStyle}
+          onLoad={() => {
+            setBackgroundLoaded(true);
+          }}
         />
         <Room
           loggedInUsername={loggedInUsername}

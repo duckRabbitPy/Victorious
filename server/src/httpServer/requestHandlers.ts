@@ -13,7 +13,7 @@ import { DBConnection, DBConnectionLive } from "../db/connection";
 
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { AuthenticationError } from "../customErrors";
+import { AuthenticationError, CustomParseError } from "../customErrors";
 import {
   getHashedPasswordByUsernameQuery,
   getUserIdByUsernameQuery,
@@ -39,7 +39,14 @@ export const createGameSession: RequestHandler = (req, res) => {
     E.flatMap((pool) =>
       E.all({
         pool: E.succeed(pool),
-        room: safeParseNumber(req.body.room),
+        room: safeParseNumber(req.body.room).pipe(
+          E.orElseFail(
+            () =>
+              new CustomParseError({
+                message: "Room number must be a positive integer",
+              })
+          )
+        ),
       })
     ),
     E.flatMap(({ pool, room }) => createGameSessionQuery(room, pool)),

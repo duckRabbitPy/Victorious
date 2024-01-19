@@ -238,7 +238,7 @@ export const updateGameState = (newGameState: GameState, pool: Pool) => {
 };
 
 export const writeNewGameStateToDB = (
-  maybeValidGameState: unknown,
+  maybeValidGameState: GameState,
   pool: Pool
 ) =>
   pipe(

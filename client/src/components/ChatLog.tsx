@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { sendChatMessage } from "../effects/effects";
 import { ChatMessage } from "../../../shared/common";
+import { THEME_COLORS } from "../constants";
 
 interface UserNameColors {
   [username: string]: string;
@@ -49,15 +50,15 @@ const ChatLog = ({
           minHeight: "200px",
           width: "400px",
           overflowY: "scroll",
-          backgroundColor: "rgba(28, 26, 27, 0.66)",
+          backgroundColor: THEME_COLORS.translucentBlack,
           border: "2px solid black",
           color: "white",
         }}
       >
         Chat log:
         {chatLog &&
-          chatLog.map((c) => (
-            <div key={c.message}>
+          chatLog.map((c, i) => (
+            <div key={`${c.message}${i}`}>
               <span style={{ color: userNameColours[c.username] }}>
                 {c.username}:{" "}
               </span>

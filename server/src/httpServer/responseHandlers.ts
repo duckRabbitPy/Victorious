@@ -1,23 +1,11 @@
 import { pipe, Effect as E } from "effect";
 import { ParseError } from "@effect/schema/ParseResult";
-import {
-  AuthenticationError,
-  IllegalGameStateError,
-  PostgresError,
-} from "../customErrors";
+import { ServerError } from "../customErrors";
 import { Response } from "express";
 import { GameState } from "../../../shared/common";
 import { DBConnection } from "../db/connection";
 
-type DataOrError<T> = E.Effect<
-  DBConnection,
-  | ParseError
-  | PostgresError
-  | AuthenticationError
-  | IllegalGameStateError
-  | Error,
-  T
->;
+type DataOrError<T> = E.Effect<DBConnection, ParseError | ServerError, T>;
 
 type SendResponseProps<T> = {
   dataOrError: DataOrError<T>;
@@ -30,22 +18,20 @@ const createResponseHandler =
   <T>(onSuccess: (data: T) => unknown) =>
   ({ dataOrError, res, successStatus, label }: SendResponseProps<T>) =>
     pipe(
-      E.matchCauseEffect(dataOrError, {
-        onFailure: (cause) => {
-          console.error(JSON.stringify(cause));
-          switch (cause._tag) {
-            case "Die":
-            case "Interrupt":
-              respondWithError(res, 500, "Internal server error");
-          }
-          return E.succeed(res.status(500).json("Internal Server error"));
-        },
-        onSuccess: (data) =>
-          E.succeed(
-            res
-              .status(successStatus)
-              .json({ [label ?? "data"]: onSuccess(data) })
-          ),
+      dataOrError,
+      E.flatMap((data) => {
+        return E.succeed(
+          res.status(successStatus).json({ [label ?? "data"]: onSuccess(data) })
+        );
+      }),
+      E.catchAll((error) => {
+        const errorMessage =
+          "message" in error
+            ? error.message
+            : "An unknown server error occured";
+
+        console.log("error", error);
+        return respondWithError(res, 500, errorMessage);
       })
     );
 

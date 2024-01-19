@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useGetLoggedInUsername } from "../hooks/auth";
-import { API_ENDPOINT } from "../constants";
+import { API_ENDPOINT, THEME_COLORS } from "../constants";
 
 export const Home = () => {
   const [room, setRoom] = useState<number | null>(null);
@@ -32,7 +32,7 @@ export const Home = () => {
         if (json.data?.gameState?.room) {
           setRoom(json.data?.gameState?.room);
         } else {
-          setErrorMessage("Error: room creation failed");
+          setErrorMessage(json?.message || "Error: room creation failed");
         }
       })
       .catch(() => {
@@ -77,15 +77,47 @@ export const Home = () => {
           <span style={{ color: "green" }}> Register</span>
         </Link>
       </div>
-      <h1>Welcome to Dominion!</h1>
+      <h1 style={{ color: THEME_COLORS.victory }}>Welcome to Victorious!</h1>
       {loggedInUsername ? (
         <div>
           <p style={{ color: "green" }}>Logged in as: {loggedInUsername}</p>
-          <div>
-            {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+          <div
+            style={{
+              display: "inline-flex",
+              justifyContent: "space-between",
+              gap: "0.5rem",
+            }}
+          >
+            {errorMessage && (
+              <>
+                <p style={{ color: "red" }}>{errorMessage}</p>
+                <button
+                  style={{
+                    padding: "0.5rem",
+                    height: "fit-content",
+                    alignSelf: "center",
+                    color: "red",
+                  }}
+                  onClick={() => setErrorMessage(null)}
+                >
+                  X
+                </button>
+              </>
+            )}
           </div>
           <form
-            onSubmit={openRoom}
+            onSubmit={(e) => {
+              e.preventDefault();
+              // check number less than 1 million
+              if (e.currentTarget.room.value > 1000000) {
+                setErrorMessage(
+                  "Error: room number must be less than 1 million"
+                );
+                return;
+              } else {
+                openRoom(e);
+              }
+            }}
             style={{
               display: "flex",
               flexDirection: "column",
@@ -93,7 +125,13 @@ export const Home = () => {
               gap: "2rem",
             }}
           >
-            <input type="text" id="room" placeholder="Enter room number" />
+            <input
+              id="room"
+              placeholder="Enter room number"
+              type="number"
+              min={1}
+              style={{ width: "18ch", padding: "0.5rem" }}
+            />
             <button type="submit">Create room</button>
           </form>
           <div style={{ padding: "1rem" }}>

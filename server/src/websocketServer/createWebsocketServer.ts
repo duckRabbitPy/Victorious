@@ -12,7 +12,7 @@ import {
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
 import { DBConnection, DBConnectionLive } from "../db/connection";
 import { SupportedEffects } from "../../../shared/common";
-import { handleChatMessage } from "./handleChatMessage";
+import { getCurrentChatLog, handleChatMessage } from "./handleChatMessage";
 import { handleGameMessage } from "./handleGameMessage";
 import { broadcastToRoom } from "./broadcast";
 
@@ -27,14 +27,13 @@ export type UserInfo = {
   username: string;
 };
 
-export function createWebsocketServer(app: wsApplication): void {
+export function createWebsocketServer(app: wsApplication) {
   // !! mutable state
   let roomConnections: RoomConnections = [];
 
-  app.ws("/", function (ws, req) {
-    ws.on("message", function message(msg: unknown) {
+  app.ws("/", (ws, req) => {
+    ws.on("message", (msg: unknown) => {
       const clientMsg = getClientMessage(msg);
-      console.log("clientMsg", msg);
       const clientNotInList = clientNotInConnectionList(
         clientMsg?.room,
         clientMsg?.authToken,
@@ -60,6 +59,23 @@ export function createWebsocketServer(app: wsApplication): void {
             }),
             E.flatMap(({ pool, userInfo, msg }) => {
               // handle chat related messages
+              if (msg.effect === SupportedEffects.getCurrentChatLog) {
+                return pipe(
+                  getCurrentChatLog({
+                    msg,
+                    pool,
+                  }),
+                  E.flatMap((chatLog) =>
+                    broadcastToRoom({
+                      broadcastType: "chatLog",
+                      payload: chatLog,
+                      room: msg.room,
+                      roomConnections,
+                    })
+                  ),
+                  E.flatMap(() => Effect.succeed("chat log sent successfully"))
+                );
+              }
               if (msg.effect === SupportedEffects.sendChatMessage) {
                 return pipe(
                   handleChatMessage({

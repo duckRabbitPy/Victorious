@@ -55,6 +55,8 @@ export const SupplyCard = ({
     animation: canBuy ? "pulse 1.2s 1s" : "",
   };
 
+  const numberRemaining = gameState.global_state.supply[cardName];
+
   return (
     <div>
       <button
@@ -63,6 +65,7 @@ export const SupplyCard = ({
           e.preventDefault();
           setSupplyCardInFocus(cardName);
         }}
+        disabled={!canBuy}
         onClick={() => {
           canBuy &&
             buyCard({
@@ -76,7 +79,10 @@ export const SupplyCard = ({
             });
         }}
       >
-        {cardName + " " + `(${gameState.global_state.supply[cardName]})`}
+        {cardName +
+          " " +
+          `(${numberRemaining})` +
+          (numberRemaining ? "" : " ❌")}
       </button>
     </div>
   );
