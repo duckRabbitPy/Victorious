@@ -96,17 +96,16 @@ export const createGameSessionQuery = (room: number, pool: Pool) => {
     try {
       const existingOpenRooms = await pool.query(
         `
-      SELECT gs.room
-      FROM game_snapshots gs
-      WHERE gs.room = $1
-        AND NOT EXISTS (
-          SELECT 1
-          FROM game_snapshots
-          WHERE gs.room = game_snapshots.room
-            AND gs.session_id = game_snapshots.session_id
-            AND game_snapshots.game_over = false
-        );
-    `,
+        SELECT *
+        FROM game_snapshots gs1
+        WHERE room = $1
+            AND NOT EXISTS (
+                SELECT 1
+                FROM game_snapshots gs2
+                WHERE gs2.session_id = gs1.session_id
+                    AND gs2.game_over = true
+            )
+        `,
         [room]
       );
 
@@ -257,3 +256,68 @@ export const writeNewGameStateToDB = (
     E.flatMap((gamestate) => updateGameState(gamestate, pool)),
     E.flatMap(safeParseGameState)
   );
+
+// @mutation
+export const endStaleGameSessionsMutation = (pool: Pool) => {
+  const endStaleSessions = async () => {
+    try {
+      const killAfterInactivityDuration = "10 seconds";
+      const latestStaleGameSnapshots = await pool.query(`
+        SELECT gs.*
+        FROM game_snapshots gs
+        WHERE created_at < NOW() - interval '${killAfterInactivityDuration}'
+            AND NOT EXISTS (
+                SELECT 1
+                FROM game_snapshots
+                WHERE session_id = gs.session_id
+                    AND game_over = true
+                    AND mutation_index > gs.mutation_index
+            )
+            AND mutation_index = (
+                SELECT MAX(mutation_index)
+                FROM game_snapshots
+                WHERE session_id = gs.session_id
+                  AND game_over = false
+            );`);
+
+      const finalSnapShotForSession = latestStaleGameSnapshots.rows.map(
+        (row: GameState) => ({
+          ...row,
+          mutation_index: row.mutation_index + 1,
+          game_over: true,
+        })
+      );
+
+      for (const finalShapshot of finalSnapShotForSession) {
+        await pool.query(
+          `
+              INSERT INTO game_snapshots
+                (session_id, mutation_index, room, turn, game_over, actor_state, global_state)
+              VALUES
+                ($1, $2, $3, $4, $5, $6, $7)
+               
+            `,
+          [
+            finalShapshot.session_id,
+            finalShapshot.mutation_index,
+            finalShapshot.room,
+            finalShapshot.turn,
+            finalShapshot.game_over,
+            JSON.stringify(finalShapshot.actor_state),
+            JSON.stringify(finalShapshot.global_state),
+          ]
+        );
+      }
+
+      return pool;
+    } catch (error) {
+      logAndThrowError(error);
+      return pool;
+    }
+  };
+
+  return E.tryPromise({
+    try: () => endStaleSessions(),
+    catch: () => new PostgresError({ message: "postgres query error" }),
+  }).pipe(E.retryN(1));
+};

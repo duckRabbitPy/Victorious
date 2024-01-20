@@ -24,7 +24,7 @@ const Room = ({
   loggedInUsername: string;
   setBackgroundIndex: React.Dispatch<React.SetStateAction<number>>;
 }) => {
-  const debug = false;
+  const debug = true;
   const { gameState, socket, chatLog, errorMessage, setErrorMessage } =
     useGameState();
   const { "*": roomParam } = useParams();
@@ -40,9 +40,7 @@ const Room = ({
   };
 
   if (!gameState || !socket)
-    return (
-      <div>Error fetching game state from server... (max 1 tab permitted) </div>
-    );
+    return <div>Error fetching game state from server... </div>;
 
   const gameStarted = gameState.turn > 0;
 
