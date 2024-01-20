@@ -1,6 +1,9 @@
 import { RequestHandler } from "express";
 import { pipe, Effect as E } from "effect";
-import { getOpenGameSessionsQuery } from "../models/gamestate/queries";
+import {
+  endStaleGameSessionsMutation,
+  getOpenGameSessionsQuery,
+} from "../models/gamestate/queries";
 
 import { safeParseNumber, safeParseNumberArray } from "../utils";
 import {
@@ -71,6 +74,7 @@ export const createGameSession: RequestHandler = (req, res) => {
 export const getOpenGameSessions: RequestHandler = (req, res) => {
   const getOpenGameSessions = DBConnection.pipe(
     E.flatMap((connection) => connection.pool),
+    E.flatMap((pool) => endStaleGameSessionsMutation(pool)),
     E.flatMap((pool) => getOpenGameSessionsQuery(pool)),
     E.flatMap((rooms) => safeParseNumberArray(rooms)),
     (dataOrError) =>

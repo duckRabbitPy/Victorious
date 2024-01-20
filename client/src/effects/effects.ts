@@ -89,10 +89,12 @@ export const incrementTurn = ({
   authToken,
   roomNumber,
   mutationIndex,
+  audio,
   setErrorMessage,
 }: {
   socket: WebSocket | null;
   authToken: string | null;
+  audio: HTMLAudioElement | undefined;
   roomNumber: number;
   mutationIndex: number;
   setErrorMessage: (message: string | null) => void;
@@ -105,7 +107,7 @@ export const incrementTurn = ({
     setErrorMessage("Auth token is null");
     return;
   }
-
+  audio?.play();
   socket.send(
     prepareMessage({
       mutationIndex,
@@ -265,11 +267,13 @@ export const startGame = ({
   authToken,
   roomNumber,
   mutationIndex,
+  audio,
   setErrorMessage,
 }: {
   socket: WebSocket | null;
   authToken: string | null;
   roomNumber: number;
+  audio: HTMLAudioElement | undefined;
   mutationIndex: number;
   setErrorMessage: (message: string | null) => void;
 }) => {
@@ -282,6 +286,7 @@ export const startGame = ({
     return;
   }
 
+  audio?.play();
   socket.send(
     prepareMessage({
       mutationIndex,

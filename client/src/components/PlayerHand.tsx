@@ -13,6 +13,7 @@ import {
   playTreasure,
   resetPlayedTreasures,
 } from "../effects/effects";
+
 import { CoreRoomInfo, CoreUserInfo } from "../types";
 
 type Props = {
@@ -130,6 +131,7 @@ const PlayerHand = ({
               socket,
               authToken,
               roomNumber,
+
               cardName: cardName,
               setErrorMessage,
             });
@@ -137,7 +139,7 @@ const PlayerHand = ({
         };
 
         return (
-          <div>
+          <div key={cardName}>
             {new Array(count).fill(0).map((_, index) => {
               return (
                 <CardInHand

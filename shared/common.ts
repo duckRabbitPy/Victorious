@@ -309,6 +309,7 @@ export const GameStateStruct = S.struct({
   mutation_index: S.number,
   actor_state: S.array(ActorStateStruct),
   global_state: GlobalStateStruct,
+  created_at: S.ValidDateFromSelf,
   game_over: S.boolean,
 });
 
@@ -333,6 +334,7 @@ export type GlobalState = S.Schema.To<typeof GlobalStateStruct>;
 export type GameState = S.Schema.To<typeof GameStateStruct>;
 export type ClientPayload = S.Schema.To<typeof ClientPayloadStruct>;
 export type ChatMessage = S.Schema.To<typeof ChatMessageStruct>;
+export type BroadCast = S.Schema.To<typeof BroadCastStruct>;
 
 export const safeParseNonEmptyString = S.parse(S.string.pipe(S.minLength(1)));
 export const safeParseCardName = S.parse(CardNames);
@@ -410,4 +412,17 @@ export const sumCardCounts = (a: CardCount, b: CardCount): CardCount => {
     }
   }
   return result;
+};
+
+export interface UserNameColors {
+  [username: string]: string;
+}
+
+export const getUserNameColors = (userNames: string[]) => {
+  const colours = ["cyan", "magenta", "lime", "yellow", "orange"];
+
+  return userNames.reduce((acc, curr, i) => {
+    acc[curr] = colours[i] ?? "white";
+    return acc;
+  }, {} as UserNameColors);
 };

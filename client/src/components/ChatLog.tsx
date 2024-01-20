@@ -1,25 +1,24 @@
 import { useState } from "react";
 import { sendChatMessage } from "../effects/effects";
-import { ChatMessage } from "../../../shared/common";
+import { ChatMessage, getUserNameColors } from "../../../shared/common";
 import { THEME_COLORS } from "../constants";
-
-interface UserNameColors {
-  [username: string]: string;
-}
 
 const ChatLog = ({
   chatLog,
   socket,
+  userNames,
   setErrorMessage,
 }: {
   chatLog: readonly ChatMessage[] | null;
   socket: WebSocket;
+  userNames: string[];
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
   const [inputValue, setInputValue] = useState<string | null>("");
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
+  const userNameColours = getUserNameColors(userNames);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -32,15 +31,6 @@ const ChatLog = ({
       setErrorMessage,
     });
   };
-
-  const colours = ["cyan", "magenta", "lime", "yellow", "orange"];
-
-  const userNameColours: UserNameColors = Array.from(
-    new Set(chatLog?.map((c) => c.username))
-  ).reduce((acc, curr, i) => {
-    acc[curr] = colours[i] ?? "white";
-    return acc;
-  }, {} as UserNameColors);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>

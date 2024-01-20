@@ -83,7 +83,18 @@ const createGameSessionQuery = (room, pool) => {
     const turn = 0;
     const create = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const existingOpenRooms = yield pool.query("SELECT room FROM game_snapshots WHERE room = $1 AND turn = 0 AND game_over = false;", [room]);
+            const existingOpenRooms = yield pool.query(`
+      SELECT gs.room
+      FROM game_snapshots gs
+      WHERE gs.room = $1
+        AND NOT EXISTS (
+          SELECT 1
+          FROM game_snapshots
+          WHERE gs.room = game_snapshots.room
+            AND gs.session_id = game_snapshots.session_id
+            AND game_snapshots.game_over = false
+        );
+    `, [room]);
             if (existingOpenRooms.rows.length > 0) {
                 throw new Error(`There is already an open room ${room}`);
             }

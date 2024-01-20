@@ -26,7 +26,7 @@ const AuthWrappedRoom = () => {
           src={
             backgroundLoaded
               ? Backgrounds[backgroundIndex]
-              : "https://res.cloudinary.com/dkytnwn87/image/upload/v1705696761/dominion/low_res_background_dke6mb.jpg"
+              : "https://res.cloudinary.com/dkytnwn87/image/upload/v1705708773/dominion/low_res_default_background.jpg"
           }
           alt="Background"
           style={imgStyle}

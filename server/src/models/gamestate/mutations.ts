@@ -95,7 +95,18 @@ export const createGameSessionQuery = (room: number, pool: Pool) => {
   const create = async () => {
     try {
       const existingOpenRooms = await pool.query(
-        "SELECT room FROM game_snapshots WHERE room = $1 AND turn = 0 AND game_over = false;",
+        `
+      SELECT gs.room
+      FROM game_snapshots gs
+      WHERE gs.room = $1
+        AND NOT EXISTS (
+          SELECT 1
+          FROM game_snapshots
+          WHERE gs.room = game_snapshots.room
+            AND gs.session_id = game_snapshots.session_id
+            AND game_snapshots.game_over = false
+        );
+    `,
         [room]
       );
 
