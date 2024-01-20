@@ -225,6 +225,7 @@ const Room = ({
 
               <ChatLog
                 chatLog={chatLog}
+                userNames={gameState.actor_state.map((actor) => actor.name)}
                 setErrorMessage={setErrorMessage}
                 socket={socket}
               />
