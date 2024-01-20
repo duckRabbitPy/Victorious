@@ -34,7 +34,7 @@ const TurnInfo = ({
       {isUsersTurn(gameState, loggedInUsername) && (
         <>
           <h3 style={{ margin: 0 }}>Phase: {currentUserState.phase}</h3>
-          <p style={{ margin: 0 }}>
+          <p style={{ margin: 0, color: THEME_COLORS.victory }}>
             {currentUserState?.phase === Phases.Buy
               ? buyPhaseInstruction
               : actionPhaseInstruction}

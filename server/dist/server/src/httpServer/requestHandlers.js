@@ -35,7 +35,7 @@ const createGameSession = (req, res) => {
 };
 exports.createGameSession = createGameSession;
 const getOpenGameSessions = (req, res) => {
-    const getOpenGameSessions = connection_1.DBConnection.pipe(effect_1.Effect.flatMap((connection) => connection.pool), effect_1.Effect.flatMap((pool) => (0, queries_1.getOpenGameSessionsQuery)(pool)), effect_1.Effect.flatMap((rooms) => (0, utils_1.safeParseNumberArray)(rooms)), (dataOrError) => (0, responseHandlers_1.sendOpenRoomsResponse)({
+    const getOpenGameSessions = connection_1.DBConnection.pipe(effect_1.Effect.flatMap((connection) => connection.pool), effect_1.Effect.flatMap((pool) => (0, queries_1.endStaleGameSessionsMutation)(pool)), effect_1.Effect.flatMap((pool) => (0, queries_1.getOpenGameSessionsQuery)(pool)), effect_1.Effect.flatMap((rooms) => (0, utils_1.safeParseNumberArray)(rooms)), (dataOrError) => (0, responseHandlers_1.sendOpenRoomsResponse)({
         dataOrError: dataOrError,
         res,
         successStatus: 200,

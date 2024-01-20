@@ -280,6 +280,7 @@ exports.GameStateStruct = S.struct({
     mutation_index: S.number,
     actor_state: S.array(ActorStateStruct),
     global_state: GlobalStateStruct,
+    created_at: S.ValidDateFromSelf,
     game_over: S.boolean,
 });
 exports.ChatMessageStruct = S.struct({

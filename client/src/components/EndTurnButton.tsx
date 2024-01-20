@@ -1,5 +1,6 @@
 import { CoreProps } from "../types";
 import { incrementTurn, startGame } from "../effects/effects";
+import useSound from "../hooks/useSound";
 
 const EndTurnButton = ({ props }: { props: CoreProps }) => {
   const {
@@ -8,6 +9,8 @@ const EndTurnButton = ({ props }: { props: CoreProps }) => {
     coreUserInfo: { currentUserState },
     setErrorMessage,
   } = props;
+
+  const { positiveSound } = useSound();
   return (
     <button
       id="end-turn"
@@ -26,6 +29,7 @@ const EndTurnButton = ({ props }: { props: CoreProps }) => {
             socket,
             authToken,
             roomNumber,
+            audio: positiveSound,
             setErrorMessage,
           });
         } else {
@@ -34,6 +38,7 @@ const EndTurnButton = ({ props }: { props: CoreProps }) => {
             socket,
             authToken,
             roomNumber,
+            audio: positiveSound,
             setErrorMessage,
           });
         }

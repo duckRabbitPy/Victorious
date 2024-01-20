@@ -40,7 +40,9 @@ const Room = ({
   };
 
   if (!gameState || !socket)
-    return <div>Error fetching game state from server...</div>;
+    return (
+      <div>Error fetching game state from server... (max 1 tab permitted) </div>
+    );
 
   const gameStarted = gameState.turn > 0;
 

@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOpenGameSessionsQuery = exports.getLatestGameSnapshotQuery = void 0;
+exports.endStaleGameSessionsMutation = exports.getOpenGameSessionsQuery = exports.getLatestGameSnapshotQuery = void 0;
 const effect_1 = require("effect");
 const customErrors_1 = require("../../customErrors");
 const utils_1 = require("../../utils");
@@ -35,7 +35,7 @@ exports.getLatestGameSnapshotQuery = getLatestGameSnapshotQuery;
 const getOpenGameSessionsQuery = (pool) => {
     const get = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const result = yield pool.query("SELECT DISTINCT room FROM game_snapshots WHERE turn = 0 AND game_over = false;");
+            const result = yield pool.query("SELECT gs.room FROM game_snapshots gs WHERE NOT EXISTS (SELECT 1 FROM game_snapshots WHERE session_id = gs.session_id AND game_over = true);");
             return result.rows.map((row) => row.room);
         }
         catch (error) {
@@ -48,3 +48,51 @@ const getOpenGameSessionsQuery = (pool) => {
     }).pipe(effect_1.Effect.retryN(1));
 };
 exports.getOpenGameSessionsQuery = getOpenGameSessionsQuery;
+// @mutation
+const endStaleGameSessionsMutation = (pool) => {
+    const endStaleSessions = () => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const killAfterInactivityDuration = "5 seconds";
+            const latestStaleGameSnapshots = yield pool.query(`
+      SELECT gs.*
+      FROM game_snapshots gs
+      WHERE created_at < NOW() - interval '${killAfterInactivityDuration}'
+        AND NOT EXISTS (
+          SELECT 1
+          FROM game_snapshots
+          WHERE session_id = gs.session_id
+            AND game_over = true
+            AND mutation_index > gs.mutation_index
+        );`);
+            const terminatedGameSessions = latestStaleGameSnapshots.rows.map((row) => (Object.assign(Object.assign({}, row), { mutation_index: row.mutation_index + 1, game_over: true })));
+            console.log("ending sessions in rooms", terminatedGameSessions.map((s) => s.room));
+            for (const session of terminatedGameSessions) {
+                yield pool.query(`
+            INSERT INTO game_snapshots
+              (session_id, mutation_index, room, turn, game_over, actor_state, global_state)
+            VALUES
+              ($1, $2, $3, $4, $5, $6, $7)
+             
+          `, [
+                    session.session_id,
+                    session.mutation_index,
+                    session.room,
+                    session.turn,
+                    session.game_over,
+                    JSON.stringify(session.actor_state),
+                    JSON.stringify(session.global_state),
+                ]);
+            }
+            return pool;
+        }
+        catch (error) {
+            (0, utils_1.logAndThrowError)(error);
+            return pool;
+        }
+    });
+    return effect_1.Effect.tryPromise({
+        try: () => endStaleSessions(),
+        catch: () => new customErrors_1.PostgresError({ message: "postgres query error" }),
+    }).pipe(effect_1.Effect.retryN(1));
+};
+exports.endStaleGameSessionsMutation = endStaleGameSessionsMutation;
