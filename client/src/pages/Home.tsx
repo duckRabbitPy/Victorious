@@ -65,6 +65,7 @@ export const Home = () => {
         }
       })
       .catch(() => {
+        setOpenRooms(null);
         setErrorMessage("Error: fetching rooms failed");
       });
   };

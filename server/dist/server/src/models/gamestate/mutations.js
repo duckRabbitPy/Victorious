@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.writeNewGameStateToDB = exports.updateGameState = exports.addLivePlayerQuery = exports.createGameSessionQuery = void 0;
+exports.endStaleGameSessionsMutation = exports.writeNewGameStateToDB = exports.updateGameState = exports.addLivePlayerQuery = exports.createGameSessionQuery = void 0;
 const effect_1 = require("effect");
 const customErrors_1 = require("../../customErrors");
 const common_1 = require("../../../../shared/common");
@@ -84,17 +84,16 @@ const createGameSessionQuery = (room, pool) => {
     const create = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const existingOpenRooms = yield pool.query(`
-      SELECT gs.room
-      FROM game_snapshots gs
-      WHERE gs.room = $1
-        AND NOT EXISTS (
-          SELECT 1
-          FROM game_snapshots
-          WHERE gs.room = game_snapshots.room
-            AND gs.session_id = game_snapshots.session_id
-            AND game_snapshots.game_over = false
-        );
-    `, [room]);
+        SELECT *
+        FROM game_snapshots gs1
+        WHERE room = $1
+            AND NOT EXISTS (
+                SELECT 1
+                FROM game_snapshots gs2
+                WHERE gs2.session_id = gs1.session_id
+                    AND gs2.game_over = true
+            )
+        `, [room]);
             if (existingOpenRooms.rows.length > 0) {
                 throw new Error(`There is already an open room ${room}`);
             }
@@ -197,3 +196,56 @@ const updateGameState = (newGameState, pool) => {
 exports.updateGameState = updateGameState;
 const writeNewGameStateToDB = (maybeValidGameState, pool) => (0, effect_1.pipe)((0, common_1.safeParseGameState)(maybeValidGameState), effect_1.Effect.flatMap((gamestate) => (0, exports.updateGameState)(gamestate, pool)), effect_1.Effect.flatMap(common_1.safeParseGameState));
 exports.writeNewGameStateToDB = writeNewGameStateToDB;
+// @mutation
+const endStaleGameSessionsMutation = (pool) => {
+    const endStaleSessions = () => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const killAfterInactivityDuration = "10 seconds";
+            const latestStaleGameSnapshots = yield pool.query(`
+        SELECT gs.*
+        FROM game_snapshots gs
+        WHERE created_at < NOW() - interval '${killAfterInactivityDuration}'
+            AND NOT EXISTS (
+                SELECT 1
+                FROM game_snapshots
+                WHERE session_id = gs.session_id
+                    AND game_over = true
+                    AND mutation_index > gs.mutation_index
+            )
+            AND mutation_index = (
+                SELECT MAX(mutation_index)
+                FROM game_snapshots
+                WHERE session_id = gs.session_id
+                  AND game_over = false
+            );`);
+            const finalSnapShotForSession = latestStaleGameSnapshots.rows.map((row) => (Object.assign(Object.assign({}, row), { mutation_index: row.mutation_index + 1, game_over: true })));
+            for (const finalShapshot of finalSnapShotForSession) {
+                yield pool.query(`
+              INSERT INTO game_snapshots
+                (session_id, mutation_index, room, turn, game_over, actor_state, global_state)
+              VALUES
+                ($1, $2, $3, $4, $5, $6, $7)
+               
+            `, [
+                    finalShapshot.session_id,
+                    finalShapshot.mutation_index,
+                    finalShapshot.room,
+                    finalShapshot.turn,
+                    finalShapshot.game_over,
+                    JSON.stringify(finalShapshot.actor_state),
+                    JSON.stringify(finalShapshot.global_state),
+                ]);
+            }
+            return pool;
+        }
+        catch (error) {
+            (0, utils_1.logAndThrowError)(error);
+            return pool;
+        }
+    });
+    return effect_1.Effect.tryPromise({
+        try: () => endStaleSessions(),
+        catch: () => new customErrors_1.PostgresError({ message: "postgres query error" }),
+    }).pipe(effect_1.Effect.retryN(1));
+};
+exports.endStaleGameSessionsMutation = endStaleGameSessionsMutation;

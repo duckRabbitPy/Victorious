@@ -1,16 +1,16 @@
 import { RequestHandler } from "express";
 import { pipe, Effect as E } from "effect";
-import {
-  endStaleGameSessionsMutation,
-  getOpenGameSessionsQuery,
-} from "../models/gamestate/queries";
+import { getOpenGameSessionsQuery } from "../models/gamestate/queries";
 
 import { safeParseNumber, safeParseNumberArray } from "../utils";
 import {
   sendGameStateResponse,
   sendOpenRoomsResponse,
 } from "./responseHandlers";
-import { createGameSessionQuery } from "../models/gamestate/mutations";
+import {
+  createGameSessionQuery,
+  endStaleGameSessionsMutation,
+} from "../models/gamestate/mutations";
 import { safeParseGameState } from "../../../shared/common";
 import { DBConnection, DBConnectionLive } from "../db/connection";
 
