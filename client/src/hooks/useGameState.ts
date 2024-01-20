@@ -3,6 +3,7 @@ import {
   ChatMessage,
   GameState,
   safeParseBroadCast,
+  BroadCast,
   safeParseChatLog,
   safeParseGameState,
   safeParseNonEmptyString,
@@ -37,6 +38,16 @@ const updateStateElseError = <T>({
     E.runSync
   );
 
+const deserialiseDates = (broadcast: BroadCast) => {
+  return {
+    ...broadcast,
+    gameState: broadcast.gameState && {
+      ...broadcast.gameState,
+      created_at: new Date(broadcast.gameState.created_at),
+    },
+  };
+};
+
 export const useGameState = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
 
@@ -54,15 +65,22 @@ export const useGameState = () => {
     );
 
     newSocket.addEventListener("message", (event) => {
-      const eventData = safeParseBroadCast(JSON.parse(event.data)).pipe(
-        E.runSync
-      );
+      const eventData = safeParseBroadCast(
+        deserialiseDates(JSON.parse(event.data))
+      ).pipe(E.runSync);
       console.log("Received message from server:", eventData);
 
       switch (eventData.broadcastType) {
         case "gameState": {
+          if (!eventData.gameState) {
+            setErrorMessage("Received null game state from server");
+            break;
+          }
           updateStateElseError({
-            dataOrError: safeParseGameState(eventData.gameState),
+            dataOrError: safeParseGameState({
+              ...eventData.gameState,
+              created_at: new Date(eventData.gameState.created_at),
+            }),
             updateState: setGameState,
             errorMessage: "Failed to parse game state from server",
             setErrorMessage,

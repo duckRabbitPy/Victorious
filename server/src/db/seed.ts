@@ -45,6 +45,7 @@ export const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
       game_over: false,
       mutation_index: 0,
       session_id: "z47ac10b-58cc-4372-a567-0e02b2c3d479",
+      created_at: new Date(),
       actor_state: [
         {
           id: testUser1.userId,
@@ -220,6 +221,7 @@ export const resetAndSeedDatabase = async () => {
             game_over boolean NOT NULL DEFAULT false,
             actor_state JSONB NOT NULL,
             global_state JSONB NOT NULL,
+            created_at timestamp DEFAULT CURRENT_TIMESTAMP,
             CONSTRAINT unique_room_session_mutation
                 UNIQUE (room, session_id, mutation_index));
       `);

@@ -109,9 +109,9 @@ export const Home = () => {
             onSubmit={(e) => {
               e.preventDefault();
               // check number less than 1 million
-              if (e.currentTarget.room.value > 1000000) {
+              if (e.currentTarget.room.value > 10000000) {
                 setErrorMessage(
-                  "Error: room number must be less than 1 million"
+                  "Error: room number must be less than 10 million"
                 );
                 return;
               } else {
