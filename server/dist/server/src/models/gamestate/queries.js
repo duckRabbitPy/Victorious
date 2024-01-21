@@ -21,12 +21,10 @@ const getLatestGameSnapshotQuery = (room, pool) => {
             const result = yield pool.query(`SELECT *
          FROM game_snapshots gs1
          WHERE room = $1
-             AND NOT EXISTS (
-                 SELECT 1
-                 FROM game_snapshots gs2
-                 WHERE gs2.session_id = gs1.session_id
-                     AND gs2.game_over = true
-             )
+             AND gs1.session_id NOT IN (
+                  SELECT session_id
+                  FROM inactive_sessions
+              )
          ORDER BY gs1.mutation_index DESC
          LIMIT 1;`, [room]);
             return result.rows[0];
@@ -45,7 +43,12 @@ exports.getLatestGameSnapshotQuery = getLatestGameSnapshotQuery;
 const getOpenGameSessionsQuery = (pool) => {
     const get = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const result = yield pool.query(`SELECT gs.room FROM game_snapshots gs WHERE NOT EXISTS (SELECT 1 FROM game_snapshots WHERE session_id = gs.session_id AND game_over = true) GROUP BY gs.room`);
+            const result = yield pool.query(`SELECT gs.room FROM game_snapshots gs WHERE
+          gs.session_id NOT IN (
+            SELECT session_id FROM inactive_sessions
+          )
+          AND gs.turn = 0
+          GROUP BY gs.room;`);
             return result.rows.map((row) => row.room);
         }
         catch (error) {

@@ -15,7 +15,7 @@ exports.DBConnectionLive = exports.DBConnection.of({
             : new pg_1.Pool({
                 user: "postgres",
                 host: "localhost",
-                database: "dominion_pg_test",
+                database: process.env.DEV_PG_NAME,
                 password: "postgres",
                 port: 5432,
             });
@@ -26,7 +26,7 @@ exports.DBConnectionTest = exports.DBConnection.of({
         return new pg_1.Pool({
             user: "postgres",
             host: "localhost",
-            database: "dominion_pg_test",
+            database: process.env.DEV_PG_NAME,
             password: "postgres",
             port: 5432,
         });

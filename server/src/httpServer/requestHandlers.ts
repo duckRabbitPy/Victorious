@@ -39,6 +39,7 @@ import { sendConfirmationEmail } from "./sendConfirmationEmail";
 export const createGameSession: RequestHandler = (req, res) => {
   const createGameSession = DBConnection.pipe(
     E.flatMap((connection) => connection.pool),
+    E.flatMap((pool) => endStaleGameSessionsMutation(pool)),
     E.flatMap((pool) =>
       E.all({
         pool: E.succeed(pool),

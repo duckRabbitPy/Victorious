@@ -20,7 +20,7 @@ const responseHandlers_2 = require("./responseHandlers");
 const common_2 = require("../../../shared/common");
 const sendConfirmationEmail_1 = require("./sendConfirmationEmail");
 const createGameSession = (req, res) => {
-    const createGameSession = connection_1.DBConnection.pipe(effect_1.Effect.flatMap((connection) => connection.pool), effect_1.Effect.flatMap((pool) => effect_1.Effect.all({
+    const createGameSession = connection_1.DBConnection.pipe(effect_1.Effect.flatMap((connection) => connection.pool), effect_1.Effect.flatMap((pool) => (0, mutations_1.endStaleGameSessionsMutation)(pool)), effect_1.Effect.flatMap((pool) => effect_1.Effect.all({
         pool: effect_1.Effect.succeed(pool),
         room: (0, utils_1.safeParseNumber)(req.body.room).pipe(effect_1.Effect.orElseFail(() => new customErrors_1.CustomParseError({
             message: "Room number must be a positive integer",

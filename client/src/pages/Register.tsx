@@ -18,7 +18,7 @@ export const Register = () => {
       email,
       password,
     };
-    // fetch from backend running on port 3000
+
     fetch(`${API_ENDPOINT}/register`, {
       method: "POST",
       headers: {

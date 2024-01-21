@@ -16,7 +16,7 @@ dotenv_1.default.config();
 const SERVER_PORT = Number((_a = process.env) === null || _a === void 0 ? void 0 : _a.PORT) || 3000;
 exports.SERVER_API_ENDPOINT = process.env.NODE_ENV === "production"
     ? "https://dominion.onrender.com/api"
-    : "http://localhost:3000/api";
+    : `http://localhost:${SERVER_PORT}/api`;
 const expressApp = (0, express_1.default)();
 const httpServer = http_1.default.createServer(expressApp);
 const appWithWSSUpgrade = (0, express_ws_1.default)({
