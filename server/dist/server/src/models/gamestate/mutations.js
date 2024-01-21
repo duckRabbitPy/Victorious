@@ -87,15 +87,15 @@ const createGameSessionQuery = (room, pool) => {
         SELECT *
         FROM game_snapshots gs1
         WHERE room = $1
-            AND NOT EXISTS (
-                SELECT 1
-                FROM game_snapshots gs2
-                WHERE gs2.session_id = gs1.session_id
-                    AND gs2.game_over = true
+            AND gs1.session_id NOT IN (
+                SELECT session_id
+                FROM inactive_sessions
             )
         `, [room]);
             if (existingOpenRooms.rows.length > 0) {
-                throw new Error(`There is already an open room ${room}`);
+                throw new customErrors_1.PostgresError({
+                    message: `There is already an open room ${room}`,
+                });
             }
             const result = yield pool.query(`INSERT INTO game_snapshots (room, turn, actor_state, global_state)
              VALUES ($1, $2, $3, $4) RETURNING *`, [room, turn, "[]", JSON.stringify(startingState)]);
@@ -108,7 +108,9 @@ const createGameSessionQuery = (room, pool) => {
     });
     return effect_1.Effect.tryPromise({
         try: () => create(),
-        catch: () => new customErrors_1.PostgresError({ message: "postgres query error" }),
+        catch: (e) => e instanceof customErrors_1.PostgresError
+            ? e
+            : new customErrors_1.PostgresError({ message: "postgres query error" }),
     }).pipe(effect_1.Effect.retryN(1));
 };
 exports.createGameSessionQuery = createGameSessionQuery;
@@ -200,42 +202,18 @@ exports.writeNewGameStateToDB = writeNewGameStateToDB;
 const endStaleGameSessionsMutation = (pool) => {
     const endStaleSessions = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
-            const killAfterInactivityDuration = "10 seconds";
-            const latestStaleGameSnapshots = yield pool.query(`
-        SELECT gs.*
-        FROM game_snapshots gs
-        WHERE created_at < NOW() - interval '${killAfterInactivityDuration}'
-            AND NOT EXISTS (
-                SELECT 1
-                FROM game_snapshots
-                WHERE session_id = gs.session_id
-                    AND game_over = true
-                    AND mutation_index > gs.mutation_index
-            )
-            AND mutation_index = (
-                SELECT MAX(mutation_index)
-                FROM game_snapshots
-                WHERE session_id = gs.session_id
-                  AND game_over = false
-            );`);
-            const finalSnapShotForSession = latestStaleGameSnapshots.rows.map((row) => (Object.assign(Object.assign({}, row), { mutation_index: row.mutation_index + 1, game_over: true })));
-            for (const finalShapshot of finalSnapShotForSession) {
-                yield pool.query(`
-              INSERT INTO game_snapshots
-                (session_id, mutation_index, room, turn, game_over, actor_state, global_state)
-              VALUES
-                ($1, $2, $3, $4, $5, $6, $7)
-               
-            `, [
-                    finalShapshot.session_id,
-                    finalShapshot.mutation_index,
-                    finalShapshot.room,
-                    finalShapshot.turn,
-                    finalShapshot.game_over,
-                    JSON.stringify(finalShapshot.actor_state),
-                    JSON.stringify(finalShapshot.global_state),
-                ]);
-            }
+            const killAfterInactivityDuration = "3 days";
+            yield pool.query(`
+        INSERT INTO inactive_sessions (session_id)
+        SELECT DISTINCT ON (session_id) session_id
+        FROM game_snapshots
+        WHERE created_at < NOW() - INTERVAL '${killAfterInactivityDuration}'
+        AND session_id NOT IN (
+          SELECT session_id
+          FROM inactive_sessions
+        )
+        ORDER BY session_id, mutation_index DESC
+      `);
             return pool;
         }
         catch (error) {

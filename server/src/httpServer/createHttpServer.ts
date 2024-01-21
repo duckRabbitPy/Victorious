@@ -16,14 +16,6 @@ export function createHttpServer(app: wsApplication) {
 
   app.use(cors());
 
-  app.use(
-    cors({
-      // Vite app running on port 5173 in development
-      origin: isDev ? process.env.VITE_DEV_CLIENT_URL : "",
-      optionsSuccessStatus: 200,
-    })
-  );
-
   app.use(json());
   app.use(urlencoded({ extended: true }));
 

@@ -21,7 +21,7 @@ export const DBConnectionLive = DBConnection.of({
       : new Pool({
           user: "postgres",
           host: "localhost",
-          database: "dominion_pg_test",
+          database: process.env.DEV_PG_NAME,
           password: "postgres",
           port: 5432,
         });
@@ -33,7 +33,7 @@ export const DBConnectionTest = DBConnection.of({
     return new Pool({
       user: "postgres",
       host: "localhost",
-      database: "dominion_pg_test",
+      database: process.env.DEV_PG_NAME,
       password: "postgres",
       port: 5432,
     });

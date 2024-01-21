@@ -214,6 +214,11 @@ const resetAndSeedDatabase = () => __awaiter(void 0, void 0, void 0, function* (
             CONSTRAINT unique_room_session_mutation
                 UNIQUE (room, session_id, mutation_index));
       `);
+        yield client.query(`
+      CREATE TABLE IF NOT EXISTS inactive_sessions (
+        session_id uuid PRIMARY KEY
+      );
+  `);
         // add test user 1
         yield client.query(`INSERT INTO users (user_id, username, password, email, confirmation_token, verified) VALUES
         ($1, $2, $3, $4, $5, $6) RETURNING *`, [
