@@ -41,3 +41,7 @@ SENDER_EMAIL= (string e.g. "sender.account@gmail.com")
 GMAIL_APP_PASSWORD= (string e.g "jfijsfnjnwesnksl")
 
 DEV_PG_NAME= (string e.g. "victorious_pg_test")
+
+## Misc
+
+Press ctrl + d to see full gamestate while playing a game

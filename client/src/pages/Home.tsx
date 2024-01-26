@@ -78,87 +78,97 @@ export const Home = () => {
           <span style={{ color: "green" }}> Register</span>
         </Link>
       </div>
-      <h1 style={{ color: THEME_COLORS.victory }}>Welcome to Victorious!</h1>
-      {loggedInUsername ? (
-        <div>
-          <p style={{ color: "green" }}>Logged in as: {loggedInUsername}</p>
-          <div
-            style={{
-              display: "inline-flex",
-              justifyContent: "space-between",
-              gap: "0.5rem",
-            }}
-          >
-            {errorMessage && (
-              <>
-                <p style={{ color: "red" }}>{errorMessage}</p>
-                <button
-                  style={{
-                    padding: "0.5rem",
-                    height: "fit-content",
-                    alignSelf: "center",
-                    color: "red",
-                  }}
-                  onClick={() => setErrorMessage(null)}
-                >
-                  X
-                </button>
-              </>
-            )}
-          </div>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              // check number less than 1 million
-              if (e.currentTarget.room.value > 10000000) {
-                setErrorMessage(
-                  "Error: room number must be less than 10 million"
-                );
-                return;
-              } else {
-                openRoom(e);
-              }
-            }}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "2rem",
-            }}
-          >
-            <input
-              id="room"
-              placeholder="Enter room number"
-              type="number"
-              min={1}
-              style={{ width: "18ch", padding: "0.5rem" }}
-            />
-            <button type="submit">Create room</button>
-          </form>
-          <div style={{ padding: "1rem" }}>
-            {room && <Link to={`/room/${room}`}>Go to room: {room}</Link>}
-          </div>
-          <p>or</p>
+      <h1
+        style={{
+          color: THEME_COLORS.victory,
+        }}
+      >
+        Welcome to Victorious! 🏰
+      </h1>
+      <div style={{ minHeight: "300px" }}>
+        {loggedInUsername ? (
           <div>
+            <p style={{ color: "green" }}>Logged in as: {loggedInUsername}</p>
+            <div
+              style={{
+                display: "inline-flex",
+                justifyContent: "space-between",
+                gap: "0.5rem",
+              }}
+            >
+              {errorMessage && (
+                <>
+                  <p style={{ color: "red" }}>{errorMessage}</p>
+                  <button
+                    style={{
+                      padding: "0.5rem",
+                      height: "fit-content",
+                      alignSelf: "center",
+                      color: "red",
+                    }}
+                    onClick={() => setErrorMessage(null)}
+                  >
+                    X
+                  </button>
+                </>
+              )}
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                // check number less than 1 million
+                if (e.currentTarget.room.value > 10000000) {
+                  setErrorMessage(
+                    "Error: room number must be less than 10 million"
+                  );
+                  return;
+                } else {
+                  openRoom(e);
+                }
+              }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "2rem",
+              }}
+            >
+              <input
+                id="room"
+                placeholder="Enter room number"
+                type="number"
+                min={1}
+                style={{ width: "18ch", padding: "0.5rem" }}
+              />
+              <button type="submit">Create room</button>
+            </form>
+            <div style={{ padding: "1rem" }}>
+              {room && <Link to={`/room/${room}`}>Go to room: {room}</Link>}
+            </div>
+            <p>or</p>
             <div>
-              <form onClick={getOpenRooms}>
-                <button>See current rooms available</button>
-              </form>
-              <ol style={{ padding: 0 }}>
-                {openRooms?.map((room) => (
-                  <li key={room} style={{ listStyle: "none" }}>
-                    <Link to={`/room/${room}`}>Room {room}</Link>
-                  </li>
-                ))}
-              </ol>
+              <div>
+                <form onClick={getOpenRooms}>
+                  <button>See current rooms available</button>
+                </form>
+                <ol style={{ padding: 0 }}>
+                  {openRooms?.map((room) => (
+                    <li key={room} style={{ listStyle: "none" }}>
+                      <Link to={`/room/${room}`}>Room {room}</Link>
+                    </li>
+                  ))}
+                </ol>
+              </div>
             </div>
           </div>
-        </div>
-      ) : (
-        <div>
-          <p>Please login or register to play!</p>
-        </div>
-      )}
+        ) : (
+          <div>
+            <p style={{ animation: "pulse 2s infinite" }}>
+              Please login or register to play!
+            </p>
+          </div>
+        )}
+      </div>
     </>
   );
 };

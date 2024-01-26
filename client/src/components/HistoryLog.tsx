@@ -16,6 +16,7 @@ const treasureColors = {
 
 const getColor = (word: string, gameState: GameState) => {
   const userNames = gameState.actor_state.map((actor) => actor.name);
+
   const userNameColors = getUserNameColors(userNames);
   const wordIsCard = getAllCardNames().includes(word as CardName);
 

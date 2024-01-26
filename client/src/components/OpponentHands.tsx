@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { GameState } from "../../../shared/common";
+import { GameState, getUserNameColors } from "../../../shared/common";
 import { isUsersTurn } from "../../../shared/utils";
 import { THEME_COLORS } from "../constants";
 
@@ -11,9 +11,14 @@ const OpponentHands = ({
   loggedInUsername: string;
 }) => {
   const [cardImgLoaded, setCardImgLoaded] = useState(false);
+
   const opponents = gameState.actor_state.filter((actor) => {
     return actor.name !== loggedInUsername;
   });
+
+  const userNameColours = getUserNameColors(
+    gameState.actor_state.map((actor) => actor.name)
+  );
 
   return (
     <div
@@ -43,7 +48,13 @@ const OpponentHands = ({
               minWidth: "100%",
             }}
           >
-            <p style={{ margin: 0 }}>Opponent: {opponent.name} ⚔️</p>
+            <p style={{ margin: 0, color: THEME_COLORS.darkRed }}>
+              Opponent:{" "}
+              <span style={{ color: userNameColours[opponent.name] }}>
+                {opponent.name}
+              </span>{" "}
+              ⚔️
+            </p>
             <p style={{ margin: 0 }}>
               Victory points: <b>{opponent.victoryPoints}</b>
             </p>

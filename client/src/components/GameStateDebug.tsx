@@ -1,6 +1,28 @@
+import { useEffect, useState } from "react";
 import { GameState } from "../../../shared/common";
 
 const GameStateDebugDisplay = ({ gameState }: { gameState: GameState }) => {
+  const [debug, setDebug] = useState(false);
+
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      // Ctrl + d to show debug info
+      if (event.ctrlKey && event.key === "d") {
+        setDebug((prev) => !prev);
+      }
+    };
+
+    // Add event listener for keydown
+    window.addEventListener("keydown", handleKeyPress);
+
+    // Clean up the event listener on component unmount
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, []); //
+
+  if (!debug) return null;
+
   return (
     <div
       id="game-state"
