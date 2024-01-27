@@ -61,7 +61,7 @@ export const handleChatMessage = ({
     getLatestGameSnapshotQuery(msg.room, pool),
     E.flatMap(safeParseGameState)
   );
-  console.log("currentGameState", currentGameState);
+
   const chatMessage = pipe(
     safeParseNonEmptyString(msg.chatMessage),
     E.orElseFail(

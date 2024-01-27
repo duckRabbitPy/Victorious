@@ -5,8 +5,8 @@ import {
   getTreasureValue,
 } from "../../../shared/common";
 import { isUsersTurn } from "../../../shared/utils";
-import { canBuyCard } from "../effects/clientValidation";
-import { buyCard } from "../effects/effects";
+import { canBuyCard, canGainCard } from "../effects/clientValidation";
+import { buyCard, gainCard } from "../effects/effects";
 import { CoreProps } from "../types";
 
 export const SupplyCard = ({
@@ -38,12 +38,18 @@ export const SupplyCard = ({
     totalTreasureValue,
   });
 
+  const canGain = canGainCard({
+    gameState,
+    loggedInUsername,
+    cardName,
+  });
+
   const isCurrentUsersTurn = isUsersTurn(gameState, loggedInUsername);
 
   const cardStyle: React.CSSProperties = {
     width: "100%",
     height: "100%",
-    cursor: canBuy ? "pointer" : "not-allowed",
+    cursor: canBuy || canGain ? "pointer" : "not-allowed",
     border: `2px solid ${
       isCurrentUsersTurn && canBuy
         ? "green"
@@ -65,8 +71,20 @@ export const SupplyCard = ({
           e.preventDefault();
           setSupplyCardInFocus(cardName);
         }}
-        disabled={!canBuy}
+        disabled={!canBuy && !canGain}
         onClick={() => {
+          if (canGain) {
+            gainCard({
+              mutationIndex: gameState.mutation_index,
+              socket,
+              authToken,
+              roomNumber,
+              cardName,
+              setErrorMessage,
+            });
+            return;
+          }
+
           canBuy &&
             buyCard({
               mutationIndex: gameState.mutation_index,

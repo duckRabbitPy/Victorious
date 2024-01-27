@@ -55,29 +55,47 @@ const Room = ({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      {errorMessage && (
-        <>
-          <div
-            style={{ color: THEME_COLORS.error }}
-          >{`Error: ${errorMessage}`}</div>
-          <button onClick={() => setErrorMessage(null)}>clear</button>
-        </>
-      )}
-      <Link
-        to="/"
+      <div
         style={{
-          backgroundColor: THEME_COLORS.translucentStraw,
-          maxWidth: "fit-content",
-          display: "flex",
-          alignItems: "center",
-          gap: "1rem",
-          padding: "0.5rem",
-          borderRadius: "0.5rem",
+          minHeight: "50px",
           alignSelf: "flex-end",
+          display: "flex",
+          gap: "1rem",
         }}
       >
-        Back to home <BiSolidCastle />
-      </Link>
+        {errorMessage && (
+          <>
+            <div
+              style={{
+                color: THEME_COLORS.lightRed,
+                alignSelf: "center",
+              }}
+            >{`Error: ${errorMessage}`}</div>
+            <button
+              onClick={() => setErrorMessage(null)}
+              style={{ maxWidth: "fit-content", alignSelf: "center" }}
+            >
+              clear
+            </button>
+          </>
+        )}
+
+        <Link
+          to="/"
+          style={{
+            backgroundColor: THEME_COLORS.translucentStraw,
+            maxWidth: "fit-content",
+            display: "flex",
+            alignItems: "center",
+            gap: "1rem",
+            padding: "0.5rem",
+            borderRadius: "0.5rem",
+            alignSelf: "center",
+          }}
+        >
+          Back to home <BiSolidCastle />
+        </Link>
+      </div>
       <div
         style={{
           backgroundColor: THEME_COLORS.translucentBlack,

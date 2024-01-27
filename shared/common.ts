@@ -289,23 +289,6 @@ export const CardCountStruct = S.record(
   S.number
 );
 
-// if mustTrashForBonus is 0 then on backend change gainReward
-
-// user plays mine
-// mustTrashForBonus: set to requirement
-// {
-// mustTrashForBonus:
-//    actionCard: Mine
-//   requirement: null
-//   count: 1
-// }),
-
-// }
-
-// user then is presented with option to trash card from hand
-//  send trashForBonus on backend
-//  switch on action card type
-//  set actionPhaseDemand gainReward for mine, for other types just apply reward
 const requirement = S.struct({
   type: S.optional(
     S.union(S.literal("Treasure"), S.literal("Victory"), S.literal("Action"))
@@ -316,9 +299,9 @@ const requirement = S.struct({
 
 const actionPhaseDemand = S.struct({
   actionCard: ActionNames,
-  type: S.union(S.literal("Gain"), S.literal("Trash")),
+  demandType: S.union(S.literal("Gain"), S.literal("Trash")),
   requirement: S.optional(requirement),
-  count: S.optional(S.number),
+  count: S.number,
 });
 
 export enum Phases {
@@ -375,6 +358,7 @@ export const BroadCastStruct = S.struct({
 });
 
 export type ActorState = S.Schema.To<typeof ActorStateStruct>;
+export type ActionPhaseDemand = S.Schema.To<typeof actionPhaseDemand>;
 export type GlobalState = S.Schema.To<typeof GlobalStateStruct>;
 export type GameState = S.Schema.To<typeof GameStateStruct>;
 export type ClientPayload = S.Schema.To<typeof ClientPayloadStruct>;
@@ -394,12 +378,14 @@ export enum SupportedEffects {
   getCurrentGameState = "getCurrentGameState",
   addLivePlayer = "addLivePlayer",
   buyCard = "buyCard",
+  gainCard = "gainCard",
   playTreasure = "playTreasure",
   resetPlayedTreasures = "resetPlayedTreasures",
   playAction = "playAction",
   incrementTurn = "incrementTurn",
   getCurrentChatLog = "getCurrentChatLog",
   sendChatMessage = "sendChatMessage",
+  trashCardToMeetDemand = "trashCardToMeetDemand",
 }
 
 export const ClientPayloadStruct = S.struct({
