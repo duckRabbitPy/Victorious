@@ -42,13 +42,6 @@ const province = {
   value: 6,
 } as const;
 
-const curse = {
-  name: "curse",
-  cost: 0,
-  type: "curse",
-  value: -1,
-} as const;
-
 const village = {
   name: "village",
   cost: 3,
@@ -104,6 +97,22 @@ const Mine = {
     "Trash a treasure card from your hand. Gain a treasure card costing up to 3 more; put it into your hand.",
 } as const;
 
+const Workshop = {
+  name: "workshop",
+  cost: 3,
+  type: "action",
+  value: 0,
+  description: "Gain a card costing up to 4",
+} as const;
+
+const Moneylender = {
+  name: "moneylender",
+  cost: 4,
+  type: "action",
+  value: 0,
+  description: "Trash a copper from your hand. If you do, +3 treasure",
+} as const;
+
 export const TreasureNames = S.union(
   S.literal("copper"),
   S.literal("silver"),
@@ -124,15 +133,15 @@ export const ActionNames = S.union(
   S.literal("laboratory"),
   S.literal("festival"),
   S.literal("mine"),
-  S.literal("curse")
+  S.literal("workshop"),
+  S.literal("moneylender")
 );
 
 const CardNames = S.union(TreasureNames, VictoryNames, ActionNames);
 const CardTypes = S.union(
   S.literal("treasure"),
   S.literal("victory"),
-  S.literal("action"),
-  S.literal("curse")
+  S.literal("action")
 );
 
 const CardStruct = S.struct({
@@ -191,7 +200,6 @@ export const cardNamesToCount = (cardNames: readonly CardName[]): CardCount => {
     estate: 0,
     duchy: 0,
     province: 0,
-    curse: 0,
     village: 0,
     smithy: 0,
     market: 0,
@@ -199,6 +207,8 @@ export const cardNamesToCount = (cardNames: readonly CardName[]): CardCount => {
     mine: 0,
     festival: 0,
     laboratory: 0,
+    workshop: 0,
+    moneylender: 0,
   };
 
   for (const cardName of cardNames) {
@@ -264,8 +274,10 @@ export const cardNameToCard = (cardName: CardName): Card => {
       return festival;
     case "mine":
       return Mine;
-    case "curse":
-      return curse;
+    case "workshop":
+      return Workshop;
+    case "moneylender":
+      return Moneylender;
   }
 };
 
@@ -276,6 +288,38 @@ export const CardCountStruct = S.record(
   S.union(TreasureNames, VictoryNames, ActionNames),
   S.number
 );
+
+// if mustTrashForBonus is 0 then on backend change gainReward
+
+// user plays mine
+// mustTrashForBonus: set to requirement
+// {
+// mustTrashForBonus:
+//    actionCard: Mine
+//   requirement: null
+//   count: 1
+// }),
+
+// }
+
+// user then is presented with option to trash card from hand
+//  send trashForBonus on backend
+//  switch on action card type
+//  set actionPhaseDemand gainReward for mine, for other types just apply reward
+const requirement = S.struct({
+  type: S.optional(
+    S.union(S.literal("Treasure"), S.literal("Victory"), S.literal("Action"))
+  ),
+  maxValue: S.optional(S.number),
+  minValue: S.optional(S.number),
+});
+
+const actionPhaseDemand = S.struct({
+  actionCard: ActionNames,
+  type: S.union(S.literal("Gain"), S.literal("Trash")),
+  requirement: S.optional(requirement),
+  count: S.optional(S.number),
+});
 
 export enum Phases {
   Action = "action",
@@ -293,6 +337,7 @@ const ActorStateStruct = S.struct({
   victoryPoints: S.number,
   discardPile: S.array(S.union(TreasureNames, VictoryNames, ActionNames)),
   deck: S.array(S.union(TreasureNames, VictoryNames, ActionNames)),
+  actionPhaseDemand: S.nullable(actionPhaseDemand),
   phase: S.enums(Phases),
 });
 
@@ -381,7 +426,8 @@ export const zeroCardCount: CardCount = {
   laboratory: 0,
   festival: 0,
   councilRoom: 0,
-  curse: 0,
+  workshop: 0,
+  moneylender: 0,
 };
 
 export const subtractCardCount = (a: CardCount, b: CardCount): CardCount => {
