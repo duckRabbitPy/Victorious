@@ -364,7 +364,7 @@ const sumCardCounts = (a, b) => {
 exports.sumCardCounts = sumCardCounts;
 const getUserNameColors = (userNames) => {
     const colours = ["cyan", "magenta", "lime", "yellow", "orange"];
-    return userNames.reduce((acc, curr, i) => {
+    return userNames.sort().reduce((acc, curr, i) => {
         var _a;
         acc[curr] = (_a = colours[i]) !== null && _a !== void 0 ? _a : "white";
         return acc;
