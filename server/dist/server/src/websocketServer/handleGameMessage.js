@@ -33,10 +33,10 @@ const handleGameMessage = ({ msg, pool, userInfo, }) => {
             })), effect_1.Effect.flatMap(common_1.safeParseGameState));
         }
         case common_1.SupportedEffects.startGame: {
-            return (0, effect_1.pipe)(currentGameState, effect_1.Effect.flatMap((currentGameState) => (0, hand_1.dealToAllActors)(currentGameState)), effect_1.Effect.flatMap(buys_1.resetBuysAndActions), effect_1.Effect.flatMap(turn_1.incrementTurn), effect_1.Effect.flatMap((gamestate) => (0, mutations_1.writeNewGameStateToDB)(gamestate, pool)));
+            return (0, effect_1.pipe)(currentGameState, effect_1.Effect.flatMap((currentGameState) => (0, hand_1.dealToAllActors)(currentGameState)), effect_1.Effect.flatMap(buys_1.resetBuysAndActions), effect_1.Effect.flatMap((gamestate) => (0, turn_1.incrementTurn)(gamestate, userInfo.username)), effect_1.Effect.flatMap((gamestate) => (0, mutations_1.writeNewGameStateToDB)(gamestate, pool)));
         }
         case common_1.SupportedEffects.incrementTurn: {
-            return (0, effect_1.pipe)(currentGameState, effect_1.Effect.flatMap((currentGameState) => (0, hand_1.cleanUp)(currentGameState)), effect_1.Effect.flatMap(turn_1.incrementTurn), effect_1.Effect.flatMap(buys_1.resetBuysAndActions), effect_1.Effect.flatMap((gamestate) => (0, mutations_1.writeNewGameStateToDB)(gamestate, pool)));
+            return (0, effect_1.pipe)(currentGameState, effect_1.Effect.flatMap((currentGameState) => (0, hand_1.cleanUp)(currentGameState)), effect_1.Effect.flatMap((gamestate) => (0, turn_1.incrementTurn)(gamestate, userInfo.username)), effect_1.Effect.flatMap(buys_1.resetBuysAndActions), effect_1.Effect.flatMap((gamestate) => (0, mutations_1.writeNewGameStateToDB)(gamestate, pool)));
         }
         case common_1.SupportedEffects.buyCard: {
             return (0, effect_1.pipe)(effect_1.Effect.all({
