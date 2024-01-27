@@ -16,6 +16,7 @@ import React from "react";
 import { Backgrounds, THEME_COLORS } from "../constants";
 import { BiSolidCastle } from "react-icons/bi";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { getUserNameColors } from "../../../shared/common";
 
 const Room = ({
   loggedInUsername,
@@ -24,9 +25,9 @@ const Room = ({
   loggedInUsername: string;
   setBackgroundIndex: React.Dispatch<React.SetStateAction<number>>;
 }) => {
-  const debug = true;
   const { gameState, socket, chatLog, errorMessage, setErrorMessage } =
     useGameState();
+
   const { "*": roomParam } = useParams();
   const roomNumber = Number(roomParam);
   const authToken = localStorage.getItem("dominion_auth_token");
@@ -40,15 +41,25 @@ const Room = ({
   };
 
   if (!gameState || !socket)
-    return <div>Error fetching game state from server... </div>;
+    return (
+      <div>
+        Error fetching game state from server...
+        <Link to="/"> Go home</Link>
+      </div>
+    );
 
+  const userNameColors = getUserNameColors(
+    gameState.actor_state.map((a) => a.name)
+  );
   const gameStarted = gameState.turn > 0;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       {errorMessage && (
         <>
-          <div style={{ color: "red" }}>{`Error: ${errorMessage}`}</div>
+          <div
+            style={{ color: THEME_COLORS.error }}
+          >{`Error: ${errorMessage}`}</div>
           <button onClick={() => setErrorMessage(null)}>clear</button>
         </>
       )}
@@ -67,7 +78,19 @@ const Room = ({
       >
         Back to home <BiSolidCastle />
       </Link>
-      <div>Playing as : {loggedInUsername}</div>
+      <div
+        style={{
+          backgroundColor: THEME_COLORS.translucentBlack,
+          color: "white",
+          padding: "1rem",
+          width: "fit-content",
+        }}
+      >
+        Playing as :{" "}
+        <span style={{ color: userNameColors[loggedInUsername] }}>
+          {loggedInUsername}
+        </span>
+      </div>
 
       {gameState.game_over ? (
         <>
@@ -223,7 +246,7 @@ const Room = ({
 
               <ChatLog
                 chatLog={chatLog}
-                userNames={gameState.actor_state.map((actor) => actor.name)}
+                userNames={gameState.actor_state.map((a) => a.name)}
                 setErrorMessage={setErrorMessage}
                 socket={socket}
               />
@@ -232,7 +255,7 @@ const Room = ({
         </>
       )}
 
-      {debug && <GameStateDebugDisplay gameState={gameState} />}
+      <GameStateDebugDisplay gameState={gameState} />
     </div>
   );
 };

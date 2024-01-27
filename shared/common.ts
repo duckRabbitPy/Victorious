@@ -421,7 +421,7 @@ export interface UserNameColors {
 export const getUserNameColors = (userNames: string[]) => {
   const colours = ["cyan", "magenta", "lime", "yellow", "orange"];
 
-  return userNames.reduce((acc, curr, i) => {
+  return userNames.sort().reduce((acc, curr, i) => {
     acc[curr] = colours[i] ?? "white";
     return acc;
   }, {} as UserNameColors);

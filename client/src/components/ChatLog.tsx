@@ -18,6 +18,7 @@ const ChatLog = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
+
   const userNameColours = getUserNameColors(userNames);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {

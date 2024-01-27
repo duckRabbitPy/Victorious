@@ -99,7 +99,7 @@ export const handleGameMessage = ({
         currentGameState,
         E.flatMap((currentGameState) => dealToAllActors(currentGameState)),
         E.flatMap(resetBuysAndActions),
-        E.flatMap(incrementTurn),
+        E.flatMap((gamestate) => incrementTurn(gamestate, userInfo.username)),
         E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
       );
     }
@@ -108,7 +108,7 @@ export const handleGameMessage = ({
       return pipe(
         currentGameState,
         E.flatMap((currentGameState) => cleanUp(currentGameState)),
-        E.flatMap(incrementTurn),
+        E.flatMap((gamestate) => incrementTurn(gamestate, userInfo.username)),
         E.flatMap(resetBuysAndActions),
         E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
       );
