@@ -176,6 +176,18 @@ export const checkClientStateIsUptoDate = ({
   return E.succeed(currentGameState);
 };
 
+export const checkEnoughPlayers = (gameState: GameState) => {
+  if (gameState.actor_state.length < 2) {
+    return E.fail(
+      new IllegalGameStateError({
+        message: `Not enough players to start game`,
+      })
+    );
+  }
+
+  return E.succeed(gameState);
+};
+
 export const checkNotAlreadyInRoom = ({
   currentGameState,
   userInfo,
@@ -197,3 +209,12 @@ export const checkNotAlreadyInRoom = ({
 
   return E.succeed(currentGameState);
 };
+
+export const delay = E.promise(
+  () =>
+    new Promise((resolve) => {
+      setTimeout(() => {
+        resolve("waited 1 sec");
+      }, 1000);
+    })
+);

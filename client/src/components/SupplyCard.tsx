@@ -49,6 +49,7 @@ export const SupplyCard = ({
   const cardStyle: React.CSSProperties = {
     width: "100%",
     height: "100%",
+    fontSize: "small",
     cursor: canBuy || canGain ? "pointer" : "not-allowed",
     border: `2px solid ${
       isCurrentUsersTurn && canBuy

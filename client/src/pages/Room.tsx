@@ -12,14 +12,19 @@ import { useGameState } from "../hooks/useGameState";
 import HistoryLog from "../components/HistoryLog";
 import OpponentHands from "../components/OpponentHands";
 import Spacer from "../components/Spacer";
-import React from "react";
+import React, { useEffect } from "react";
 import { THEME_COLORS } from "../constants";
 import { BiSolidCastle } from "react-icons/bi";
 
-import { getUserNameColors } from "../../../shared/common";
+import {
+  botNamePrefixes,
+  countToCardNamesArray,
+  getUserNameColors,
+} from "../../../shared/common";
 import { BackgroundSelector } from "../components/BackgroundSelector";
 
 import { ResetPlayedTreasuresButton } from "../components/ResetPlayedTreasures";
+import { handleBotPlayerTurn } from "../effects/effects";
 
 const Room = ({
   loggedInUsername,
@@ -28,12 +33,48 @@ const Room = ({
   loggedInUsername: string;
   setBackgroundIndex: React.Dispatch<React.SetStateAction<number>>;
 }) => {
-  const { gameState, socket, chatLog, errorMessage, setErrorMessage } =
-    useGameState();
-
   const { "*": roomParam } = useParams();
   const roomNumber = Number(roomParam);
   const authToken = localStorage.getItem("dominion_auth_token");
+
+  const { gameState, socket, chatLog, errorMessage, setErrorMessage } =
+    useGameState();
+
+  useEffect(() => {
+    if (
+      gameState &&
+      gameState.actor_state.length > 1 &&
+      gameState.actor_state
+        .map((a) => countToCardNamesArray(a.hand).length)
+        .reduce((a, b) => a + b, 0) > 0
+    ) {
+      const currentActivePlayerState =
+        gameState.actor_state[gameState.turn % gameState.actor_state.length];
+
+      const currentPlayerIsBot = botNamePrefixes.some((prefix) =>
+        currentActivePlayerState?.name.startsWith(prefix)
+      );
+
+      setTimeout(() => {
+        if (currentPlayerIsBot) {
+          handleBotPlayerTurn({
+            socket,
+            authToken,
+            roomNumber,
+            mutationIndex: gameState.mutation_index,
+            setErrorMessage,
+          });
+        }
+      }, 1000);
+    }
+  }, [
+    authToken,
+    gameState,
+    gameState?.mutation_index,
+    roomNumber,
+    setErrorMessage,
+    socket,
+  ]);
 
   const coreRoomInfo = { socket, authToken, roomNumber };
   const coreUserInfo = {
@@ -156,7 +197,7 @@ const Room = ({
                     display: "flex",
                     flexDirection: "column",
                     justifyItems: "space-between",
-                    gap: "1rem",
+                    gap: "0.5rem",
                   }}
                 >
                   <OpponentHands

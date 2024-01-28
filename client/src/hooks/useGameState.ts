@@ -119,6 +119,7 @@ export const useGameState = () => {
           socket: newSocket,
           authToken: localStorage.getItem("dominion_auth_token"),
           roomNumber: Number(window.location.pathname.split("/").pop()),
+          setErrorMessage,
         });
         setInitialGameStateFetched(true);
       }

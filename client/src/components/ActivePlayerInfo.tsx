@@ -1,6 +1,6 @@
 import { CoreProps } from "../types";
 import { isUsersTurn } from "../../../shared/utils";
-import { addNewPlayer } from "../effects/effects";
+import { addBotPlayer, addNewPlayer } from "../effects/effects";
 import CopyRoomLinkButton from "./CopyRoomLinkButton";
 import { getUserNameColors } from "../../../shared/common";
 
@@ -65,7 +65,22 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
               {gameState.actor_state.length < 2 && (
                 <p>Waiting for players to join...</p>
               )}
-              <CopyRoomLinkButton />
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <button
+                  onClick={() =>
+                    addBotPlayer({
+                      mutationIndex: 0,
+                      socket,
+                      authToken,
+                      roomNumber,
+                      setErrorMessage,
+                    })
+                  }
+                >
+                  Add bot 🤖
+                </button>
+                <CopyRoomLinkButton />
+              </div>
             </div>
           </>
         }

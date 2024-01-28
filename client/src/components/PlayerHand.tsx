@@ -89,7 +89,6 @@ const PlayerHand = ({
         backgroundColor: THEME_COLORS.translucentBlack,
         border: "2px solid black",
         color: "white",
-        flex: 1,
       }}
     >
       <>
@@ -129,7 +128,8 @@ const PlayerHand = ({
             : "pointer";
 
         const buttonStyle = {
-          margin: "0.2rem",
+          margin: "0.1rem",
+          fontSize: "small",
           border: borderColor,
           cursor: cursor,
         };
@@ -189,6 +189,7 @@ const PlayerHand = ({
             style={{
               display: "flex",
               justifyContent: "center",
+              height: "fit-content",
             }}
           >
             {new Array(count).fill(0).map((_, index) => {

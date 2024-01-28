@@ -18,6 +18,10 @@ export class AuthorisationError extends Data.TaggedClass("AuthorisationError")<{
   message: string;
 }> {}
 
+export class RegistrationError extends Data.TaggedClass("RegistrationError")<{
+  message: string;
+}> {}
+
 export class CustomParseError extends Data.TaggedClass("CustomParseError")<{
   message: string;
 }> {}
@@ -28,6 +32,12 @@ export class JSONParseError extends Data.TaggedClass("JSONParseError")<{
 
 export class IllegalGameStateError extends Data.TaggedClass(
   "IllegalGameStateError"
+)<{
+  message: string;
+}> {}
+
+export class ExternalServiceError extends Data.TaggedClass(
+  "ExternalServiceError"
 )<{
   message: string;
 }> {}

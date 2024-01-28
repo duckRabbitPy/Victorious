@@ -18,6 +18,7 @@
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.8",
     "nodemon": "^3.0.2",
+    "openai": "^4.26.0",
     "pg": "^8.11.3",
     "react": "^16.8",
     "react-dom": "^16.8",

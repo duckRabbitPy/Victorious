@@ -75,7 +75,7 @@ const Supply = ({ props }: { props: CoreProps }) => {
         flexDirection: "row",
         justifyContent: "space-between",
         position: "relative",
-        gap: "2rem",
+        gap: "0.5rem",
       }}
     >
       {supplyCardInFocus && (
@@ -174,7 +174,8 @@ const Supply = ({ props }: { props: CoreProps }) => {
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "1rem",
+          gap: "0.5rem",
+          maxHeight: "50px",
         }}
       >
         {actionCards.map((cardName) => (

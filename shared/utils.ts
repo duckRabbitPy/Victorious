@@ -20,9 +20,12 @@ export const isUsersTurn = (gameState: GameState, userName: string) => {
 
   const turn = gameState.turn;
 
-  const currentActivePlayer = gameState.actor_state[turn % numberOfActors];
+  const currentActivePlayerState = gameState.actor_state[turn % numberOfActors];
 
-  return !!currentActivePlayer.name && currentActivePlayer.name === userName;
+  return (
+    !!currentActivePlayerState.name &&
+    currentActivePlayerState.name === userName
+  );
 };
 
 type GroupedItems<T> = Record<string, T[]>;

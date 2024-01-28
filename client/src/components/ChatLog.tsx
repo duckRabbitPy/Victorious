@@ -38,6 +38,7 @@ const ChatLog = ({
       style={{
         display: "flex",
         flexDirection: "column",
+        height: "100%",
         gap: "1rem",
       }}
     >

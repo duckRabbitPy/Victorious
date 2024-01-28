@@ -1,14 +1,16 @@
-import { pipe, Effect as E } from "effect";
+import { pipe, Effect as E, Effect } from "effect";
 import {
   addLivePlayerQuery,
   writeNewGameStateToDB,
 } from "../models/gamestate/mutations";
 
 import {
+  botNamePrefixes,
   ClientPayload,
   GameState,
   safeParseCardName,
   safeParseGameState,
+  safeParseRegisterResult,
   SupportedEffects,
 } from "../../../shared/common";
 import {
@@ -18,6 +20,7 @@ import {
   resetPlayedTreasures,
 } from "./evolve/hand";
 
+import { handleIfBotPlayerTurn } from "./evolve/bots";
 import { buyCard, gainCard, resetBuysAndActions } from "./evolve/buys";
 import { incrementTurn } from "./evolve/turn";
 import { playAction, trashCardToMeetDemand } from "./evolve/actions";
@@ -30,7 +33,14 @@ import {
   PostgresError,
 } from "../customErrors";
 import { ParseError } from "@effect/schema/ParseResult";
-import { checkClientStateIsUptoDate, checkNotAlreadyInRoom } from "../utils";
+import {
+  checkClientStateIsUptoDate,
+  checkEnoughPlayers,
+  checkNotAlreadyInRoom,
+  tapPipeLine,
+} from "../utils";
+import { uuidv4 } from "../../../shared/utils";
+import { registerNewUserQuery } from "../models/users";
 
 type handleGameMessageProps = {
   msg: ClientPayload;
@@ -94,9 +104,47 @@ export const handleGameMessage = ({
       );
     }
 
+    case SupportedEffects.addBotPlayer: {
+      const botUserName = `${
+        botNamePrefixes[Math.floor(Math.random() * botNamePrefixes.length)]
+      }${Math.floor(Math.random() * 1000) + 1}`;
+
+      const newBotUserInfo = pipe(
+        registerNewUserQuery(
+          botUserName,
+          `bot${uuidv4()}@botemail.com`,
+          uuidv4(),
+          pool
+        ),
+        E.flatMap(safeParseRegisterResult),
+        E.flatMap((botRegistrationInfo) => {
+          return E.succeed({
+            userId: botRegistrationInfo.user_id,
+            username: botRegistrationInfo.username,
+          });
+        })
+      );
+
+      return pipe(
+        Effect.all({
+          newBotUserInfo,
+          currentGameState,
+        }),
+        E.flatMap(({ newBotUserInfo, currentGameState }) =>
+          addLivePlayerQuery({
+            userInfo: newBotUserInfo,
+            currentGameState,
+            pool,
+          })
+        ),
+        E.flatMap(safeParseGameState)
+      );
+    }
+
     case SupportedEffects.startGame: {
       return pipe(
         currentGameState,
+        E.flatMap(checkEnoughPlayers),
         E.flatMap((currentGameState) => dealToAllActors(currentGameState)),
         E.flatMap(resetBuysAndActions),
         E.flatMap((gamestate) => incrementTurn(gamestate, userInfo.username)),
@@ -111,6 +159,14 @@ export const handleGameMessage = ({
         E.flatMap((gamestate) => incrementTurn(gamestate, userInfo.username)),
         E.flatMap(resetBuysAndActions),
         E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
+      );
+    }
+
+    case SupportedEffects.handleBotPlayerTurn: {
+      return pipe(
+        currentGameState,
+        tapPipeLine,
+        E.flatMap((gamestate) => handleIfBotPlayerTurn(gamestate, pool))
       );
     }
 

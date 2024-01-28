@@ -33,10 +33,10 @@ export const getInitialGameState = ({
   socket: WebSocket | null;
   authToken: string | null;
   roomNumber: number;
-  setErrorMessage?: (message: string | null) => void;
+  setErrorMessage: (message: string | null) => void;
 }) => {
   if (!socket || !authToken) {
-    setErrorMessage?.("Socket or auth token is null");
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
     return;
   }
 
@@ -64,12 +64,8 @@ export const addNewPlayer = ({
   mutationIndex: number;
   setErrorMessage: (message: string | null) => void;
 }) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
-    return;
-  }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
+  if (!socket || !authToken) {
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
     return;
   }
 
@@ -77,6 +73,35 @@ export const addNewPlayer = ({
     prepareMessage({
       mutationIndex,
       effect: SupportedEffects.addLivePlayer,
+      authToken,
+      room: roomNumber,
+      toDiscardFromHand: [],
+    })
+  );
+};
+
+export const addBotPlayer = ({
+  socket,
+  authToken,
+  roomNumber,
+  mutationIndex,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  mutationIndex: number;
+  setErrorMessage: (message: string | null) => void;
+}) => {
+  if (!socket || !authToken) {
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
+    return;
+  }
+
+  socket.send(
+    prepareMessage({
+      mutationIndex,
+      effect: SupportedEffects.addBotPlayer,
       authToken,
       room: roomNumber,
       toDiscardFromHand: [],
@@ -99,14 +124,11 @@ export const incrementTurn = ({
   mutationIndex: number;
   setErrorMessage: (message: string | null) => void;
 }) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
+  if (!socket || !authToken) {
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
     return;
   }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
-    return;
-  }
+
   audio?.play();
   socket.send(
     prepareMessage({
@@ -115,6 +137,35 @@ export const incrementTurn = ({
       authToken,
       room: roomNumber,
       // todo: discard all
+      toDiscardFromHand: [],
+    })
+  );
+};
+
+export const handleBotPlayerTurn = ({
+  socket,
+  authToken,
+  roomNumber,
+  mutationIndex,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  mutationIndex: number;
+  setErrorMessage: (message: string | null) => void;
+}) => {
+  if (!socket || !authToken) {
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
+    return;
+  }
+
+  socket.send(
+    prepareMessage({
+      mutationIndex,
+      effect: SupportedEffects.handleBotPlayerTurn,
+      authToken,
+      room: roomNumber,
       toDiscardFromHand: [],
     })
   );
@@ -137,14 +188,11 @@ export const buyCard = ({
   toDiscardFromHand: CardName[];
   setErrorMessage: (message: string | null) => void;
 }) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
+  if (!socket || !authToken) {
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
     return;
   }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
-    return;
-  }
+
   socket.send(
     prepareMessage({
       mutationIndex,
@@ -172,14 +220,11 @@ export const gainCard = ({
   mutationIndex: number;
   setErrorMessage: (message: string | null) => void;
 }) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
+  if (!socket || !authToken) {
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
     return;
   }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
-    return;
-  }
+
   socket.send(
     prepareMessage({
       mutationIndex,
@@ -207,12 +252,8 @@ export const playTreasure = ({
   mutationIndex: number;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
-    return;
-  }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
+  if (!socket || !authToken) {
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
     return;
   }
 
@@ -244,12 +285,8 @@ export const trashCardToMeetDemand = ({
 
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
-    return;
-  }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
+  if (!socket || !authToken) {
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
     return;
   }
 
@@ -278,12 +315,8 @@ export const resetPlayedTreasures = ({
   mutationIndex: number;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
-    return;
-  }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
+  if (!socket || !authToken) {
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
     return;
   }
 
@@ -313,12 +346,8 @@ export const playAction = ({
   mutationIndex: number;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
-    return;
-  }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
+  if (!socket || !authToken) {
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
     return;
   }
 
@@ -349,12 +378,8 @@ export const startGame = ({
   mutationIndex: number;
   setErrorMessage: (message: string | null) => void;
 }) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
-    return;
-  }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
+  if (!socket || !authToken) {
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
     return;
   }
 
@@ -412,14 +437,11 @@ export const sendChatMessage = ({
   setInputValue: React.Dispatch<React.SetStateAction<string | null>>;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
 }) => {
-  if (!socket) {
-    setErrorMessage("Socket is null");
+  if (!socket || !authToken) {
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
     return;
   }
-  if (!authToken) {
-    setErrorMessage("Auth token is null");
-    return;
-  }
+
   if (!chatMessage) {
     setErrorMessage("Chat message is empty");
     return;

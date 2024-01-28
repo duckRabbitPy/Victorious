@@ -22,8 +22,17 @@ export const applyAction = (
     case "village": {
       const newActorState = gameState.actor_state.map((actor) => {
         if (actor.id === userId) {
+          const { newCardsIntoHand, newDeck, newDiscardPile } = dealCards({
+            deck: actor.deck,
+            discardPile: actor.discardPile,
+            numberOfCardsToDraw: 1,
+          });
+
           return {
             ...actor,
+            hand: sumCardCounts(actor.hand, cardNamesToCount(newCardsIntoHand)),
+            deck: newDeck,
+            discardPile: newDiscardPile,
             actions: actor.actions + 2,
           };
         }
