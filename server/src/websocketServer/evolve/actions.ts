@@ -1,9 +1,11 @@
 import { Effect as E } from "effect";
 import {
+  ActionPhaseDemand,
   CardName,
   GameState,
   Phases,
   cardNamesToCount,
+  getCardValueByName,
   hasActionCard,
   subtractCardCount,
   sumCardCounts,
@@ -159,10 +161,33 @@ export const applyAction = (
         actor_state: newActorState,
       };
     }
+
+    // actions that require user action
+    case "mine": {
+      const newActorState = gameState.actor_state.map((actor) => {
+        const actionPhaseDemand: ActionPhaseDemand = {
+          actionCard: "mine",
+          demandType: "Trash",
+          count: 1,
+        };
+
+        if (actor.id === userId) {
+          return {
+            ...actor,
+            actionPhaseDemand,
+          };
+        }
+        return actor;
+      });
+
+      return {
+        ...gameState,
+        actor_state: newActorState,
+      };
+    }
   }
 };
 
-// todo refactor with reusable helper functions
 export const playAction = ({
   gameState,
   userId,
@@ -216,7 +241,10 @@ export const playAction = ({
         return {
           ...actor,
           phase:
-            actor.actions < 1 || !hasActionCard(actor.hand)
+            actor.actions < 1 ||
+            (!hasActionCard(actor.hand) &&
+              actor.actionPhaseDemand === null &&
+              !actor.actionPhaseDemand)
               ? Phases.Buy
               : Phases.Action,
         };
@@ -226,4 +254,125 @@ export const playAction = ({
   };
 
   return E.succeed(GameStateWithLatestPhase);
+};
+
+export const trashCardToMeetDemand = ({
+  userId,
+  gameState,
+  toTrash,
+}: {
+  userId: string;
+  gameState: GameState;
+  toTrash: CardName;
+}) => {
+  const newActorState = gameState.actor_state.map((actor) => {
+    if (actor.id === userId && actor.actionPhaseDemand) {
+      const remainingDemandCount =
+        (actor.actionPhaseDemand?.count &&
+          actor.actionPhaseDemand?.count - 1) ||
+        0;
+
+      const newDemandType = remainingDemandCount > 0 ? "Trash" : "Gain";
+
+      const newActionPhaseDemand = {
+        actionCard: actor.actionPhaseDemand.actionCard,
+        demandType: newDemandType,
+        count:
+          newDemandType === "Trash"
+            ? getTrashCountDemandFromAction(actor.actionPhaseDemand.actionCard)
+            : getGainCountDemandFromAction(actor.actionPhaseDemand.actionCard),
+        requirement:
+          newDemandType === "Trash"
+            ? getTrashRequirementFromAction(actor.actionPhaseDemand.actionCard)
+            : getGainRequirementFromAction(
+                actor.actionPhaseDemand.actionCard,
+                toTrash
+              ),
+      } as ActionPhaseDemand;
+
+      const handCopy = { ...actor.hand };
+      const updatedHand = {
+        ...handCopy,
+        [toTrash]: handCopy[toTrash] - 1,
+      };
+
+      return {
+        ...actor,
+        hand: updatedHand,
+        discardPile: [...actor.discardPile, toTrash],
+        actionPhaseDemand: newActionPhaseDemand,
+      };
+    }
+    return actor;
+  });
+
+  const latestTransaction = `${
+    gameState.actor_state.filter((a) => a.id === userId)[0].name
+  } trashed ${indefiniteArticle(toTrash)} ${toTrash}`;
+
+  const newGlobalState = {
+    ...gameState.global_state,
+    history: [...gameState.global_state.history, latestTransaction],
+  };
+
+  const updatedGameState = {
+    ...gameState,
+    global_state: newGlobalState,
+    actor_state: newActorState,
+  };
+
+  return E.succeed(updatedGameState);
+};
+
+const getTrashCountDemandFromAction = (actionCard: CardName) => {
+  switch (actionCard) {
+    case "mine":
+      return 1;
+    case "workshop":
+      return 1;
+    default:
+      return 0;
+  }
+};
+
+const getGainCountDemandFromAction = (actionCard: CardName) => {
+  switch (actionCard) {
+    case "mine":
+      return 1;
+    case "workshop":
+      return 1;
+    default:
+      return 0;
+  }
+};
+
+const getTrashRequirementFromAction = (actionCard: CardName) => {
+  switch (actionCard) {
+    case "councilRoom":
+      return {
+        type: "Treasure",
+        minValue: 0,
+        maxValue: 1,
+      };
+    default:
+      return undefined;
+  }
+};
+
+const getGainRequirementFromAction = (
+  actionCard: CardName,
+  trashedCard: CardName
+) => {
+  switch (actionCard) {
+    case "mine":
+      return {
+        maxValue: getCardValueByName(trashedCard) + 3,
+      };
+    case "workshop":
+      return {
+        maxValue: 4,
+      };
+    default:
+      return undefined;
+  }
 };

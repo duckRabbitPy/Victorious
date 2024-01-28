@@ -13,10 +13,13 @@ import HistoryLog from "../components/HistoryLog";
 import OpponentHands from "../components/OpponentHands";
 import Spacer from "../components/Spacer";
 import React from "react";
-import { Backgrounds, THEME_COLORS } from "../constants";
+import { THEME_COLORS } from "../constants";
 import { BiSolidCastle } from "react-icons/bi";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+
 import { getUserNameColors } from "../../../shared/common";
+import { BackgroundSelector } from "../components/BackgroundSelector";
+
+import { ResetPlayedTreasuresButton } from "../components/ResetPlayedTreasures";
 
 const Room = ({
   loggedInUsername,
@@ -54,118 +57,71 @@ const Room = ({
   const gameStarted = gameState.turn > 0;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "1rem",
+        maxHeight: "100vh",
+      }}
+    >
       {errorMessage && (
         <>
           <div
-            style={{ color: THEME_COLORS.error }}
+            style={{
+              color: THEME_COLORS.lightRed,
+              alignSelf: "center",
+            }}
           >{`Error: ${errorMessage}`}</div>
-          <button onClick={() => setErrorMessage(null)}>clear</button>
+          <button
+            onClick={() => setErrorMessage(null)}
+            style={{ maxWidth: "fit-content", alignSelf: "center" }}
+          >
+            clear
+          </button>
         </>
       )}
-      <Link
-        to="/"
-        style={{
-          backgroundColor: THEME_COLORS.translucentStraw,
-          maxWidth: "fit-content",
-          display: "flex",
-          alignItems: "center",
-          gap: "1rem",
-          padding: "0.5rem",
-          borderRadius: "0.5rem",
-          alignSelf: "flex-end",
-        }}
-      >
-        Back to home <BiSolidCastle />
-      </Link>
-      <div
-        style={{
-          backgroundColor: THEME_COLORS.translucentBlack,
-          color: "white",
-          padding: "1rem",
-          width: "fit-content",
-        }}
-      >
-        Playing as :{" "}
-        <span style={{ color: userNameColors[loggedInUsername] }}>
-          {loggedInUsername}
-        </span>
-      </div>
-
       {gameState.game_over ? (
-        <>
-          <div>
-            <h1 style={{ margin: 0 }}>Game over!</h1>
-            {gameState.actor_state
-              .slice()
-              .sort((a, b) => a.victoryPoints - b.victoryPoints)
-              .map((actor) => actor.name)[0] === loggedInUsername
-              ? "You win!"
-              : "You lose!"}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-                color: "white",
-                backgroundColor: `rgba(28, 26, 27, 0.66)`,
-              }}
-            >
+        <div>
+          <h1 style={{ margin: 0 }}>Game over!</h1>
+          {gameState.actor_state
+            .slice()
+            .sort((a, b) => a.victoryPoints - b.victoryPoints)
+            .map((actor) => actor.name)[0] === loggedInUsername
+            ? "You win!"
+            : "You lose!"}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "1rem",
+              color: "white",
+              backgroundColor: `rgba(28, 26, 27, 0.66)`,
+            }}
+          >
+            <div>
+              <h2>Final scores:</h2>
               <div>
-                <h2>Final scores:</h2>
-                <div>
-                  {gameState.actor_state.map((actor) => (
-                    <div key={actor.name}>
-                      {actor.name}: {actor.victoryPoints}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div style={{ marginBottom: "1rem", color: "lightgreen" }}>
-                <h2 style={{ margin: 0 }}>Winner:</h2>
-                {
-                  gameState.actor_state
-                    .slice()
-                    .sort((a, b) => a.victoryPoints - b.victoryPoints)
-                    .map((actor) => actor.name)[0]
-                }
+                {gameState.actor_state.map((actor) => (
+                  <div key={actor.name}>
+                    {actor.name}: {actor.victoryPoints}
+                  </div>
+                ))}
               </div>
             </div>
+            <div style={{ marginBottom: "1rem", color: "lightgreen" }}>
+              <h2 style={{ margin: 0 }}>Winner:</h2>
+              {
+                gameState.actor_state
+                  .slice()
+                  .sort((a, b) => a.victoryPoints - b.victoryPoints)
+                  .map((actor) => actor.name)[0]
+              }
+            </div>
           </div>
-        </>
+        </div>
       ) : (
         <>
-          <div style={{ display: "flex", gap: "1rem", color: "white" }}>
-            <button
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              onClick={() => {
-                setBackgroundIndex((i = 0) =>
-                  i === 0 ? Backgrounds.length : i - 1
-                );
-              }}
-            >
-              <FaArrowLeft />
-            </button>
-            <button
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              onClick={() => {
-                setBackgroundIndex((i) =>
-                  i === Backgrounds.length - 1 ? 0 : i + 1
-                );
-              }}
-            >
-              <FaArrowRight />
-            </button>
-          </div>
-
           <div
             style={{
               display: "flex",
@@ -216,15 +172,30 @@ const Room = ({
                       setErrorMessage,
                     }}
                   />
+
                   {isUsersTurn(gameState, loggedInUsername) && (
-                    <EndTurnButton
-                      props={{
-                        gameState,
-                        coreRoomInfo,
-                        coreUserInfo,
-                        setErrorMessage,
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        gap: "0.5rem",
                       }}
-                    />
+                    >
+                      <EndTurnButton
+                        props={{
+                          gameState,
+                          coreRoomInfo,
+                          coreUserInfo,
+                          setErrorMessage,
+                        }}
+                      />
+                      <ResetPlayedTreasuresButton
+                        gameState={gameState}
+                        coreRoomInfo={coreRoomInfo}
+                        coreUserInfo={coreUserInfo}
+                        setErrorMessage={setErrorMessage}
+                      />
+                    </div>
                   )}
                 </div>
               )}
@@ -240,10 +211,58 @@ const Room = ({
             </div>
 
             <div
-              style={{ display: "flex", gap: "1rem", flexDirection: "column" }}
+              style={{
+                display: "flex",
+                gap: "1rem",
+                flexDirection: "column",
+              }}
             >
-              {gameStarted && <HistoryLog gameState={gameState} />}
+              <div style={{ display: "flex", gap: "1rem" }}>
+                <div
+                  style={{
+                    backgroundColor: THEME_COLORS.translucentBlack,
+                    color: "white",
+                    padding: "1rem",
+                    width: "100%",
+                  }}
+                >
+                  Playing as :{" "}
+                  <span style={{ color: userNameColors[loggedInUsername] }}>
+                    {loggedInUsername}
+                  </span>
+                </div>
 
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "0.5rem",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <Link
+                    to="/"
+                    style={{
+                      backgroundColor: THEME_COLORS.translucentStraw,
+                      maxWidth: "fit-content",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                      padding: "0.5rem",
+                      fontSize: "1.2rem",
+                      borderRadius: "0.5rem",
+                      alignSelf: "center",
+                    }}
+                  >
+                    Back to home <BiSolidCastle size={50} />
+                  </Link>
+
+                  <BackgroundSelector setBackgroundIndex={setBackgroundIndex} />
+                </div>
+              </div>
+
+              {gameStarted && <HistoryLog gameState={gameState} />}
               <ChatLog
                 chatLog={chatLog}
                 userNames={gameState.actor_state.map((a) => a.name)}

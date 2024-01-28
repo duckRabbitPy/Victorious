@@ -31,3 +31,26 @@ export const canBuyCard = ({
     isUsersTurn(gameState, loggedInUsername)
   );
 };
+
+export const canGainCard = ({
+  gameState,
+  loggedInUsername,
+  cardName,
+}: {
+  gameState: GameState;
+  loggedInUsername: string;
+  cardName: CardName;
+}) => {
+  const actor = getActorFromGameState(gameState, loggedInUsername);
+  const cardCost = cardNameToCard(cardName).cost;
+  const demandHasBeenMet = actor.actionPhaseDemand?.demandType === "Gain";
+  const gainsRemaining = actor.actionPhaseDemand?.count || 0;
+
+  return (
+    demandHasBeenMet &&
+    gainsRemaining > 0 &&
+    gameState.global_state.supply[cardName] > 0 &&
+    (actor.actionPhaseDemand.requirement?.maxValue || 999) > cardCost &&
+    isUsersTurn(gameState, loggedInUsername)
+  );
+};

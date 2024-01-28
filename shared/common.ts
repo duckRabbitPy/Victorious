@@ -42,13 +42,6 @@ const province = {
   value: 6,
 } as const;
 
-const curse = {
-  name: "curse",
-  cost: 0,
-  type: "curse",
-  value: -1,
-} as const;
-
 const village = {
   name: "village",
   cost: 3,
@@ -95,13 +88,29 @@ const festival = {
   description: "+2 actions, +1 buy, +2 treasure",
 } as const;
 
-const Mine = {
+const mine = {
   name: "mine",
   cost: 5,
   type: "action",
   value: 0,
   description:
     "Trash a treasure card from your hand. Gain a treasure card costing up to 3 more; put it into your hand.",
+} as const;
+
+const workshop = {
+  name: "workshop",
+  cost: 3,
+  type: "action",
+  value: 0,
+  description: "Gain a card costing up to 4",
+} as const;
+
+const moneylender = {
+  name: "moneylender",
+  cost: 4,
+  type: "action",
+  value: 0,
+  description: "Trash a copper from your hand. If you do, +3 treasure",
 } as const;
 
 export const TreasureNames = S.union(
@@ -124,15 +133,15 @@ export const ActionNames = S.union(
   S.literal("laboratory"),
   S.literal("festival"),
   S.literal("mine"),
-  S.literal("curse")
+  S.literal("workshop"),
+  S.literal("moneylender")
 );
 
 const CardNames = S.union(TreasureNames, VictoryNames, ActionNames);
 const CardTypes = S.union(
   S.literal("treasure"),
   S.literal("victory"),
-  S.literal("action"),
-  S.literal("curse")
+  S.literal("action")
 );
 
 const CardStruct = S.struct({
@@ -191,7 +200,6 @@ export const cardNamesToCount = (cardNames: readonly CardName[]): CardCount => {
     estate: 0,
     duchy: 0,
     province: 0,
-    curse: 0,
     village: 0,
     smithy: 0,
     market: 0,
@@ -199,6 +207,8 @@ export const cardNamesToCount = (cardNames: readonly CardName[]): CardCount => {
     mine: 0,
     festival: 0,
     laboratory: 0,
+    workshop: 0,
+    moneylender: 0,
   };
 
   for (const cardName of cardNames) {
@@ -263,9 +273,11 @@ export const cardNameToCard = (cardName: CardName): Card => {
     case "festival":
       return festival;
     case "mine":
-      return Mine;
-    case "curse":
-      return curse;
+      return mine;
+    case "workshop":
+      return workshop;
+    case "moneylender":
+      return moneylender;
   }
 };
 
@@ -276,6 +288,21 @@ export const CardCountStruct = S.record(
   S.union(TreasureNames, VictoryNames, ActionNames),
   S.number
 );
+
+const requirement = S.struct({
+  type: S.optional(
+    S.union(S.literal("Treasure"), S.literal("Victory"), S.literal("Action"))
+  ),
+  maxValue: S.optional(S.number),
+  minValue: S.optional(S.number),
+});
+
+const actionPhaseDemand = S.struct({
+  actionCard: ActionNames,
+  demandType: S.union(S.literal("Gain"), S.literal("Trash")),
+  requirement: S.optional(requirement),
+  count: S.number,
+});
 
 export enum Phases {
   Action = "action",
@@ -293,6 +320,7 @@ const ActorStateStruct = S.struct({
   victoryPoints: S.number,
   discardPile: S.array(S.union(TreasureNames, VictoryNames, ActionNames)),
   deck: S.array(S.union(TreasureNames, VictoryNames, ActionNames)),
+  actionPhaseDemand: S.nullable(actionPhaseDemand),
   phase: S.enums(Phases),
 });
 
@@ -330,6 +358,7 @@ export const BroadCastStruct = S.struct({
 });
 
 export type ActorState = S.Schema.To<typeof ActorStateStruct>;
+export type ActionPhaseDemand = S.Schema.To<typeof actionPhaseDemand>;
 export type GlobalState = S.Schema.To<typeof GlobalStateStruct>;
 export type GameState = S.Schema.To<typeof GameStateStruct>;
 export type ClientPayload = S.Schema.To<typeof ClientPayloadStruct>;
@@ -349,12 +378,14 @@ export enum SupportedEffects {
   getCurrentGameState = "getCurrentGameState",
   addLivePlayer = "addLivePlayer",
   buyCard = "buyCard",
+  gainCard = "gainCard",
   playTreasure = "playTreasure",
   resetPlayedTreasures = "resetPlayedTreasures",
   playAction = "playAction",
   incrementTurn = "incrementTurn",
   getCurrentChatLog = "getCurrentChatLog",
   sendChatMessage = "sendChatMessage",
+  trashCardToMeetDemand = "trashCardToMeetDemand",
 }
 
 export const ClientPayloadStruct = S.struct({
@@ -381,7 +412,8 @@ export const zeroCardCount: CardCount = {
   laboratory: 0,
   festival: 0,
   councilRoom: 0,
-  curse: 0,
+  workshop: 0,
+  moneylender: 0,
 };
 
 export const subtractCardCount = (a: CardCount, b: CardCount): CardCount => {

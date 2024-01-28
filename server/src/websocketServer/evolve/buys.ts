@@ -1,5 +1,6 @@
 import { Effect as E } from "effect";
 import {
+  ActionPhaseDemand,
   CardName,
   GameState,
   Phases,
@@ -94,6 +95,72 @@ export const buyCard = ({
   const latestTransaction = `${
     gameState.actor_state.filter((a) => a.id === userId)[0].name
   } purchased ${indefiniteArticle(cardName)} ${cardName}`;
+
+  const newGlobalState = {
+    ...gameState.global_state,
+    supply: {
+      ...gameState.global_state.supply,
+      [cardName]: gameState.global_state.supply[cardName] - 1,
+    },
+    history: [...gameState.global_state.history, latestTransaction],
+  };
+
+  return E.succeed({
+    ...gameState,
+    actor_state: newActorState,
+    global_state: newGlobalState,
+  });
+};
+
+export const gainCard = ({
+  gameState,
+  userId,
+  cardName,
+}: {
+  gameState: GameState;
+  userId: string;
+  cardName: CardName;
+}) => {
+  if (gameState.global_state.supply[cardName] < 1) {
+    return E.fail(
+      new IllegalGameStateError({
+        message: `Cannot gain ${cardName} because supply is empty`,
+      })
+    );
+  }
+
+  const newActorState = gameState.actor_state.map((actor) => {
+    if (actor.id === userId) {
+      const currentActorDemandPhase =
+        actor.actionPhaseDemand as ActionPhaseDemand;
+
+      const endActionDemandPhase =
+        currentActorDemandPhase?.count === null || 1 || 0;
+
+      const newActionPhaseDemand = endActionDemandPhase
+        ? null
+        : {
+            ...currentActorDemandPhase,
+            count: (currentActorDemandPhase?.count || 1) - 1,
+          };
+
+      const newHand = {
+        ...actor.hand,
+        [cardName]: actor.hand[cardName] + 1,
+      };
+
+      return {
+        ...actor,
+        hand: newHand,
+        actionPhaseDemand: newActionPhaseDemand,
+      };
+    }
+    return actor;
+  });
+
+  const latestTransaction = `${
+    gameState.actor_state.filter((a) => a.id === userId)[0].name
+  } gained ${indefiniteArticle(cardName)} ${cardName}`;
 
   const newGlobalState = {
     ...gameState.global_state,

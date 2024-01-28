@@ -157,6 +157,41 @@ export const buyCard = ({
   );
 };
 
+export const gainCard = ({
+  socket,
+  authToken,
+  roomNumber,
+  cardName,
+  mutationIndex,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  cardName: CardName;
+  mutationIndex: number;
+  setErrorMessage: (message: string | null) => void;
+}) => {
+  if (!socket) {
+    setErrorMessage("Socket is null");
+    return;
+  }
+  if (!authToken) {
+    setErrorMessage("Auth token is null");
+    return;
+  }
+  socket.send(
+    prepareMessage({
+      mutationIndex,
+      effect: SupportedEffects.gainCard,
+      authToken,
+      room: roomNumber,
+      cardName,
+      toDiscardFromHand: [],
+    })
+  );
+};
+
 export const playTreasure = ({
   socket,
   authToken,
@@ -184,6 +219,43 @@ export const playTreasure = ({
   socket.send(
     prepareMessage({
       effect: SupportedEffects.playTreasure,
+      authToken,
+      mutationIndex,
+      room: roomNumber,
+      cardName,
+      toDiscardFromHand: [],
+    })
+  );
+};
+
+export const trashCardToMeetDemand = ({
+  socket,
+  authToken,
+  roomNumber,
+  cardName,
+  mutationIndex,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  cardName: CardName;
+  mutationIndex: number;
+
+  setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
+}) => {
+  if (!socket) {
+    setErrorMessage("Socket is null");
+    return;
+  }
+  if (!authToken) {
+    setErrorMessage("Auth token is null");
+    return;
+  }
+
+  socket.send(
+    prepareMessage({
+      effect: SupportedEffects.trashCardToMeetDemand,
       authToken,
       mutationIndex,
       room: roomNumber,

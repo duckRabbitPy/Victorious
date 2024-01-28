@@ -18,9 +18,9 @@ import {
   resetPlayedTreasures,
 } from "./evolve/hand";
 
-import { buyCard, resetBuysAndActions } from "./evolve/buys";
+import { buyCard, gainCard, resetBuysAndActions } from "./evolve/buys";
 import { incrementTurn } from "./evolve/turn";
-import { playAction } from "./evolve/actions";
+import { playAction, trashCardToMeetDemand } from "./evolve/actions";
 import { deduceVictoryPoints, determineIfGameIsOver } from "./evolve/victory";
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
@@ -134,6 +134,25 @@ export const handleGameMessage = ({
       );
     }
 
+    case SupportedEffects.gainCard: {
+      return pipe(
+        E.all({
+          currentGameState,
+          cardName,
+        }),
+        E.flatMap(({ currentGameState, cardName }) =>
+          gainCard({
+            gameState: currentGameState,
+            cardName,
+            userId: userInfo.userId,
+          })
+        ),
+        E.flatMap(deduceVictoryPoints),
+        E.flatMap(determineIfGameIsOver),
+        E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
+      );
+    }
+
     case SupportedEffects.playTreasure: {
       return pipe(
         E.all({
@@ -173,6 +192,25 @@ export const handleGameMessage = ({
             userId: userInfo.userId,
             cardName,
             toDiscardFromHand,
+          })
+        ),
+        E.flatMap(deduceVictoryPoints),
+        E.flatMap(determineIfGameIsOver),
+        E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
+      );
+    }
+
+    case SupportedEffects.trashCardToMeetDemand: {
+      return pipe(
+        E.all({
+          currentGameState,
+          cardName,
+        }),
+        E.flatMap(({ currentGameState, cardName }) =>
+          trashCardToMeetDemand({
+            userId: userInfo.userId,
+            gameState: currentGameState,
+            toTrash: cardName,
           })
         ),
         E.flatMap(deduceVictoryPoints),

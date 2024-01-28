@@ -5,13 +5,14 @@ import {
   cardNameToCard,
   GameState,
   getTreasureValue,
+  ActionPhaseDemand,
 } from "../../../shared/common";
 import { isUsersTurn } from "../../../shared/utils";
 import { THEME_COLORS } from "../constants";
 import {
   playAction,
   playTreasure,
-  resetPlayedTreasures,
+  trashCardToMeetDemand,
 } from "../effects/effects";
 
 import { CoreRoomInfo, CoreUserInfo } from "../types";
@@ -48,6 +49,24 @@ const CardInHand = ({
   );
 };
 
+const constructDemandText = (actionPhaseDemand: ActionPhaseDemand) => {
+  const { demandType, count, requirement } = actionPhaseDemand;
+
+  if (demandType === "Gain") {
+    return `Gain ${count} ${count > 1 ? "cards" : "card"} ${
+      requirement?.maxValue ? `worth up to ${requirement.maxValue}` : ""
+    } ${requirement?.minValue ? `worth at least ${requirement.minValue}` : ""}`;
+  }
+
+  if (demandType === "Trash") {
+    return `Trash ${count} ${count > 1 ? "cards" : "card"} ${
+      requirement?.maxValue ? `worth up to ${requirement.maxValue}` : ""
+    } ${requirement?.minValue ? `worth at least ${requirement.minValue}` : ""}`;
+  }
+
+  return "";
+};
+
 const PlayerHand = ({
   gameState,
   coreRoomInfo: { socket, authToken, roomNumber },
@@ -70,13 +89,26 @@ const PlayerHand = ({
         backgroundColor: THEME_COLORS.translucentBlack,
         border: "2px solid black",
         color: "white",
+        flex: 1,
       }}
     >
       <>
-        <h3>Hand</h3>
+        <h3 style={{ margin: 0 }}>Hand</h3>
         {!isUsersTurn(gameState, loggedInUsername)
           ? "Waiting for your turn..."
           : "Click on a card to play it."}
+
+        <div
+          style={{
+            color:
+              currentUserState.actionPhaseDemand?.demandType === "Trash"
+                ? THEME_COLORS.lightRed
+                : "green",
+          }}
+        >
+          {currentUserState.actionPhaseDemand &&
+            constructDemandText(currentUserState.actionPhaseDemand)}
+        </div>
       </>
 
       {visibleHandCountKVP.map(([cardName, count]) => {
@@ -90,7 +122,9 @@ const PlayerHand = ({
             : "2px solid black";
 
         const cursor =
-          !isUsersTurn(gameState, loggedInUsername) || !currentUserState.buys
+          !isUsersTurn(gameState, loggedInUsername) ||
+          (!currentUserState.buys &&
+            currentUserState.actionPhaseDemand?.demandType !== "Trash")
             ? "not-allowed"
             : "pointer";
 
@@ -102,12 +136,13 @@ const PlayerHand = ({
 
         const disabled =
           !isUsersTurn(gameState, loggedInUsername) ||
-          (currentUserState.phase === Phases.Action &&
+          (((currentUserState.phase === Phases.Action &&
             getCardTypeByName(cardName) !== "action") ||
-          (currentUserState.phase === Phases.Buy &&
-            getCardTypeByName(cardName) !== "treasure") ||
-          !currentUserState.buys ||
-          cardNameToCard(cardName).type === "victory";
+            (currentUserState.phase === Phases.Buy &&
+              getCardTypeByName(cardName) !== "treasure") ||
+            !currentUserState.buys ||
+            cardNameToCard(cardName).type === "victory") &&
+            currentUserState.actionPhaseDemand?.demandType !== "Trash");
 
         const onClick = () => {
           if (
@@ -123,6 +158,17 @@ const PlayerHand = ({
               setErrorMessage,
             });
           } else if (
+            currentUserState.actionPhaseDemand?.demandType === "Trash"
+          ) {
+            trashCardToMeetDemand({
+              mutationIndex: gameState.mutation_index,
+              socket,
+              authToken,
+              roomNumber,
+              cardName,
+              setErrorMessage,
+            });
+          } else if (
             currentUserState.phase === Phases.Action &&
             getCardTypeByName(cardName) === "action"
           ) {
@@ -131,7 +177,6 @@ const PlayerHand = ({
               socket,
               authToken,
               roomNumber,
-
               cardName: cardName,
               setErrorMessage,
             });
@@ -139,7 +184,13 @@ const PlayerHand = ({
         };
 
         return (
-          <div key={cardName}>
+          <div
+            key={cardName}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
             {new Array(count).fill(0).map((_, index) => {
               return (
                 <CardInHand
@@ -178,24 +229,6 @@ const PlayerHand = ({
             )}
           </p>
         </div>
-        {getTreasureValue(cardsInPlay) > 0 && (
-          <button
-            style={{
-              margin: "1rem",
-            }}
-            onClick={() => {
-              resetPlayedTreasures({
-                mutationIndex: gameState.mutation_index,
-                socket,
-                authToken,
-                roomNumber,
-                setErrorMessage,
-              });
-            }}
-          >
-            reset played treasures
-          </button>
-        )}
       </div>
     </div>
   );

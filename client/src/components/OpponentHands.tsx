@@ -16,7 +16,7 @@ const OpponentHands = ({
     return actor.name !== loggedInUsername;
   });
 
-  const userNameColours = getUserNameColors(
+  const userNameColors = getUserNameColors(
     gameState.actor_state.map((actor) => actor.name)
   );
 
@@ -24,8 +24,8 @@ const OpponentHands = ({
     <div
       style={{
         display: "flex",
-        justifyContent: "space-between",
-        gap: "1rem",
+        flexDirection: "column",
+        gap: "0.5rem",
       }}
     >
       {opponents.map((opponent, index) => {
@@ -48,12 +48,31 @@ const OpponentHands = ({
               minWidth: "100%",
             }}
           >
-            <p style={{ margin: 0, color: THEME_COLORS.darkRed }}>
-              Opponent:{" "}
-              <span style={{ color: userNameColours[opponent.name] }}>
-                {opponent.name}
-              </span>{" "}
-              ⚔️
+            <p
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: 0,
+              }}
+            >
+              <span
+                style={{
+                  color: THEME_COLORS.lightRed,
+                }}
+              >
+                Opponent:
+              </span>
+              <span>{opponent.name}</span>
+              <span
+                style={{
+                  display: "inline-block",
+                  width: "1rem",
+                  height: "1rem",
+                  marginLeft: "0.5rem",
+                  backgroundColor: userNameColors[opponent.name],
+                }}
+              />
             </p>
             <p style={{ margin: 0 }}>
               Victory points: <b>{opponent.victoryPoints}</b>

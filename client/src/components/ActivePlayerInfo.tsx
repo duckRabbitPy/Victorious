@@ -2,6 +2,7 @@ import { CoreProps } from "../types";
 import { isUsersTurn } from "../../../shared/utils";
 import { addNewPlayer } from "../effects/effects";
 import CopyRoomLinkButton from "./CopyRoomLinkButton";
+import { getUserNameColors } from "../../../shared/common";
 
 const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
   const {
@@ -10,6 +11,10 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
     coreUserInfo: { loggedInUsername },
     setErrorMessage,
   } = props;
+
+  const userNameColors = getUserNameColors(
+    gameState.actor_state.map((a) => a.name)
+  );
   return (
     <div style={{ display: "flex", gap: "1rem", flexDirection: "column" }}>
       <div
@@ -34,13 +39,25 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
                 <li
                   key={actor.id}
                   style={{
-                    color: isUsersTurn(gameState, actor.name)
-                      ? "green"
-                      : "black",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                    justifyItems: "center",
                   }}
-                >{`✅ ${actor.name} ${
-                  isUsersTurn(gameState, actor.name) ? "👈" : ""
-                }`}</li>
+                >
+                  {`✅ ${actor.name} ${
+                    isUsersTurn(gameState, actor.name) ? "👈" : ""
+                  }`}
+
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: "1rem",
+                      height: "1rem",
+                      backgroundColor: userNameColors[actor.name],
+                    }}
+                  />
+                </li>
               ))}
             </ol>
 

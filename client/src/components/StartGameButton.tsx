@@ -1,6 +1,7 @@
 import { CoreRoomInfo } from "../types";
 import { startGame } from "../effects/effects";
 import { GameState } from "../../../shared/common";
+import useSound from "../hooks/useSound";
 
 type Props = {
   gameState: GameState;
@@ -13,6 +14,7 @@ const StartGameButton = ({
   coreRoomInfo: { socket, authToken, roomNumber },
   setErrorMessage,
 }: Props) => {
+  const { positiveSound } = useSound();
   return (
     <button
       id="start-game"
@@ -22,6 +24,7 @@ const StartGameButton = ({
           socket,
           authToken,
           roomNumber,
+          audio: positiveSound,
           setErrorMessage,
         });
       }}
