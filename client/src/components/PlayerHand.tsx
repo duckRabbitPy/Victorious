@@ -12,7 +12,6 @@ import { THEME_COLORS } from "../constants";
 import {
   playAction,
   playTreasure,
-  resetPlayedTreasures,
   trashCardToMeetDemand,
 } from "../effects/effects";
 
@@ -90,10 +89,11 @@ const PlayerHand = ({
         backgroundColor: THEME_COLORS.translucentBlack,
         border: "2px solid black",
         color: "white",
+        flex: 1,
       }}
     >
       <>
-        <h3>Hand</h3>
+        <h3 style={{ margin: 0 }}>Hand</h3>
         {!isUsersTurn(gameState, loggedInUsername)
           ? "Waiting for your turn..."
           : "Click on a card to play it."}
@@ -184,7 +184,13 @@ const PlayerHand = ({
         };
 
         return (
-          <div key={cardName}>
+          <div
+            key={cardName}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
             {new Array(count).fill(0).map((_, index) => {
               return (
                 <CardInHand
@@ -223,24 +229,6 @@ const PlayerHand = ({
             )}
           </p>
         </div>
-        {getTreasureValue(cardsInPlay) > 0 && (
-          <button
-            style={{
-              margin: "1rem",
-            }}
-            onClick={() => {
-              resetPlayedTreasures({
-                mutationIndex: gameState.mutation_index,
-                socket,
-                authToken,
-                roomNumber,
-                setErrorMessage,
-              });
-            }}
-          >
-            reset played treasures
-          </button>
-        )}
       </div>
     </div>
   );

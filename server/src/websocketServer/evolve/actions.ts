@@ -12,7 +12,6 @@ import {
 } from "../../../../shared/common";
 import { indefiniteArticle } from "../../../../shared/utils";
 import { dealCards } from "./hand";
-import { get } from "http";
 
 export const applyAction = (
   gameState: GameState,
@@ -329,6 +328,8 @@ const getTrashCountDemandFromAction = (actionCard: CardName) => {
   switch (actionCard) {
     case "mine":
       return 1;
+    case "workshop":
+      return 1;
     default:
       return 0;
   }
@@ -338,6 +339,8 @@ const getGainCountDemandFromAction = (actionCard: CardName) => {
   switch (actionCard) {
     case "mine":
       return 1;
+    case "workshop":
+      return 1;
     default:
       return 0;
   }
@@ -345,8 +348,12 @@ const getGainCountDemandFromAction = (actionCard: CardName) => {
 
 const getTrashRequirementFromAction = (actionCard: CardName) => {
   switch (actionCard) {
-    case "mine":
-      return undefined;
+    case "councilRoom":
+      return {
+        type: "Treasure",
+        minValue: 0,
+        maxValue: 1,
+      };
     default:
       return undefined;
   }
@@ -360,6 +367,10 @@ const getGainRequirementFromAction = (
     case "mine":
       return {
         maxValue: getCardValueByName(trashedCard) + 3,
+      };
+    case "workshop":
+      return {
+        maxValue: 4,
       };
     default:
       return undefined;

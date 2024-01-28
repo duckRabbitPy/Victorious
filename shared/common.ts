@@ -88,7 +88,7 @@ const festival = {
   description: "+2 actions, +1 buy, +2 treasure",
 } as const;
 
-const Mine = {
+const mine = {
   name: "mine",
   cost: 5,
   type: "action",
@@ -97,7 +97,7 @@ const Mine = {
     "Trash a treasure card from your hand. Gain a treasure card costing up to 3 more; put it into your hand.",
 } as const;
 
-const Workshop = {
+const workshop = {
   name: "workshop",
   cost: 3,
   type: "action",
@@ -105,7 +105,7 @@ const Workshop = {
   description: "Gain a card costing up to 4",
 } as const;
 
-const Moneylender = {
+const moneylender = {
   name: "moneylender",
   cost: 4,
   type: "action",
@@ -273,11 +273,11 @@ export const cardNameToCard = (cardName: CardName): Card => {
     case "festival":
       return festival;
     case "mine":
-      return Mine;
+      return mine;
     case "workshop":
-      return Workshop;
+      return workshop;
     case "moneylender":
-      return Moneylender;
+      return moneylender;
   }
 };
 

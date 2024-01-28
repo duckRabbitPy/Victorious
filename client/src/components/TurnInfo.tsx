@@ -25,7 +25,6 @@ const TurnInfo = ({
       style={{
         border: "1px black solid",
         background: THEME_COLORS.translucentStraw,
-        padding: "1rem",
       }}
     >
       {!isUsersTurn(gameState, loggedInUsername) && (
