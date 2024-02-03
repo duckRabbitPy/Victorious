@@ -1,5 +1,23 @@
 import * as S from "@effect/schema/Schema";
 
+export const ALL_CARD_NAMES: CardName[] = [
+  "copper",
+  "silver",
+  "gold",
+  "estate",
+  "duchy",
+  "province",
+  "village",
+  "smithy",
+  "market",
+  "councilRoom",
+  "laboratory",
+  "festival",
+  "mine",
+  "workshop",
+  "moneylender",
+] as const;
+
 const copper = {
   name: "copper",
   cost: 0,
@@ -47,6 +65,7 @@ const village = {
   cost: 3,
   type: "action",
   value: 0,
+  description: "Draw 1 card, +2 actions",
 } as const;
 
 const smithy = {
@@ -54,6 +73,7 @@ const smithy = {
   cost: 4,
   type: "action",
   value: 0,
+  description: "Draw 3 cards",
 } as const;
 
 const market = {
@@ -102,7 +122,7 @@ const workshop = {
   cost: 3,
   type: "action",
   value: 0,
-  description: "Gain a card costing up to 4",
+  description: "Gain a card costing up to 4 coins",
 } as const;
 
 const moneylender = {
@@ -152,24 +172,6 @@ const CardStruct = S.struct({
   description: S.optional(S.string),
 });
 
-export const getAllCardNames = (): CardName[] => {
-  return [
-    "copper",
-    "silver",
-    "gold",
-    "estate",
-    "duchy",
-    "province",
-    "village",
-    "smithy",
-    "market",
-    "councilRoom",
-    "laboratory",
-    "festival",
-    "mine",
-  ];
-};
-
 export const getCardCostByName = (cardName: CardName): number => {
   return cardNameToCard(cardName).cost;
 };
@@ -184,7 +186,7 @@ export const getCardValueByName = (cardName: CardName): number => {
 
 export const countToCardNamesArray = (cardCount: CardCount): CardName[] => {
   const cardNames: CardName[] = [];
-  for (const cardName of getAllCardNames()) {
+  for (const cardName of ALL_CARD_NAMES) {
     for (let i = 0; i < cardCount[cardName]; i++) {
       cardNames.push(cardName);
     }
@@ -357,6 +359,13 @@ export const BroadCastStruct = S.struct({
   error: S.optional(S.string),
 });
 
+const registerResultSchema = S.struct({
+  user_id: S.string,
+  username: S.string,
+  email: S.string,
+  confirmation_token: S.string,
+});
+
 export type ActorState = S.Schema.To<typeof ActorStateStruct>;
 export type ActionPhaseDemand = S.Schema.To<typeof actionPhaseDemand>;
 export type GlobalState = S.Schema.To<typeof GlobalStateStruct>;
@@ -370,6 +379,7 @@ export const safeParseCardName = S.parse(CardNames);
 export const safeParseBroadCast = S.parse(BroadCastStruct);
 export const safeParseGameState = S.parse(GameStateStruct);
 export const safeParseChatLog = S.parse(S.array(ChatMessageStruct));
+export const safeParseRegisterResult = S.parse(registerResultSchema);
 
 export type BroadCastType = "gameState" | "chatLog" | "error";
 
@@ -377,6 +387,8 @@ export enum SupportedEffects {
   startGame = "startGame",
   getCurrentGameState = "getCurrentGameState",
   addLivePlayer = "addLivePlayer",
+  addBotPlayer = "addBotPlayer",
+  handleBotPlayerTurn = "handleBotPlayerTurn",
   buyCard = "buyCard",
   gainCard = "gainCard",
   playTreasure = "playTreasure",
@@ -458,3 +470,12 @@ export const getUserNameColors = (userNames: string[]) => {
     return acc;
   }, {} as UserNameColors);
 };
+
+export const botNamePrefixes = [
+  "Lancelot_bot_",
+  "Arthur_bot_",
+  "Guinevere_bot_",
+  "Merlin_bot_",
+  "Morgana_bot_",
+  "Galahad_bot_",
+];

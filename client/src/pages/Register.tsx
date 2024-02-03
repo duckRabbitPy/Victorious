@@ -33,12 +33,13 @@ export const Register = () => {
           setErrorMessage(null);
           setEmailSent(true);
         } else {
-          setErrorMessage("An error occurred, please try again.");
+          setErrorMessage(
+            data.message || "An error occurred, please try again."
+          );
         }
       })
-      .catch((error) => {
+      .catch(() => {
         setErrorMessage("An error occurred, please try again.");
-        console.error("Error:", error);
       })
       .finally(() => {
         setLoading(false);

@@ -26,6 +26,7 @@ export const canBuyCard = ({
 
   return (
     buysRemaining > 0 &&
+    actor.phase === "buy" &&
     gameState.global_state.supply[cardName] > 0 &&
     totalTreasureValue >= cardCost &&
     isUsersTurn(gameState, loggedInUsername)
@@ -50,7 +51,7 @@ export const canGainCard = ({
     demandHasBeenMet &&
     gainsRemaining > 0 &&
     gameState.global_state.supply[cardName] > 0 &&
-    (actor.actionPhaseDemand.requirement?.maxValue || 999) > cardCost &&
+    (actor.actionPhaseDemand.requirement?.maxValue || 999) >= cardCost &&
     isUsersTurn(gameState, loggedInUsername)
   );
 };

@@ -1,7 +1,7 @@
 import React from "react";
 import {
+  ALL_CARD_NAMES,
   CardName,
-  getAllCardNames,
   getCardCostByName,
   getCardDescriptionByName,
   getCardTypeByName,
@@ -37,6 +37,10 @@ const treasureCardUrls = {
   councilRoom:
     "https://res.cloudinary.com/dkytnwn87/image/upload/v1704141742/dominion/Leonardo_Diffusion_XL_medieval_council_room_0_g9hye5.jpg",
   mine: "https://res.cloudinary.com/dkytnwn87/image/upload/v1704141742/dominion/Leonardo_Diffusion_XL_medieval_mine_0_rizl4d.jpg",
+  moneylender:
+    "https://res.cloudinary.com/dkytnwn87/image/upload/v1706955426/dominion/Leonardo_Diffusion_XL_money_lender_small_pouch_of_coins_being_1_qnu368.jpg",
+  workshop:
+    "https://res.cloudinary.com/dkytnwn87/image/upload/v1706955296/dominion/Leonardo_Diffusion_XL_workshop_medival_tools_at_table_3_wxhz9k.jpg",
 } as Record<CardName, string>;
 
 const Supply = ({ props }: { props: CoreProps }) => {
@@ -52,7 +56,7 @@ const Supply = ({ props }: { props: CoreProps }) => {
 
   if (!currentUserState) return null;
 
-  const cardTypeGroups = groupBy(getAllCardNames(), (cardName) =>
+  const cardTypeGroups = groupBy(ALL_CARD_NAMES, (cardName) =>
     getCardTypeByName(cardName)
   );
 
@@ -75,7 +79,7 @@ const Supply = ({ props }: { props: CoreProps }) => {
         flexDirection: "row",
         justifyContent: "space-between",
         position: "relative",
-        gap: "2rem",
+        gap: "0.5rem",
       }}
     >
       {supplyCardInFocus && (
@@ -90,7 +94,7 @@ const Supply = ({ props }: { props: CoreProps }) => {
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
-            backgroundColor: "rgba(28, 26, 27, 0.8)",
+            backgroundColor: "rgba(28, 26, 27, 1)",
             flexDirection: "column",
             justifyItems: "center",
             display: "flex",
@@ -130,14 +134,16 @@ const Supply = ({ props }: { props: CoreProps }) => {
           </div>
         </div>
       )}
-      <div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(5, 1fr)",
+          gap: "0.5rem",
+        }}
+      >
         <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            flexDirection: "column",
-            gap: "0.5rem",
-          }}
+          style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}
         >
           {treasureCards.map((cardName) => (
             <SupplyCard
@@ -153,7 +159,15 @@ const Supply = ({ props }: { props: CoreProps }) => {
               {cardName}
             </SupplyCard>
           ))}
+        </div>
 
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "0.5rem",
+          }}
+        >
           {victoryCards.map((cardName) => (
             <SupplyCard
               key={cardName}
@@ -169,28 +183,32 @@ const Supply = ({ props }: { props: CoreProps }) => {
             </SupplyCard>
           ))}
         </div>
-      </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: "1rem",
-        }}
-      >
-        {actionCards.map((cardName) => (
-          <SupplyCard
-            key={cardName}
-            coreProps={{
-              gameState,
-              coreRoomInfo: { socket, authToken, roomNumber },
-              coreUserInfo: { loggedInUsername, currentUserState },
-              setErrorMessage,
-            }}
-            setSupplyCardInFocus={setSupplyCardInFocus}
-          >
-            {cardName}
-          </SupplyCard>
-        ))}
+
+        <div
+          style={{
+            gridColumn: "span 3",
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gridAutoRows: "minmax(60px, auto)",
+            gap: "0.5rem",
+            marginLeft: "1rem",
+          }}
+        >
+          {actionCards.map((cardName) => (
+            <SupplyCard
+              key={cardName}
+              coreProps={{
+                gameState,
+                coreRoomInfo: { socket, authToken, roomNumber },
+                coreUserInfo: { loggedInUsername, currentUserState },
+                setErrorMessage,
+              }}
+              setSupplyCardInFocus={setSupplyCardInFocus}
+            >
+              {cardName}
+            </SupplyCard>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -11,13 +11,18 @@ import {
   createGameSessionQuery,
   endStaleGameSessionsMutation,
 } from "../models/gamestate/mutations";
-import { safeParseGameState } from "../../../shared/common";
+import { botNamePrefixes, safeParseGameState } from "../../../shared/common";
 import { DBConnection, DBConnectionLive } from "../db/connection";
 
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { AuthenticationError, CustomParseError } from "../customErrors";
 import {
+  AuthenticationError,
+  CustomParseError,
+  RegistrationError,
+} from "../customErrors";
+import {
+  getAllRegisteredUserNamesQuery,
   getHashedPasswordByUsernameQuery,
   getUserIdByUsernameQuery,
   registerNewUserQuery,
@@ -136,9 +141,28 @@ export const register: RequestHandler = (req, res) => {
       const saltRounds = 10;
       const hashedPassword = bcrypt.hashSync(password, saltRounds);
 
-      // todo: check if user already exists first
       return pipe(
-        registerNewUserQuery(username, email, hashedPassword, pool),
+        getAllRegisteredUserNamesQuery(pool),
+        E.flatMap((usernames) => {
+          const conflictWithBotNames =
+            botNamePrefixes.includes(username) ||
+            botNamePrefixes.some((botName) => botName.includes(username));
+
+          if (
+            (usernames && usernames.includes(username)) ||
+            conflictWithBotNames
+          ) {
+            return E.fail(
+              new RegistrationError({
+                message: "Username is reserved or taken",
+              })
+            );
+          }
+          return E.unit;
+        }),
+        E.flatMap(() =>
+          registerNewUserQuery(username, email, hashedPassword, pool)
+        ),
         E.flatMap(({ email, confirmation_token }) =>
           sendConfirmationEmail({ email, confirmation_token })
         ),
@@ -164,16 +188,14 @@ export const register: RequestHandler = (req, res) => {
 };
 
 export const verify: RequestHandler = (req, res) => {
-  const confirmation_token = safeParseNonEmptyString(
-    req.params.confirmation_token
-  );
-
   const usernameOrError = DBConnection.pipe(
     E.flatMap((connection) => connection.pool),
     E.flatMap((pool) =>
       E.all({
         pool: E.succeed(pool),
-        confirmation_token: safeParseNonEmptyString(confirmation_token),
+        confirmation_token: safeParseNonEmptyString(
+          req.params.confirmation_token
+        ),
       })
     ),
     E.flatMap(({ confirmation_token, pool }) =>

@@ -1,11 +1,11 @@
 export const API_ENDPOINT =
   import.meta.env.MODE === "production"
-    ? "https://dominion.onrender.com/api"
+    ? "https://victorious-duckrabbit.koyeb.app/api"
     : "http://localhost:3000/api";
 
 export const WEB_SOCKET_URL =
   import.meta.env.MODE === "production"
-    ? "wss://dominion.onrender.com"
+    ? "wss://victorious-duckrabbit.koyeb.app/api"
     : "ws://localhost:3000";
 
 export const Backgrounds = [
@@ -25,5 +25,6 @@ export const THEME_COLORS = {
   translucentBlack: "rgba(28, 26, 27, 0.66)",
   translucentStraw: "rgba(255, 255, 255, 0.7)",
   lightRed: "red",
+  lightGreen: "lightgreen",
   darkRed: "darkred",
 };

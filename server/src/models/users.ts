@@ -1,5 +1,5 @@
 import { pipe, Effect as E } from "effect";
-import { PostgresError } from "../customErrors";
+import { PostgresError, RegistrationError } from "../customErrors";
 import { logAndThrowError } from "../utils";
 import { uuidv4 } from "../../../shared/utils";
 import { Pool } from "pg";
@@ -47,6 +47,23 @@ export const getUserIdByUsernameQuery = (username: string, pool: Pool) => {
   }).pipe(E.retryN(1));
 };
 
+export const getAllRegisteredUserNamesQuery = (pool: Pool) => {
+  const get = async () => {
+    try {
+      const result = await pool.query("SELECT username FROM users");
+
+      return result.rows.map((row) => row.username);
+    } catch (error) {
+      logAndThrowError(error);
+    }
+  };
+
+  return E.tryPromise({
+    try: () => get(),
+    catch: () => new PostgresError({ message: "postgres query error" }),
+  }).pipe(E.retryN(1));
+};
+
 export const registerNewUserQuery = (
   username: string,
   email: string,
@@ -57,7 +74,7 @@ export const registerNewUserQuery = (
     try {
       const confirmation_token = uuidv4();
       const result = await pool.query(
-        "INSERT INTO users (username, password, email, confirmation_token) VALUES ($1, $2, $3, $4) RETURNING email, confirmation_token",
+        "INSERT INTO users (username, password, email, confirmation_token) VALUES ($1, $2, $3, $4) RETURNING user_id, username, email, confirmation_token",
         [username, hashedPassword, email, confirmation_token]
       );
       return result.rows[0];
@@ -68,7 +85,10 @@ export const registerNewUserQuery = (
 
   return E.tryPromise({
     try: () => add(),
-    catch: () => new PostgresError({ message: "postgres query error" }),
+    catch: () =>
+      new RegistrationError({
+        message: "Error registering user, email and usernames must be unique",
+      }),
   }).pipe(E.retryN(1));
 };
 

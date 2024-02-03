@@ -68,7 +68,6 @@ export const useGameState = () => {
       const eventData = safeParseBroadCast(
         deserialiseDates(JSON.parse(event.data))
       ).pipe(E.runSync);
-      console.log("Received message from server:", eventData);
 
       switch (eventData.broadcastType) {
         case "gameState": {
@@ -119,6 +118,7 @@ export const useGameState = () => {
           socket: newSocket,
           authToken: localStorage.getItem("dominion_auth_token"),
           roomNumber: Number(window.location.pathname.split("/").pop()),
+          setErrorMessage,
         });
         setInitialGameStateFetched(true);
       }

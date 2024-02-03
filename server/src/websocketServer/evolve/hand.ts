@@ -151,6 +151,8 @@ export const cleanUp = (gameState: GameState) => {
 
         return {
           ...actor,
+          actionPhaseDemand: null,
+          bonusTreasureValue: 0,
           hand: cardNamesToCount(newCardsIntoHand),
           deck: newDeck,
           cardsInPlay: zeroCardCount,

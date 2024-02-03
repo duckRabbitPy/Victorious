@@ -6,7 +6,7 @@ import {
   sendErrorMsgToClient,
   clientNotInConnectionList,
   getClientMessage,
-  tapPipeLine,
+  delay,
 } from "../utils";
 
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
@@ -15,6 +15,7 @@ import { SupportedEffects } from "../../../shared/common";
 import { getCurrentChatLog, handleChatMessage } from "./handleChatMessage";
 import { handleGameMessage } from "./handleGameMessage";
 import { broadcastToRoom } from "./broadcast";
+import { sendBotMessage } from "./bots/sendBotMessage";
 
 export type RoomConnections = {
   socket: WebSocket;
@@ -73,7 +74,7 @@ export function createWebsocketServer(app: wsApplication) {
                       roomConnections,
                     })
                   ),
-                  E.flatMap(() => Effect.succeed("chat log sent successfully"))
+                  E.flatMap(() => E.succeed("chat log sent successfully"))
                 );
               }
               if (msg.effect === SupportedEffects.sendChatMessage) {
@@ -91,9 +92,7 @@ export function createWebsocketServer(app: wsApplication) {
                       roomConnections,
                     })
                   ),
-                  E.flatMap(() =>
-                    Effect.succeed("chat message sent successfully")
-                  )
+                  E.flatMap(() => E.succeed("chat message sent successfully"))
                 );
               }
 
@@ -112,14 +111,11 @@ export function createWebsocketServer(app: wsApplication) {
                     roomConnections,
                   });
                 }),
-                E.flatMap(() =>
-                  Effect.succeed("game message sent successfully")
-                )
+                E.flatMap(() => E.succeed("game message sent successfully"))
               );
             })
           )
         ),
-        tapPipeLine,
         // todo: differentiate between errors that should be sent to client and errors that should be only be logged
         E.catchAll((error) =>
           sendErrorMsgToClient(error, clientMsg, roomConnections)
@@ -127,13 +123,43 @@ export function createWebsocketServer(app: wsApplication) {
         Logger.withMinimumLogLevel(LogLevel.All)
       );
 
-      const runnable = E.provideService(
+      const processMessageRunnable = E.provideService(
         processMessage,
         DBConnection,
         DBConnectionLive
       );
 
-      E.runPromise(runnable);
+      const sendBotMessages = DBConnection.pipe(
+        E.flatMap((connection) => connection.pool),
+        E.flatMap((pool) =>
+          pipe(
+            E.all({
+              msg: parseJSONToClientMsg(msg),
+              pool: E.succeed(pool),
+            }),
+            E.flatMap(({ pool, msg }) => {
+              if (msg.chatMessage) {
+                return sendBotMessage(msg, roomConnections, pool);
+              }
+              return E.succeed(E.unit);
+            }),
+            E.catchAll((e) => {
+              console.log(e);
+              return E.succeed(E.unit);
+            })
+          )
+        )
+      );
+
+      const sendBotMessagesRunnable = E.provideService(
+        sendBotMessages,
+        DBConnection,
+        DBConnectionLive
+      );
+
+      E.runPromise(processMessageRunnable)
+        .then(() => E.runPromise(delay))
+        .then(() => E.runPromise(sendBotMessagesRunnable));
     });
 
     ws.on("close", () => {

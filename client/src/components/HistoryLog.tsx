@@ -1,8 +1,9 @@
+import { useEffect, useRef } from "react";
 import {
+  ALL_CARD_NAMES,
   CardName,
   GameState,
   UserNameColors,
-  getAllCardNames,
   getCardTypeByName,
   getUserNameColors,
 } from "../../../shared/common";
@@ -18,7 +19,8 @@ const getColor = (word: string, gameState: GameState) => {
   const userNames = gameState.actor_state.map((actor) => actor.name);
 
   const userNameColors = getUserNameColors(userNames);
-  const wordIsCard = getAllCardNames().includes(word as CardName);
+
+  const wordIsCard = ALL_CARD_NAMES.includes(word as CardName);
 
   if (wordIsCard && getCardTypeByName(word as CardName) === "treasure")
     return treasureColors[word as keyof typeof treasureColors];
@@ -49,12 +51,25 @@ const HistoryLog = ({ gameState }: { gameState: GameState }) => {
     return <li key={index}>{renderColoredText(historyItem, gameState)}</li>;
   });
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [history]);
+
   return (
     <div
+      ref={containerRef}
       style={{
         height: "100%",
         width: "400px",
-        maxHeight: "300px",
+        maxHeight: "250px",
         overflowY: "scroll",
         backgroundColor: THEME_COLORS.translucentBlack,
         border: "2px solid black",

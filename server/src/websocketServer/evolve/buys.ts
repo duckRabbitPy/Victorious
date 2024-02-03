@@ -40,7 +40,7 @@ export const buyCard = ({
   userId: string;
   cardName: CardName;
   toDiscardFromHand: readonly CardName[];
-}) => {
+}): E.Effect<never, IllegalGameStateError, GameState> => {
   if (gameState.global_state.supply[cardName] < 1) {
     return E.fail(
       new IllegalGameStateError({
@@ -63,7 +63,10 @@ export const buyCard = ({
         cardNamesToCount(toDiscardFromHand),
         gameState.actor_state.filter((a) => a.id === userId)[0].cardsInPlay
       )
-    ) < cardNameToCard(cardName).cost
+    ) +
+      gameState.actor_state.filter((a) => a.id === userId)[0]
+        .bonusTreasureValue <
+    cardNameToCard(cardName).cost
   ) {
     return E.fail(
       new IllegalGameStateError({
@@ -152,6 +155,10 @@ export const gainCard = ({
       return {
         ...actor,
         hand: newHand,
+        phase:
+          hasActionCard(newHand) && actor.actions > 0
+            ? Phases.Action
+            : Phases.Buy,
         actionPhaseDemand: newActionPhaseDemand,
       };
     }

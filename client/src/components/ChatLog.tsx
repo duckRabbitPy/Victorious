@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { sendChatMessage } from "../effects/effects";
 import { ChatMessage, getUserNameColors } from "../../../shared/common";
 import { THEME_COLORS } from "../constants";
@@ -18,6 +18,17 @@ const ChatLog = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
   };
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatLog]);
 
   const userNameColours = getUserNameColors(userNames);
 
@@ -38,12 +49,15 @@ const ChatLog = ({
       style={{
         display: "flex",
         flexDirection: "column",
+        height: "100%",
         gap: "1rem",
       }}
     >
       <div
+        ref={containerRef}
         style={{
           height: "100%",
+          maxHeight: "250px",
           width: "400px",
           overflowY: "scroll",
           backgroundColor: THEME_COLORS.translucentBlack,

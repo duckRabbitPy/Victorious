@@ -13,9 +13,21 @@ import {
 } from "../models/chatlog/mutations";
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
-import { UserInfo } from "./createWebsocketServer";
+import { RoomConnections, UserInfo } from "./createWebsocketServer";
 import { ParseError } from "@effect/schema/ParseResult";
-import { CustomParseError, PostgresError } from "../customErrors";
+import {
+  CustomParseError,
+  ExternalServiceError,
+  PostgresError,
+} from "../customErrors";
+import dotenv from "dotenv";
+import { broadcastToRoom } from "./broadcast";
+import { OpenAIError } from "openai/error";
+import { cons } from "effect/List";
+import { b } from "vitest/dist/suite-WwpgKT7k";
+import { OpenAIStub } from "./bots/openAI";
+
+dotenv.config();
 
 type HandleChatMessageProps = {
   msg: ClientPayload;

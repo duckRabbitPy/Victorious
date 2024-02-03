@@ -22,8 +22,17 @@ export const applyAction = (
     case "village": {
       const newActorState = gameState.actor_state.map((actor) => {
         if (actor.id === userId) {
+          const { newCardsIntoHand, newDeck, newDiscardPile } = dealCards({
+            deck: actor.deck,
+            discardPile: actor.discardPile,
+            numberOfCardsToDraw: 1,
+          });
+
           return {
             ...actor,
+            hand: sumCardCounts(actor.hand, cardNamesToCount(newCardsIntoHand)),
+            deck: newDeck,
+            discardPile: newDiscardPile,
             actions: actor.actions + 2,
           };
         }
@@ -185,6 +194,54 @@ export const applyAction = (
         actor_state: newActorState,
       };
     }
+
+    case "workshop": {
+      const newActorState = gameState.actor_state.map((actor) => {
+        const actionPhaseDemand: ActionPhaseDemand = {
+          actionCard: "workshop",
+          demandType: "Gain",
+          count: 1,
+          requirement: getGainRequirementFromAction("workshop"),
+        };
+
+        if (actor.id === userId) {
+          return {
+            ...actor,
+            actionPhaseDemand,
+          };
+        }
+        return actor;
+      });
+
+      return {
+        ...gameState,
+        actor_state: newActorState,
+      };
+    }
+
+    case "moneylender": {
+      const newActorState = gameState.actor_state.map((actor) => {
+        const actionPhaseDemand: ActionPhaseDemand = {
+          actionCard: "moneylender",
+          demandType: "Trash",
+          count: 1,
+          requirement: getTrashRequirementFromAction("moneylender"),
+        };
+
+        if (actor.id === userId) {
+          return {
+            ...actor,
+            actionPhaseDemand,
+          };
+        }
+        return actor;
+      });
+
+      return {
+        ...gameState,
+        actor_state: newActorState,
+      };
+    }
   }
 };
 
@@ -237,14 +294,18 @@ export const playAction = ({
   const GameStateWithLatestPhase = {
     ...updatedGameState,
     actor_state: updatedGameState.actor_state.map((actor) => {
+      console.log({
+        actions: actor.actions,
+        actionPhaseDemand: actor.actionPhaseDemand,
+        hand: actor.hand,
+        hasActionCard: hasActionCard(actor.hand),
+      });
       if (actor.id === userId) {
         return {
           ...actor,
           phase:
-            actor.actions < 1 ||
-            (!hasActionCard(actor.hand) &&
-              actor.actionPhaseDemand === null &&
-              !actor.actionPhaseDemand)
+            (actor.actions < 1 && actor.actionPhaseDemand === null) ||
+            (!hasActionCard(actor.hand) && actor.actionPhaseDemand === null)
               ? Phases.Buy
               : Phases.Action,
         };
@@ -326,10 +387,11 @@ export const trashCardToMeetDemand = ({
 
 const getTrashCountDemandFromAction = (actionCard: CardName) => {
   switch (actionCard) {
+    case "moneylender":
     case "mine":
       return 1;
     case "workshop":
-      return 1;
+      return 0;
     default:
       return 0;
   }
@@ -339,6 +401,7 @@ const getGainCountDemandFromAction = (actionCard: CardName) => {
   switch (actionCard) {
     case "mine":
       return 1;
+    case "moneylender":
     case "workshop":
       return 1;
     default:
@@ -348,9 +411,9 @@ const getGainCountDemandFromAction = (actionCard: CardName) => {
 
 const getTrashRequirementFromAction = (actionCard: CardName) => {
   switch (actionCard) {
-    case "councilRoom":
+    case "moneylender":
       return {
-        type: "Treasure",
+        type: "Treasure" as const,
         minValue: 0,
         maxValue: 1,
       };
@@ -361,16 +424,20 @@ const getTrashRequirementFromAction = (actionCard: CardName) => {
 
 const getGainRequirementFromAction = (
   actionCard: CardName,
-  trashedCard: CardName
+  trashedCard?: CardName
 ) => {
   switch (actionCard) {
     case "mine":
       return {
-        maxValue: getCardValueByName(trashedCard) + 3,
+        maxValue: trashedCard && getCardValueByName(trashedCard) + 3,
       };
     case "workshop":
       return {
         maxValue: 4,
+      };
+    case "moneylender":
+      return {
+        maxValue: 3,
       };
     default:
       return undefined;
