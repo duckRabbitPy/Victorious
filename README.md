@@ -22,7 +22,7 @@
 
 `yarn build` - creates a javascript build in /dist in the client and the server directories
 
-`yarn start` - runs the server in production mode (this should be only be run on the production host server e.g. render.com) the client is served by the express server as a static asset
+`yarn start` - runs the server in production mode (this should be only be run on the production host server e.g. render.com / koyeb.com) the client is served by the express server as a static asset
 
 ## Environmental variables
 
