@@ -63,7 +63,7 @@ const OpponentHands = ({
               >
                 Opponent:
               </span>
-              <span>{opponent.name}</span>
+              <span>&nbsp;{opponent.name}</span>
               <span
                 style={{
                   display: "inline-block",
@@ -99,12 +99,16 @@ const OpponentHands = ({
                     }}
                     key={index}
                     style={{
-                      height: isUsersTurn(gameState, loggedInUsername)
-                        ? "50px"
-                        : "150px",
-                      width: isUsersTurn(gameState, loggedInUsername)
-                        ? "30px"
-                        : "90px",
+                      height:
+                        isUsersTurn(gameState, loggedInUsername) ||
+                        gameState.actor_state.length > 2
+                          ? "50px"
+                          : "150px",
+                      width:
+                        isUsersTurn(gameState, loggedInUsername) ||
+                        gameState.actor_state.length > 2
+                          ? "30px"
+                          : "90px",
                       border: "2px black solid",
                     }}
                   />

@@ -1,5 +1,23 @@
 import * as S from "@effect/schema/Schema";
 
+export const ALL_CARD_NAMES: CardName[] = [
+  "copper",
+  "silver",
+  "gold",
+  "estate",
+  "duchy",
+  "province",
+  "village",
+  "smithy",
+  "market",
+  "councilRoom",
+  "laboratory",
+  "festival",
+  "mine",
+  "workshop",
+  "moneylender",
+] as const;
+
 const copper = {
   name: "copper",
   cost: 0,
@@ -55,6 +73,7 @@ const smithy = {
   cost: 4,
   type: "action",
   value: 0,
+  description: "Draw 3 cards",
 } as const;
 
 const market = {
@@ -103,7 +122,7 @@ const workshop = {
   cost: 3,
   type: "action",
   value: 0,
-  description: "Gain a card costing up to 4",
+  description: "Gain a card costing up to 4 coins",
 } as const;
 
 const moneylender = {
@@ -153,24 +172,6 @@ const CardStruct = S.struct({
   description: S.optional(S.string),
 });
 
-export const getAllCardNames = (): CardName[] => {
-  return [
-    "copper",
-    "silver",
-    "gold",
-    "estate",
-    "duchy",
-    "province",
-    "village",
-    "smithy",
-    "market",
-    "councilRoom",
-    "laboratory",
-    "festival",
-    "mine",
-  ];
-};
-
 export const getCardCostByName = (cardName: CardName): number => {
   return cardNameToCard(cardName).cost;
 };
@@ -185,7 +186,7 @@ export const getCardValueByName = (cardName: CardName): number => {
 
 export const countToCardNamesArray = (cardCount: CardCount): CardName[] => {
   const cardNames: CardName[] = [];
-  for (const cardName of getAllCardNames()) {
+  for (const cardName of ALL_CARD_NAMES) {
     for (let i = 0; i < cardCount[cardName]; i++) {
       cardNames.push(cardName);
     }

@@ -83,6 +83,12 @@ const PlayerHand = ({
     ([_, count]) => count > 0
   ) as [CardName, number][];
 
+  const playerMustGain =
+    currentUserState.actionPhaseDemand?.demandType === "Gain";
+
+  const playerMustTrash =
+    currentUserState.actionPhaseDemand?.demandType === "Trash";
+
   return (
     <div
       style={{
@@ -102,7 +108,7 @@ const PlayerHand = ({
             color:
               currentUserState.actionPhaseDemand?.demandType === "Trash"
                 ? THEME_COLORS.lightRed
-                : "green",
+                : THEME_COLORS.lightGreen,
           }}
         >
           {currentUserState.actionPhaseDemand &&
@@ -110,103 +116,113 @@ const PlayerHand = ({
         </div>
       </>
 
-      {visibleHandCountKVP.map(([cardName, count]) => {
-        const isActionCard = getCardTypeByName(cardName) === "action";
-        const isTreasureCard = getCardTypeByName(cardName) === "treasure";
+      <div
+        style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}
+      >
+        {visibleHandCountKVP.map(([cardName, count]) => {
+          const isActionCard = getCardTypeByName(cardName) === "action";
+          const isTreasureCard = getCardTypeByName(cardName) === "treasure";
 
-        const borderColor =
-          (currentUserState.phase === Phases.Action && isActionCard) ||
-          (currentUserState.phase === Phases.Buy && isTreasureCard)
-            ? "2px solid green"
-            : "2px solid black";
+          const disabled =
+            !isUsersTurn(gameState, loggedInUsername) ||
+            (((currentUserState.phase === Phases.Action &&
+              getCardTypeByName(cardName) !== "action") ||
+              (currentUserState.phase === Phases.Buy &&
+                getCardTypeByName(cardName) !== "treasure") ||
+              !currentUserState.buys ||
+              cardNameToCard(cardName).type === "victory") &&
+              currentUserState.actionPhaseDemand?.demandType !== "Trash") ||
+            playerMustGain ||
+            (currentUserState.actions < 1 &&
+              currentUserState.actionPhaseDemand === null);
 
-        const cursor =
-          !isUsersTurn(gameState, loggedInUsername) ||
-          (!currentUserState.buys &&
-            currentUserState.actionPhaseDemand?.demandType !== "Trash")
-            ? "not-allowed"
-            : "pointer";
+          const getCardInHandColor = () => {
+            if (playerMustTrash) {
+              return "2px solid red";
+            }
 
-        const buttonStyle = {
-          margin: "0.1rem",
-          fontSize: "small",
-          border: borderColor,
-          cursor: cursor,
-        };
+            if (
+              ((currentUserState.phase === Phases.Action && isActionCard) ||
+                (currentUserState.phase === Phases.Buy && isTreasureCard)) &&
+              !playerMustGain
+            ) {
+              return "2px solid green";
+            }
 
-        const disabled =
-          !isUsersTurn(gameState, loggedInUsername) ||
-          (((currentUserState.phase === Phases.Action &&
-            getCardTypeByName(cardName) !== "action") ||
-            (currentUserState.phase === Phases.Buy &&
-              getCardTypeByName(cardName) !== "treasure") ||
-            !currentUserState.buys ||
-            cardNameToCard(cardName).type === "victory") &&
-            currentUserState.actionPhaseDemand?.demandType !== "Trash");
+            return "2px solid black";
+          };
 
-        const onClick = () => {
-          if (
-            currentUserState?.phase === Phases.Buy &&
-            getCardTypeByName(cardName) === "treasure"
-          ) {
-            playTreasure({
-              mutationIndex: gameState.mutation_index,
-              socket,
-              authToken,
-              roomNumber,
-              cardName: cardName,
-              setErrorMessage,
-            });
-          } else if (
-            currentUserState.actionPhaseDemand?.demandType === "Trash"
-          ) {
-            trashCardToMeetDemand({
-              mutationIndex: gameState.mutation_index,
-              socket,
-              authToken,
-              roomNumber,
-              cardName,
-              setErrorMessage,
-            });
-          } else if (
-            currentUserState.phase === Phases.Action &&
-            getCardTypeByName(cardName) === "action"
-          ) {
-            playAction({
-              mutationIndex: gameState.mutation_index,
-              socket,
-              authToken,
-              roomNumber,
-              cardName: cardName,
-              setErrorMessage,
-            });
-          }
-        };
+          const buttonStyle = {
+            margin: "0.1rem",
+            fontSize: "small",
+            border: getCardInHandColor(),
+            cursor: disabled ? "not-allowed" : "pointer",
+          };
 
-        return (
-          <div
-            key={cardName}
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              height: "fit-content",
-            }}
-          >
-            {new Array(count).fill(0).map((_, index) => {
-              return (
-                <CardInHand
-                  key={`${cardName}-${index}`}
-                  cardName={cardName}
-                  onClick={onClick}
-                  buttonStyle={buttonStyle}
-                  index={index}
-                  disabled={disabled}
-                />
-              );
-            })}
-          </div>
-        );
-      })}
+          const onClick = () => {
+            if (
+              currentUserState?.phase === Phases.Buy &&
+              getCardTypeByName(cardName) === "treasure"
+            ) {
+              playTreasure({
+                mutationIndex: gameState.mutation_index,
+                socket,
+                authToken,
+                roomNumber,
+                cardName: cardName,
+                setErrorMessage,
+              });
+            } else if (
+              currentUserState.actionPhaseDemand?.demandType === "Trash"
+            ) {
+              trashCardToMeetDemand({
+                mutationIndex: gameState.mutation_index,
+                socket,
+                authToken,
+                roomNumber,
+                cardName,
+                setErrorMessage,
+              });
+            } else if (
+              currentUserState.phase === Phases.Action &&
+              getCardTypeByName(cardName) === "action"
+            ) {
+              playAction({
+                mutationIndex: gameState.mutation_index,
+                socket,
+                authToken,
+                roomNumber,
+                cardName: cardName,
+                setErrorMessage,
+              });
+            }
+          };
+
+          return (
+            <div
+              key={cardName}
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                height: "fit-content",
+              }}
+            >
+              {new Array(count).fill(0).map((_, index) => {
+                return (
+                  <CardInHand
+                    key={`${cardName}-${index}`}
+                    cardName={cardName}
+                    onClick={onClick}
+                    buttonStyle={buttonStyle}
+                    index={index}
+                    disabled={disabled}
+                  />
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
 
       <div>
         <div

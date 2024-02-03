@@ -31,6 +31,7 @@ import {
   CustomParseError,
   IllegalGameStateError,
   PostgresError,
+  RegistrationError,
 } from "../customErrors";
 import { ParseError } from "@effect/schema/ParseResult";
 import {
@@ -57,7 +58,13 @@ export const handleGameMessage = ({
   userInfo,
 }: handleGameMessageProps): E.Effect<
   never,
-  PostgresError | ParseError | IllegalGameStateError | Error | CustomParseError,
+  | PostgresError
+  | ParseError
+  | IllegalGameStateError
+  | Error
+  | CustomParseError
+  // can occur when registering bots in game
+  | RegistrationError,
   GameState
 > => {
   const currentGameState = pipe(
@@ -165,7 +172,6 @@ export const handleGameMessage = ({
     case SupportedEffects.handleBotPlayerTurn: {
       return pipe(
         currentGameState,
-        tapPipeLine,
         E.flatMap((gamestate) => handleIfBotPlayerTurn(gamestate, pool))
       );
     }

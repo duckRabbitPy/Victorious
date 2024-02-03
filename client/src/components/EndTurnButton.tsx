@@ -44,7 +44,7 @@ const EndTurnButton = ({ props }: { props: CoreProps }) => {
         }
       }}
     >
-      End {currentUserState?.phase === "buy" ? "Buys" : "Actions"}
+      End Turn
     </button>
   );
 };

@@ -1,5 +1,5 @@
 import { pipe, Effect as E } from "effect";
-import { PostgresError } from "../customErrors";
+import { PostgresError, RegistrationError } from "../customErrors";
 import { logAndThrowError } from "../utils";
 import { uuidv4 } from "../../../shared/utils";
 import { Pool } from "pg";
@@ -85,7 +85,10 @@ export const registerNewUserQuery = (
 
   return E.tryPromise({
     try: () => add(),
-    catch: () => new PostgresError({ message: "postgres query error" }),
+    catch: () =>
+      new RegistrationError({
+        message: "Error registering user, email and usernames must be unique",
+      }),
   }).pipe(E.retryN(1));
 };
 

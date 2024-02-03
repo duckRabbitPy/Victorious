@@ -139,17 +139,10 @@ export function createWebsocketServer(app: wsApplication) {
             }),
             E.flatMap(({ pool, msg }) => {
               if (msg.chatMessage) {
-                return E.succeed({
-                  chatMessage: msg.chatMessage,
-                  msg,
-                  pool,
-                });
+                return sendBotMessage(msg, roomConnections, pool);
               }
-              return E.fail("no chat message to respond to skipping bot reply");
+              return E.succeed(E.unit);
             }),
-            E.flatMap(({ msg, pool }) =>
-              sendBotMessage(msg, roomConnections, pool)
-            ),
             E.catchAll((e) => {
               console.log(e);
               return E.succeed(E.unit);

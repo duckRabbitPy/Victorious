@@ -40,9 +40,17 @@ const Room = ({
   const { gameState, socket, chatLog, errorMessage, setErrorMessage } =
     useGameState();
 
+  const isNominatedMsgSenderForBots =
+    gameState?.actor_state
+      .map((a) => a.name)
+      .filter((name) =>
+        botNamePrefixes.every((prefix) => !name.startsWith(prefix))
+      )[0] === loggedInUsername;
+
   useEffect(() => {
     if (
       gameState &&
+      isNominatedMsgSenderForBots &&
       gameState.actor_state.length > 1 &&
       gameState.actor_state
         .map((a) => countToCardNamesArray(a.hand).length)
@@ -54,6 +62,8 @@ const Room = ({
       const currentPlayerIsBot = botNamePrefixes.some((prefix) =>
         currentActivePlayerState?.name.startsWith(prefix)
       );
+
+      // find first non bot player
 
       setTimeout(() => {
         if (currentPlayerIsBot) {
@@ -70,7 +80,7 @@ const Room = ({
   }, [
     authToken,
     gameState,
-    gameState?.mutation_index,
+    isNominatedMsgSenderForBots,
     roomNumber,
     setErrorMessage,
     socket,
@@ -104,6 +114,8 @@ const Room = ({
         flexDirection: "column",
         gap: "1rem",
         maxHeight: "100vh",
+        // todo use media queries
+        minWidth: "1200px",
       }}
     >
       {errorMessage && (
@@ -166,7 +178,7 @@ const Room = ({
           <div
             style={{
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent: "center",
               gap: "1rem",
             }}
           >

@@ -68,7 +68,6 @@ export const useGameState = () => {
       const eventData = safeParseBroadCast(
         deserialiseDates(JSON.parse(event.data))
       ).pipe(E.runSync);
-      console.log("Received message from server:", eventData);
 
       switch (eventData.broadcastType) {
         case "gameState": {

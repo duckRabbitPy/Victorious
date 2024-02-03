@@ -8,7 +8,6 @@ import {
   cardNameToCard,
   getTreasureValue,
 } from "../../../../shared/common";
-import { isUsersTurn } from "../../../../shared/utils";
 import { buyCard, resetBuysAndActions } from "./buys";
 import { IllegalGameStateError, PostgresError } from "../../customErrors";
 import { writeNewGameStateToDB } from "../../models/gamestate/mutations";
@@ -33,18 +32,10 @@ export const handleIfBotPlayerTurn = (
   );
 
   if (!currentPlayerIsBot || !currentActorGameState) {
-    return E.succeed(gameState);
-  }
-
-  // first turn of game
-  if (gameState.turn === 0) {
-    return pipe(
-      cleanUp(gameState),
-      E.flatMap((gamestate) =>
-        incrementTurn(gamestate, currentActorGameState.name)
-      ),
-      E.flatMap(resetBuysAndActions),
-      E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
+    return E.fail(
+      new IllegalGameStateError({
+        message: "current player is not a bot",
+      })
     );
   }
 

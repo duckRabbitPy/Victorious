@@ -28,7 +28,6 @@ export const sendBotMessage = (
       botMsg: E.tryPromise({
         try: () => sendMsgToAIService(msg),
         catch: (e) => {
-          console.log(e);
           return new ExternalServiceError({
             message: e instanceof OpenAIError ? e.message : "Openai error",
           });
@@ -52,7 +51,6 @@ export const sendBotMessage = (
         botActorInfo[Math.floor(Math.random() * botActorInfo.length)];
 
       if (!botUserInfo) {
-        console.log(botActorInfo);
         return E.fail(new Error("no bot user info"));
       }
 
