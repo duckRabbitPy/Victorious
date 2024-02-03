@@ -40,9 +40,7 @@ export const sendLoginResponse = createResponseHandler<string>(
 );
 
 export const sendRegisterResponse = createResponseHandler<string>(
-  (successMsg) => ({
-    successMsg,
-  })
+  (successMsg) => successMsg
 );
 
 export const sendConfirmUserResponse = createResponseHandler<string>(
