@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { sendChatMessage } from "../effects/effects";
 import { ChatMessage, getUserNameColors } from "../../../shared/common";
-import { THEME_COLORS } from "../constants";
+import { LOCAL_STORAGE_AUTH_KEY, THEME_COLORS } from "../constants";
 
 const ChatLog = ({
   chatLog,
@@ -36,7 +36,7 @@ const ChatLog = ({
     e.preventDefault();
     sendChatMessage({
       socket,
-      authToken: localStorage.getItem("dominion_auth_token"),
+      authToken: localStorage.getItem(LOCAL_STORAGE_AUTH_KEY),
       roomNumber: Number(window.location.pathname.split("/").pop()),
       chatMessage: inputValue,
       setInputValue,

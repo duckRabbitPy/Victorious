@@ -10,7 +10,7 @@ import {
 } from "../../../shared/common";
 import { Effect as E, pipe } from "effect";
 import { getInitialGameState, getInititalChatLog } from "../effects/effects";
-import { WEB_SOCKET_URL } from "../constants";
+import { LOCAL_STORAGE_AUTH_KEY, WEB_SOCKET_URL } from "../constants";
 
 const updateStateElseError = <T>({
   dataOrError,
@@ -69,7 +69,7 @@ export const useGameState = () => {
         deserialiseDates(JSON.parse(event.data))
       ).pipe(E.runSync);
 
-      console.log("event", event);
+      console.log("message event data", event.data);
 
       switch (eventData.broadcastType) {
         case "gameState": {
@@ -118,7 +118,7 @@ export const useGameState = () => {
       if (!initialGameStateFetched) {
         getInitialGameState({
           socket: newSocket,
-          authToken: localStorage.getItem("dominion_auth_token"),
+          authToken: localStorage.getItem(LOCAL_STORAGE_AUTH_KEY),
           roomNumber: Number(window.location.pathname.split("/").pop()),
           setErrorMessage,
         });
@@ -128,7 +128,7 @@ export const useGameState = () => {
       if (!initialChatLogFetched) {
         getInititalChatLog({
           socket: newSocket,
-          authToken: localStorage.getItem("dominion_auth_token"),
+          authToken: localStorage.getItem(LOCAL_STORAGE_AUTH_KEY),
           roomNumber: Number(window.location.pathname.split("/").pop()),
           setErrorMessage,
         });

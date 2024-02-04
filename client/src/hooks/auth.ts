@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { uuidv4 } from "../../../shared/utils";
-import { API_ENDPOINT } from "../constants";
+import { API_ENDPOINT, LOCAL_STORAGE_AUTH_KEY } from "../constants";
 
 const getLoggedInUserName = async () => {
-  const authToken = localStorage.getItem("dominion_auth_token");
+  const authToken = localStorage.getItem(LOCAL_STORAGE_AUTH_KEY);
 
   if (!authToken) {
     return null;
   }
-
+  console.log("endpoint", API_ENDPOINT);
   try {
     const response = await fetch(`${API_ENDPOINT}/auth`, {
       method: "GET",
@@ -19,7 +19,7 @@ const getLoggedInUserName = async () => {
     });
 
     const json = await response.json();
-
+    console.log("json", json);
     return (json?.username as string) || null;
   } catch (error) {
     return null;
@@ -38,6 +38,7 @@ export const useGetLoggedInUsername = () => {
     const fetchData = async () => {
       try {
         const result = await getLoggedInUserName();
+        console.log("result", result);
         setLoggedInUsername(result);
       } catch (error) {
         setLoggedInUsername(null);

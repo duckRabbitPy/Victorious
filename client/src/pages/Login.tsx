@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useGetLoggedInUsername } from "../hooks/auth";
-import { API_ENDPOINT } from "../constants";
+import {
+  API_ENDPOINT,
+  LOCAL_STORAGE_AUTH_KEY,
+  LOCAL_STORAGE_USERNAME_KEY,
+} from "../constants";
 
 export const Login = () => {
   const { loggedInUsername, refetchLoginStatus } = useGetLoggedInUsername();
@@ -29,12 +33,11 @@ export const Login = () => {
       .then((data) => {
         if (data.authToken) {
           setErrorMessage(null);
-          localStorage.removeItem("victorious_auth_token");
-          localStorage.removeItem("victorious_user_name");
-          localStorage.setItem("victorious_auth_token", data.authToken);
-          localStorage.setItem("victorious_user_name", username);
+          localStorage.removeItem(LOCAL_STORAGE_AUTH_KEY);
+          localStorage.removeItem(LOCAL_STORAGE_USERNAME_KEY);
+          localStorage.setItem(LOCAL_STORAGE_AUTH_KEY, data.authToken);
+          localStorage.setItem(LOCAL_STORAGE_USERNAME_KEY, username);
           refetchLoginStatus();
-          window.location.href = "/";
         } else {
           setErrorMessage(
             "A login error occurred, are you sure you have registered and entered the correct username and password?"
@@ -58,8 +61,8 @@ export const Login = () => {
         <Link to={"/"}>Home</Link>
         <button
           onClick={() => {
-            localStorage.removeItem("victorious_auth_token");
-            localStorage.removeItem("victorious_user_name");
+            localStorage.removeItem(LOCAL_STORAGE_AUTH_KEY);
+            localStorage.removeItem(LOCAL_STORAGE_USERNAME_KEY);
             refetchLoginStatus();
             setErrorMessage(null);
           }}

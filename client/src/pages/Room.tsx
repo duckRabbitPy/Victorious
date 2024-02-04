@@ -13,7 +13,11 @@ import HistoryLog from "../components/HistoryLog";
 import OpponentHands from "../components/OpponentHands";
 import Spacer from "../components/Spacer";
 import React, { useEffect } from "react";
-import { THEME_COLORS } from "../constants";
+import {
+  LOCAL_STORAGE_AUTH_KEY,
+  LOCAL_STORAGE_USERNAME_KEY,
+  THEME_COLORS,
+} from "../constants";
 import { BiSolidCastle } from "react-icons/bi";
 
 import {
@@ -35,7 +39,7 @@ const Room = ({
 }) => {
   const { "*": roomParam } = useParams();
   const roomNumber = Number(roomParam);
-  const authToken = localStorage.getItem("dominion_auth_token");
+  const authToken = localStorage.getItem(LOCAL_STORAGE_AUTH_KEY);
 
   const { gameState, socket, chatLog, errorMessage, setErrorMessage } =
     useGameState();
@@ -90,7 +94,7 @@ const Room = ({
   const coreUserInfo = {
     loggedInUsername,
     currentUserState: gameState?.actor_state.find(
-      (a) => a.name === localStorage.getItem("victorious_user_name")
+      (a) => a.name === localStorage.getItem(LOCAL_STORAGE_USERNAME_KEY)
     ),
   };
 
