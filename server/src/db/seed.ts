@@ -195,6 +195,7 @@ export const resetAndSeedDatabase = async () => {
     await client.query("DROP TABLE IF EXISTS chat_log CASCADE");
     await client.query("DROP TABLE IF EXISTS users CASCADE");
     await client.query("DROP TABLE IF EXISTS game_snapshots CASCADE");
+    await client.query("DROP TABLE IF EXISTS inactive_sessions CASCADE");
 
     await client.query(`
         CREATE TABLE IF NOT EXISTS users (

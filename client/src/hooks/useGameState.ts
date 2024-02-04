@@ -69,6 +69,8 @@ export const useGameState = () => {
         deserialiseDates(JSON.parse(event.data))
       ).pipe(E.runSync);
 
+      console.log("event", event);
+
       switch (eventData.broadcastType) {
         case "gameState": {
           if (!eventData.gameState) {

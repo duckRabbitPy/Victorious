@@ -57,7 +57,7 @@ function createWebsocketServer(app) {
                     msg,
                     userInfo,
                     pool,
-                }), effect_1.Effect.flatMap((gameState) => {
+                }), utils_1.tapPipeLine, effect_1.Effect.flatMap((gameState) => {
                     return (0, broadcast_1.broadcastToRoom)({
                         broadcastType: "gameState",
                         payload: gameState,
