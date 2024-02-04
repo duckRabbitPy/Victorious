@@ -3,7 +3,7 @@ import { uuidv4 } from "../../../shared/utils";
 import { API_ENDPOINT } from "../constants";
 
 const getLoggedInUserName = async () => {
-  const authToken = localStorage.getItem("dominion_auth_token");
+  const authToken = localStorage.getItem("victorious_auth_token");
 
   if (!authToken) {
     return null;
