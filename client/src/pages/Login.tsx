@@ -34,7 +34,6 @@ export const Login = () => {
           localStorage.setItem("victorious_auth_token", data.authToken);
           localStorage.setItem("victorious_user_name", username);
           refetchLoginStatus();
-          window.location.href = "/";
         } else {
           setErrorMessage(
             "A login error occurred, are you sure you have registered and entered the correct username and password?"
