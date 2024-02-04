@@ -7,9 +7,11 @@ import {
   countToCardNamesArray,
   hasActionCard,
   subtractCardCount,
+  sumCardCounts,
   zeroCardCount,
 } from "../../../../shared/common";
 import { isUsersTurn } from "../../../../shared/utils";
+import { sum } from "effect/Duration";
 
 export const dealCards = ({
   deck,
@@ -78,6 +80,33 @@ export const dealToAllActors = (gameState: GameState) => {
         discardPile: newDiscardPile,
         phase: hasActionCard(newHand) ? Phases.Action : Phases.Buy,
       };
+    }),
+  });
+};
+
+export const playAllTreasures = (gameState: GameState) => {
+  return E.succeed({
+    ...gameState,
+    actor_state: gameState.actor_state.map((actor) => {
+      if (isUsersTurn(gameState, actor.name)) {
+        const newHand = {
+          ...actor.hand,
+          copper: 0,
+          silver: 0,
+          gold: 0,
+        };
+        return {
+          ...actor,
+          hand: newHand,
+          cardsInPlay: {
+            ...actor.cardsInPlay,
+            copper: actor.hand.copper,
+            silver: actor.hand.silver,
+            gold: actor.hand.gold,
+          },
+        };
+      }
+      return actor;
     }),
   });
 };

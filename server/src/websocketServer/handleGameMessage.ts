@@ -172,7 +172,19 @@ export const handleGameMessage = ({
     case SupportedEffects.handleBotPlayerTurn: {
       return pipe(
         currentGameState,
-        E.flatMap((gamestate) => handleIfBotPlayerTurn(gamestate, pool))
+        E.flatMap((gamestate) => handleIfBotPlayerTurn(gamestate, pool)),
+        E.flatMap((postBuyPhaseGamestate) => cleanUp(postBuyPhaseGamestate)),
+        E.flatMap((gamestate) =>
+          incrementTurn(
+            gamestate,
+            gamestate.actor_state[gamestate.turn % gamestate.actor_state.length]
+              .name
+          )
+        ),
+        E.flatMap(resetBuysAndActions),
+        E.flatMap((postIncrementGamestate) =>
+          writeNewGameStateToDB(postIncrementGamestate, pool)
+        )
       );
     }
 

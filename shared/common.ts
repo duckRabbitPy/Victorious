@@ -233,6 +233,15 @@ export const hasActionCard = (hand: CardCount): boolean => {
   return false;
 };
 
+export const hasTreasureCard = (hand: CardCount): boolean => {
+  for (const cardName of Object.keys(hand) as Array<CardName>) {
+    if (getCardTypeByName(cardName) === "treasure" && hand[cardName] > 0) {
+      return true;
+    }
+  }
+  return false;
+};
+
 export const getTreasureValue = (hand: CardCount): number => {
   return (
     hand.copper * getCardValueByName("copper") +

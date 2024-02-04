@@ -294,12 +294,6 @@ export const playAction = ({
   const GameStateWithLatestPhase = {
     ...updatedGameState,
     actor_state: updatedGameState.actor_state.map((actor) => {
-      console.log({
-        actions: actor.actions,
-        actionPhaseDemand: actor.actionPhaseDemand,
-        hand: actor.hand,
-        hasActionCard: hasActionCard(actor.hand),
-      });
       if (actor.id === userId) {
         return {
           ...actor,
