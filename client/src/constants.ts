@@ -5,7 +5,7 @@ export const API_ENDPOINT =
 
 export const WEB_SOCKET_URL =
   import.meta.env.MODE === "production"
-    ? "wss://victorious.onrender.com/api"
+    ? "wss://victorious.onrender.com"
     : "ws://localhost:3000";
 
 export const Backgrounds = [
