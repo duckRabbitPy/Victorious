@@ -73,7 +73,12 @@ const PlayerHand = ({
   coreUserInfo: { loggedInUsername, currentUserState },
   setErrorMessage,
 }: Props) => {
-  if (gameState.turn < 1 || !socket || !currentUserState) return null;
+  console.log("player hand", {
+    gameState,
+    coreRoomInfo: { socket, authToken, roomNumber },
+    coreUserInfo: { loggedInUsername, currentUserState },
+  });
+  if (gameState.turn < 1 || !currentUserState) return null;
 
   const currentHand = currentUserState.hand;
   const cardsInPlay = currentUserState.cardsInPlay;
