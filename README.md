@@ -43,7 +43,9 @@ DEV_PG_NAME= (string e.g. "victorious_pg_test")
 Press ctrl + d to see full gamestate while playing a game
 
 ## Tech stack
+
 <img width="1344" alt="Screenshot 2024-02-04 at 14 42 58" src="https://github.com/duckRabbitPy/Victorious/assets/78092825/916a3e7f-3563-4bf8-984b-cee9fc7ef9dc">
+
 
 ##### Backend
 
