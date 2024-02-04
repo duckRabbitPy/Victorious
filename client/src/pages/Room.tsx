@@ -98,7 +98,7 @@ const Room = ({
     return (
       <div>
         Error fetching game state from server...
-        <p>`No ${socket ? "game state" : "socket"} found.</p>
+        <p>No {socket ? "game state" : "socket"} found.</p>
         <Link to="/"> Go home</Link>
       </div>
     );
