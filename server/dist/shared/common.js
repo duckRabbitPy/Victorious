@@ -23,8 +23,25 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserNameColors = exports.sumCardCounts = exports.subtractCardCount = exports.zeroCardCount = exports.ClientPayloadStruct = exports.SupportedEffects = exports.safeParseChatLog = exports.safeParseGameState = exports.safeParseBroadCast = exports.safeParseCardName = exports.safeParseNonEmptyString = exports.BroadCastStruct = exports.ChatMessageStruct = exports.GameStateStruct = exports.Phases = exports.CardCountStruct = exports.cardNameToCard = exports.cardNameToVictoryPoints = exports.getTreasureValue = exports.hasActionCard = exports.getCardTypeByName = exports.cardNamesToCount = exports.countToCardNamesArray = exports.getCardValueByName = exports.getCardDescriptionByName = exports.getCardCostByName = exports.getAllCardNames = exports.ActionNames = exports.VictoryNames = exports.TreasureNames = void 0;
+exports.botNamePrefixes = exports.getUserNameColors = exports.sumCardCounts = exports.subtractCardCount = exports.zeroCardCount = exports.ClientPayloadStruct = exports.SupportedEffects = exports.safeParseRegisterResult = exports.safeParseChatLog = exports.safeParseGameState = exports.safeParseBroadCast = exports.safeParseCardName = exports.safeParseNonEmptyString = exports.BroadCastStruct = exports.ChatMessageStruct = exports.GameStateStruct = exports.Phases = exports.CardCountStruct = exports.cardNameToCard = exports.cardNameToVictoryPoints = exports.getTreasureValue = exports.hasTreasureCard = exports.hasActionCard = exports.getCardTypeByName = exports.cardNamesToCount = exports.countToCardNamesArray = exports.getCardValueByName = exports.getCardDescriptionByName = exports.getCardCostByName = exports.ActionNames = exports.VictoryNames = exports.TreasureNames = exports.ALL_CARD_NAMES = void 0;
 const S = __importStar(require("@effect/schema/Schema"));
+exports.ALL_CARD_NAMES = [
+    "copper",
+    "silver",
+    "gold",
+    "estate",
+    "duchy",
+    "province",
+    "village",
+    "smithy",
+    "market",
+    "councilRoom",
+    "laboratory",
+    "festival",
+    "mine",
+    "workshop",
+    "moneylender",
+];
 const copper = {
     name: "copper",
     cost: 0,
@@ -61,23 +78,19 @@ const province = {
     type: "victory",
     value: 6,
 };
-const curse = {
-    name: "curse",
-    cost: 0,
-    type: "curse",
-    value: -1,
-};
 const village = {
     name: "village",
     cost: 3,
     type: "action",
     value: 0,
+    description: "Draw 1 card, +2 actions",
 };
 const smithy = {
     name: "smithy",
     cost: 4,
     type: "action",
     value: 0,
+    description: "Draw 3 cards",
 };
 const market = {
     name: "market",
@@ -107,18 +120,32 @@ const festival = {
     value: 0,
     description: "+2 actions, +1 buy, +2 treasure",
 };
-const Mine = {
+const mine = {
     name: "mine",
     cost: 5,
     type: "action",
     value: 0,
     description: "Trash a treasure card from your hand. Gain a treasure card costing up to 3 more; put it into your hand.",
 };
+const workshop = {
+    name: "workshop",
+    cost: 3,
+    type: "action",
+    value: 0,
+    description: "Gain a card costing up to 4 coins",
+};
+const moneylender = {
+    name: "moneylender",
+    cost: 4,
+    type: "action",
+    value: 0,
+    description: "Trash a copper from your hand. If you do, +3 treasure",
+};
 exports.TreasureNames = S.union(S.literal("copper"), S.literal("silver"), S.literal("gold"));
 exports.VictoryNames = S.union(S.literal("estate"), S.literal("duchy"), S.literal("province"));
-exports.ActionNames = S.union(S.literal("village"), S.literal("smithy"), S.literal("market"), S.literal("councilRoom"), S.literal("laboratory"), S.literal("festival"), S.literal("mine"), S.literal("curse"));
+exports.ActionNames = S.union(S.literal("village"), S.literal("smithy"), S.literal("market"), S.literal("councilRoom"), S.literal("laboratory"), S.literal("festival"), S.literal("mine"), S.literal("workshop"), S.literal("moneylender"));
 const CardNames = S.union(exports.TreasureNames, exports.VictoryNames, exports.ActionNames);
-const CardTypes = S.union(S.literal("treasure"), S.literal("victory"), S.literal("action"), S.literal("curse"));
+const CardTypes = S.union(S.literal("treasure"), S.literal("victory"), S.literal("action"));
 const CardStruct = S.struct({
     name: CardNames,
     cost: S.number,
@@ -126,24 +153,6 @@ const CardStruct = S.struct({
     value: S.number,
     description: S.optional(S.string),
 });
-const getAllCardNames = () => {
-    return [
-        "copper",
-        "silver",
-        "gold",
-        "estate",
-        "duchy",
-        "province",
-        "village",
-        "smithy",
-        "market",
-        "councilRoom",
-        "laboratory",
-        "festival",
-        "mine",
-    ];
-};
-exports.getAllCardNames = getAllCardNames;
 const getCardCostByName = (cardName) => {
     return (0, exports.cardNameToCard)(cardName).cost;
 };
@@ -159,7 +168,7 @@ const getCardValueByName = (cardName) => {
 exports.getCardValueByName = getCardValueByName;
 const countToCardNamesArray = (cardCount) => {
     const cardNames = [];
-    for (const cardName of (0, exports.getAllCardNames)()) {
+    for (const cardName of exports.ALL_CARD_NAMES) {
         for (let i = 0; i < cardCount[cardName]; i++) {
             cardNames.push(cardName);
         }
@@ -175,7 +184,6 @@ const cardNamesToCount = (cardNames) => {
         estate: 0,
         duchy: 0,
         province: 0,
-        curse: 0,
         village: 0,
         smithy: 0,
         market: 0,
@@ -183,6 +191,8 @@ const cardNamesToCount = (cardNames) => {
         mine: 0,
         festival: 0,
         laboratory: 0,
+        workshop: 0,
+        moneylender: 0,
     };
     for (const cardName of cardNames) {
         temporaryCardCount[cardName]++;
@@ -203,6 +213,15 @@ const hasActionCard = (hand) => {
     return false;
 };
 exports.hasActionCard = hasActionCard;
+const hasTreasureCard = (hand) => {
+    for (const cardName of Object.keys(hand)) {
+        if ((0, exports.getCardTypeByName)(cardName) === "treasure" && hand[cardName] > 0) {
+            return true;
+        }
+    }
+    return false;
+};
+exports.hasTreasureCard = hasTreasureCard;
 const getTreasureValue = (hand) => {
     return (hand.copper * (0, exports.getCardValueByName)("copper") +
         hand.silver * (0, exports.getCardValueByName)("silver") +
@@ -243,13 +262,26 @@ const cardNameToCard = (cardName) => {
         case "festival":
             return festival;
         case "mine":
-            return Mine;
-        case "curse":
-            return curse;
+            return mine;
+        case "workshop":
+            return workshop;
+        case "moneylender":
+            return moneylender;
     }
 };
 exports.cardNameToCard = cardNameToCard;
 exports.CardCountStruct = S.record(S.union(exports.TreasureNames, exports.VictoryNames, exports.ActionNames), S.number);
+const requirement = S.struct({
+    type: S.optional(S.union(S.literal("Treasure"), S.literal("Victory"), S.literal("Action"))),
+    maxValue: S.optional(S.number),
+    minValue: S.optional(S.number),
+});
+const actionPhaseDemand = S.struct({
+    actionCard: exports.ActionNames,
+    demandType: S.union(S.literal("Gain"), S.literal("Trash")),
+    requirement: S.optional(requirement),
+    count: S.number,
+});
 var Phases;
 (function (Phases) {
     Phases["Action"] = "action";
@@ -266,6 +298,7 @@ const ActorStateStruct = S.struct({
     victoryPoints: S.number,
     discardPile: S.array(S.union(exports.TreasureNames, exports.VictoryNames, exports.ActionNames)),
     deck: S.array(S.union(exports.TreasureNames, exports.VictoryNames, exports.ActionNames)),
+    actionPhaseDemand: S.nullable(actionPhaseDemand),
     phase: S.enums(Phases),
 });
 const GlobalStateStruct = S.struct({
@@ -293,23 +326,34 @@ exports.BroadCastStruct = S.struct({
     chatLog: S.optional(S.array(exports.ChatMessageStruct)),
     error: S.optional(S.string),
 });
+const registerResultSchema = S.struct({
+    user_id: S.string,
+    username: S.string,
+    email: S.string,
+    confirmation_token: S.string,
+});
 exports.safeParseNonEmptyString = S.parse(S.string.pipe(S.minLength(1)));
 exports.safeParseCardName = S.parse(CardNames);
 exports.safeParseBroadCast = S.parse(exports.BroadCastStruct);
 exports.safeParseGameState = S.parse(exports.GameStateStruct);
 exports.safeParseChatLog = S.parse(S.array(exports.ChatMessageStruct));
+exports.safeParseRegisterResult = S.parse(registerResultSchema);
 var SupportedEffects;
 (function (SupportedEffects) {
     SupportedEffects["startGame"] = "startGame";
     SupportedEffects["getCurrentGameState"] = "getCurrentGameState";
     SupportedEffects["addLivePlayer"] = "addLivePlayer";
+    SupportedEffects["addBotPlayer"] = "addBotPlayer";
+    SupportedEffects["handleBotPlayerTurn"] = "handleBotPlayerTurn";
     SupportedEffects["buyCard"] = "buyCard";
+    SupportedEffects["gainCard"] = "gainCard";
     SupportedEffects["playTreasure"] = "playTreasure";
     SupportedEffects["resetPlayedTreasures"] = "resetPlayedTreasures";
     SupportedEffects["playAction"] = "playAction";
     SupportedEffects["incrementTurn"] = "incrementTurn";
     SupportedEffects["getCurrentChatLog"] = "getCurrentChatLog";
     SupportedEffects["sendChatMessage"] = "sendChatMessage";
+    SupportedEffects["trashCardToMeetDemand"] = "trashCardToMeetDemand";
 })(SupportedEffects || (exports.SupportedEffects = SupportedEffects = {}));
 exports.ClientPayloadStruct = S.struct({
     mutationIndex: S.number,
@@ -334,7 +378,8 @@ exports.zeroCardCount = {
     laboratory: 0,
     festival: 0,
     councilRoom: 0,
-    curse: 0,
+    workshop: 0,
+    moneylender: 0,
 };
 const subtractCardCount = (a, b) => {
     const result = {};
@@ -371,3 +416,11 @@ const getUserNameColors = (userNames) => {
     }, {});
 };
 exports.getUserNameColors = getUserNameColors;
+exports.botNamePrefixes = [
+    "Lancelot_bot_",
+    "Arthur_bot_",
+    "Guinevere_bot_",
+    "Merlin_bot_",
+    "Morgana_bot_",
+    "Galahad_bot_",
+];

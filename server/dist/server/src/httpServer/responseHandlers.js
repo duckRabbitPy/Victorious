@@ -12,9 +12,7 @@ const createResponseHandler = (onSuccess) => ({ dataOrError, res, successStatus,
     return respondWithError(res, 500, errorMessage);
 }));
 exports.sendLoginResponse = createResponseHandler((authToken) => authToken);
-exports.sendRegisterResponse = createResponseHandler((successMsg) => ({
-    successMsg,
-}));
+exports.sendRegisterResponse = createResponseHandler((successMsg) => successMsg);
 exports.sendConfirmUserResponse = createResponseHandler((confirmMessage) => ({
     confirmMessage,
 }));

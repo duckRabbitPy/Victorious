@@ -19,7 +19,8 @@ const hand_1 = require("../websocketServer/evolve/hand");
             laboratory: 0,
             festival: 0,
             councilRoom: 0,
-            curse: 0,
+            workshop: 0,
+            moneylender: 0,
         };
         const cardCountB = {
             copper: 2,
@@ -35,7 +36,8 @@ const hand_1 = require("../websocketServer/evolve/hand");
             laboratory: 0,
             festival: 0,
             councilRoom: 0,
-            curse: 0,
+            workshop: 0,
+            moneylender: 0,
         };
         (0, vitest_1.expect)((0, common_1.subtractCardCount)(cardCountA, cardCountB)).toEqual({
             copper: 3,
@@ -51,7 +53,8 @@ const hand_1 = require("../websocketServer/evolve/hand");
             laboratory: 0,
             festival: 0,
             councilRoom: 0,
-            curse: 0,
+            workshop: 0,
+            moneylender: 0,
         });
     });
     (0, vitest_1.it)("subtract zero cards", () => {
@@ -69,7 +72,8 @@ const hand_1 = require("../websocketServer/evolve/hand");
             laboratory: 0,
             festival: 0,
             councilRoom: 0,
-            curse: 0,
+            workshop: 0,
+            moneylender: 0,
         };
         const cardCountB = {
             copper: 0,
@@ -85,7 +89,8 @@ const hand_1 = require("../websocketServer/evolve/hand");
             laboratory: 0,
             festival: 0,
             councilRoom: 0,
-            curse: 0,
+            workshop: 0,
+            moneylender: 0,
         };
         (0, vitest_1.expect)((0, common_1.subtractCardCount)(cardCountA, cardCountB)).toEqual({
             copper: 3,
@@ -101,7 +106,8 @@ const hand_1 = require("../websocketServer/evolve/hand");
             laboratory: 0,
             festival: 0,
             councilRoom: 0,
-            curse: 0,
+            workshop: 0,
+            moneylender: 0,
         });
     });
     (0, vitest_1.it)("deal more cards than in deck", () => {

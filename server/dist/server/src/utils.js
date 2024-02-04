@@ -26,7 +26,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkNotAlreadyInRoom = exports.checkClientStateIsUptoDate = exports.clientNotInConnectionList = exports.getClientMessage = exports.getUserInfoFromJWT = exports.parseJSONToClientMsg = exports.parseClientMessage = exports.sendErrorMsgToClient = exports.verifyJwt = exports.safeParseNumberArray = exports.safeParseUUID = exports.safeParseUUIDs = exports.safeParseJWT = exports.safeParseNumber = exports.tapPipeLine = exports.logAndThrowError = void 0;
+exports.delay = exports.checkNotAlreadyInRoom = exports.checkEnoughPlayers = exports.checkClientStateIsUptoDate = exports.clientNotInConnectionList = exports.getClientMessage = exports.getUserInfoFromJWT = exports.parseJSONToClientMsg = exports.parseClientMessage = exports.sendErrorMsgToClient = exports.verifyJwt = exports.safeParseNumberArray = exports.safeParseUUID = exports.safeParseUUIDs = exports.safeParseJWT = exports.safeParseNumber = exports.tapPipeLine = exports.logAndThrowError = void 0;
 const Schema = __importStar(require("@effect/schema/Schema"));
 const common_1 = require("../../shared/common");
 const effect_1 = require("effect");
@@ -114,6 +114,15 @@ const checkClientStateIsUptoDate = ({ msg, currentGameState, }) => {
     return effect_1.Effect.succeed(currentGameState);
 };
 exports.checkClientStateIsUptoDate = checkClientStateIsUptoDate;
+const checkEnoughPlayers = (gameState) => {
+    if (gameState.actor_state.length < 2) {
+        return effect_1.Effect.fail(new customErrors_1.IllegalGameStateError({
+            message: `Not enough players to start game`,
+        }));
+    }
+    return effect_1.Effect.succeed(gameState);
+};
+exports.checkEnoughPlayers = checkEnoughPlayers;
 const checkNotAlreadyInRoom = ({ currentGameState, userInfo, }) => {
     if (currentGameState.actor_state
         .map((actor) => actor.id)
@@ -125,3 +134,8 @@ const checkNotAlreadyInRoom = ({ currentGameState, userInfo, }) => {
     return effect_1.Effect.succeed(currentGameState);
 };
 exports.checkNotAlreadyInRoom = checkNotAlreadyInRoom;
+exports.delay = effect_1.Effect.promise(() => new Promise((resolve) => {
+    setTimeout(() => {
+        resolve("waited 1 sec");
+    }, 1000);
+}));

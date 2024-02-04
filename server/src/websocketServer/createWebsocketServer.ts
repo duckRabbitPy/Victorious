@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { Logger, pipe, LogLevel, Effect as E, Effect } from "effect";
+import { Logger, pipe, LogLevel, Effect as E } from "effect";
 import {
   getUserInfoFromJWT,
   parseJSONToClientMsg,

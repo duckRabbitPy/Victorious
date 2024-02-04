@@ -194,13 +194,16 @@ const Room = ({
                 />
               )}
               <div>
-                {gameState.actor_state.length > 1 && gameState.turn < 1 && (
-                  <StartGameButton
-                    gameState={gameState}
-                    coreRoomInfo={coreRoomInfo}
-                    setErrorMessage={setErrorMessage}
-                  />
-                )}
+                {gameState.actor_state.filter((a) =>
+                  botNamePrefixes.some((prefix) => !a.name.startsWith(prefix))
+                ).length > 1 &&
+                  gameState.turn < 1 && (
+                    <StartGameButton
+                      gameState={gameState}
+                      coreRoomInfo={coreRoomInfo}
+                      setErrorMessage={setErrorMessage}
+                    />
+                  )}
               </div>
 
               {gameStarted && (

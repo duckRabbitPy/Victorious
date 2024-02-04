@@ -16,8 +16,9 @@ const isUsersTurn = (gameState, userName) => {
     }
     const numberOfActors = gameState.actor_state.length;
     const turn = gameState.turn;
-    const currentActivePlayer = gameState.actor_state[turn % numberOfActors];
-    return !!currentActivePlayer.name && currentActivePlayer.name === userName;
+    const currentActivePlayerState = gameState.actor_state[turn % numberOfActors];
+    return (!!currentActivePlayerState.name &&
+        currentActivePlayerState.name === userName);
 };
 exports.isUsersTurn = isUsersTurn;
 const groupBy = (array, getKey) => array.reduce((result, item) => {
