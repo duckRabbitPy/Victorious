@@ -66,8 +66,17 @@ const register = (req, res) => {
     const successMsgOrError = connection_1.DBConnection.pipe(effect_1.Effect.flatMap((connection) => connection.pool), effect_1.Effect.flatMap((pool) => effect_1.Effect.all({ username, email, password, pool: effect_1.Effect.succeed(pool) })), effect_1.Effect.flatMap(({ username, email, password, pool }) => {
         const saltRounds = 10;
         const hashedPassword = bcrypt_1.default.hashSync(password, saltRounds);
-        // todo: check if user already exists first
-        return (0, effect_1.pipe)((0, users_1.registerNewUserQuery)(username, email, hashedPassword, pool), effect_1.Effect.flatMap(({ email, confirmation_token }) => (0, sendConfirmationEmail_1.sendConfirmationEmail)({ email, confirmation_token })), effect_1.Effect.flatMap(() => effect_1.Effect.succeed("Email sent")));
+        return (0, effect_1.pipe)((0, users_1.getAllRegisteredUserNamesQuery)(pool), effect_1.Effect.flatMap((usernames) => {
+            const conflictWithBotNames = common_1.botNamePrefixes.includes(username) ||
+                common_1.botNamePrefixes.some((botName) => botName.includes(username));
+            if ((usernames && usernames.includes(username)) ||
+                conflictWithBotNames) {
+                return effect_1.Effect.fail(new customErrors_1.RegistrationError({
+                    message: "Username is reserved or taken",
+                }));
+            }
+            return effect_1.Effect.unit;
+        }), effect_1.Effect.flatMap(() => (0, users_1.registerNewUserQuery)(username, email, hashedPassword, pool)), effect_1.Effect.flatMap(({ email, confirmation_token }) => (0, sendConfirmationEmail_1.sendConfirmationEmail)({ email, confirmation_token })), effect_1.Effect.flatMap(() => effect_1.Effect.succeed("Email sent")));
     }), (dataOrError) => (0, responseHandlers_2.sendRegisterResponse)({
         dataOrError: dataOrError,
         res,
@@ -79,10 +88,9 @@ const register = (req, res) => {
 };
 exports.register = register;
 const verify = (req, res) => {
-    const confirmation_token = (0, common_2.safeParseNonEmptyString)(req.params.confirmation_token);
     const usernameOrError = connection_1.DBConnection.pipe(effect_1.Effect.flatMap((connection) => connection.pool), effect_1.Effect.flatMap((pool) => effect_1.Effect.all({
         pool: effect_1.Effect.succeed(pool),
-        confirmation_token: (0, common_2.safeParseNonEmptyString)(confirmation_token),
+        confirmation_token: (0, common_2.safeParseNonEmptyString)(req.params.confirmation_token),
     })), effect_1.Effect.flatMap(({ confirmation_token, pool }) => (0, users_1.verifyUserQuery)(confirmation_token, pool)), effect_1.Effect.flatMap((username) => effect_1.Effect.succeed(`Verified ${username}. You can now log in with your account.`)), (dataOrError) => (0, responseHandlers_2.sendConfirmUserResponse)({
         dataOrError: dataOrError,
         res,

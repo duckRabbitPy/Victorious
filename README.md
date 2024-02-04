@@ -10,7 +10,6 @@
 
 (run these commands in seperate terminals)
 
-
 ## Testing
 
 `yarn test` - runs vite unit tests and db tests
@@ -19,7 +18,7 @@
 
 `yarn build` - creates a javascript build in /dist in the client and the server directories
 
-`yarn start` - runs the server in production mode (this should be only be run on the production host server e.g. render.com / koyeb.com) the client is served by the express server as a static asset
+`yarn start` - runs the server in production mode (this should be only be run on the production host server e.g. render.com) the client is served by the express server as a static asset
 
 ## Environmental variables
 
@@ -40,12 +39,15 @@ GMAIL_APP_PASSWORD= (string e.g "jfijsfnjnwesnksl")
 DEV_PG_NAME= (string e.g. "victorious_pg_test")
 
 ## Misc
+
 Press ctrl + d to see full gamestate while playing a game
 
 ## Tech stack
+
 ![techStack](https://github.com/duckRabbitPy/Victorious/assets/78092825/d822bc1a-9219-4cae-b4b1-c020d25646bf)
 
 ##### Backend
+
 - Node js
 - Express Http server
 - Node Websockets
@@ -54,13 +56,14 @@ Press ctrl + d to see full gamestate while playing a game
 - Vitest
 - Postgres
 
-
 ##### Frontend
+
 - Vite + React
 - Typescript
 
 ##### Deployment
-- Koyeb
+
+- Render.com
 - Supabase for Postgres
 
 ## What is Effect?
@@ -86,5 +89,3 @@ getDataEffect: Effect.Effect<
   Todo | readonly Todo[] | void
 >;
 ```
-
-
