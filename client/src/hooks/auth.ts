@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { uuidv4 } from "../../../shared/utils";
-import { API_ENDPOINT } from "../constants";
+import { API_ENDPOINT, LOCAL_STORAGE_AUTH_KEY } from "../constants";
 
 const getLoggedInUserName = async () => {
-  const authToken = localStorage.getItem("victorious_auth_token");
+  const authToken = localStorage.getItem(LOCAL_STORAGE_AUTH_KEY);
 
   if (!authToken) {
     return null;
