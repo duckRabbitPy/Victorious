@@ -29,10 +29,10 @@ export const Login = () => {
       .then((data) => {
         if (data.authToken) {
           setErrorMessage(null);
-          localStorage.removeItem("dominion_auth_token");
-          localStorage.removeItem("dominion_user_name");
-          localStorage.setItem("dominion_auth_token", data.authToken);
-          localStorage.setItem("dominion_user_name", username);
+          localStorage.removeItem("victorious_auth_token");
+          localStorage.removeItem("victorious_user_name");
+          localStorage.setItem("victorious_auth_token", data.authToken);
+          localStorage.setItem("victorious_user_name", username);
           refetchLoginStatus();
           window.location.href = "/";
         } else {
@@ -58,8 +58,8 @@ export const Login = () => {
         <Link to={"/"}>Home</Link>
         <button
           onClick={() => {
-            localStorage.removeItem("dominion_auth_token");
-            localStorage.removeItem("dominion_user_name");
+            localStorage.removeItem("victorious_auth_token");
+            localStorage.removeItem("victorious_user_name");
             refetchLoginStatus();
             setErrorMessage(null);
           }}

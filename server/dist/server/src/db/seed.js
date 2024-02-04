@@ -187,6 +187,7 @@ const resetAndSeedDatabase = () => __awaiter(void 0, void 0, void 0, function* (
         yield client.query("DROP TABLE IF EXISTS chat_log CASCADE");
         yield client.query("DROP TABLE IF EXISTS users CASCADE");
         yield client.query("DROP TABLE IF EXISTS game_snapshots CASCADE");
+        yield client.query("DROP TABLE IF EXISTS inactive_sessions CASCADE");
         yield client.query(`
         CREATE TABLE IF NOT EXISTS users (
           user_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

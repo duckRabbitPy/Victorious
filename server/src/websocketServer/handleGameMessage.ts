@@ -38,7 +38,6 @@ import {
   checkClientStateIsUptoDate,
   checkEnoughPlayers,
   checkNotAlreadyInRoom,
-  tapPipeLine,
 } from "../utils";
 import { uuidv4 } from "../../../shared/utils";
 import { registerNewUserQuery } from "../models/users";
