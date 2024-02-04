@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.verifyUserQuery = exports.registerNewUserQuery = exports.getUserIdByUsernameQuery = exports.getHashedPasswordByUsernameQuery = void 0;
+exports.verifyUserQuery = exports.registerNewUserQuery = exports.getAllRegisteredUserNamesQuery = exports.getUserIdByUsernameQuery = exports.getHashedPasswordByUsernameQuery = void 0;
 const effect_1 = require("effect");
 const customErrors_1 = require("../customErrors");
 const utils_1 = require("../utils");
@@ -46,11 +46,27 @@ const getUserIdByUsernameQuery = (username, pool) => {
     }).pipe(effect_1.Effect.retryN(1));
 };
 exports.getUserIdByUsernameQuery = getUserIdByUsernameQuery;
+const getAllRegisteredUserNamesQuery = (pool) => {
+    const get = () => __awaiter(void 0, void 0, void 0, function* () {
+        try {
+            const result = yield pool.query("SELECT username FROM users");
+            return result.rows.map((row) => row.username);
+        }
+        catch (error) {
+            (0, utils_1.logAndThrowError)(error);
+        }
+    });
+    return effect_1.Effect.tryPromise({
+        try: () => get(),
+        catch: () => new customErrors_1.PostgresError({ message: "postgres query error" }),
+    }).pipe(effect_1.Effect.retryN(1));
+};
+exports.getAllRegisteredUserNamesQuery = getAllRegisteredUserNamesQuery;
 const registerNewUserQuery = (username, email, hashedPassword, pool) => {
     const add = () => __awaiter(void 0, void 0, void 0, function* () {
         try {
             const confirmation_token = (0, utils_2.uuidv4)();
-            const result = yield pool.query("INSERT INTO users (username, password, email, confirmation_token) VALUES ($1, $2, $3, $4) RETURNING email, confirmation_token", [username, hashedPassword, email, confirmation_token]);
+            const result = yield pool.query("INSERT INTO users (username, password, email, confirmation_token) VALUES ($1, $2, $3, $4) RETURNING user_id, username, email, confirmation_token", [username, hashedPassword, email, confirmation_token]);
             return result.rows[0];
         }
         catch (error) {
@@ -59,7 +75,9 @@ const registerNewUserQuery = (username, email, hashedPassword, pool) => {
     });
     return effect_1.Effect.tryPromise({
         try: () => add(),
-        catch: () => new customErrors_1.PostgresError({ message: "postgres query error" }),
+        catch: () => new customErrors_1.RegistrationError({
+            message: "Error registering user, email and usernames must be unique",
+        }),
     }).pipe(effect_1.Effect.retryN(1));
 };
 exports.registerNewUserQuery = registerNewUserQuery;

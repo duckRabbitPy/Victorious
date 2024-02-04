@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cleanUp = exports.resetPlayedTreasures = exports.playTreasure = exports.dealToAllActors = exports.dealCards = void 0;
+exports.cleanUp = exports.resetPlayedTreasures = exports.playTreasure = exports.playAllTreasures = exports.dealToAllActors = exports.dealCards = void 0;
 const effect_1 = require("effect");
 const common_1 = require("../../../../shared/common");
 const utils_1 = require("../../../../shared/utils");
@@ -48,6 +48,16 @@ const dealToAllActors = (gameState) => {
         }) }));
 };
 exports.dealToAllActors = dealToAllActors;
+const playAllTreasures = (gameState) => {
+    return effect_1.Effect.succeed(Object.assign(Object.assign({}, gameState), { actor_state: gameState.actor_state.map((actor) => {
+            if ((0, utils_1.isUsersTurn)(gameState, actor.name)) {
+                const newHand = Object.assign(Object.assign({}, actor.hand), { copper: 0, silver: 0, gold: 0 });
+                return Object.assign(Object.assign({}, actor), { hand: newHand, cardsInPlay: Object.assign(Object.assign({}, actor.cardsInPlay), { copper: actor.hand.copper, silver: actor.hand.silver, gold: actor.hand.gold }) });
+            }
+            return actor;
+        }) }));
+};
+exports.playAllTreasures = playAllTreasures;
 const playTreasure = ({ gameState, userId, cardName, }) => {
     const newActorState = gameState.actor_state.map((actor) => {
         if (actor.id === userId) {
@@ -77,7 +87,7 @@ const cleanUp = (gameState) => {
                         .concat(toDiscardFromHand)
                         .concat((0, common_1.countToCardNamesArray)(actor.cardsInPlay)),
                 });
-                return Object.assign(Object.assign({}, actor), { hand: (0, common_1.cardNamesToCount)(newCardsIntoHand), deck: newDeck, cardsInPlay: common_1.zeroCardCount, discardPile: newDiscardPile });
+                return Object.assign(Object.assign({}, actor), { actionPhaseDemand: null, bonusTreasureValue: 0, hand: (0, common_1.cardNamesToCount)(newCardsIntoHand), deck: newDeck, cardsInPlay: common_1.zeroCardCount, discardPile: newDiscardPile });
             }
             else
                 return gameState.actor_state[index];
