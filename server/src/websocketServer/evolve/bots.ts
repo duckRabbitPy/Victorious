@@ -12,8 +12,8 @@ import { buyCard, resetBuysAndActions } from "./buys";
 import { IllegalGameStateError, PostgresError } from "../../customErrors";
 import { writeNewGameStateToDB } from "../../models/gamestate/mutations";
 import { ParseError } from "@effect/schema/ParseResult";
-import { cleanUp, playTreasure } from "./hand";
-import { incrementTurn } from "./turn";
+import { playAllTreasures } from "./hand";
+
 import { playAction } from "./actions";
 
 export const handleIfBotPlayerTurn = (
@@ -26,7 +26,6 @@ export const handleIfBotPlayerTurn = (
 > => {
   const currentActorGameState =
     gameState.actor_state[gameState.turn % gameState.actor_state.length];
-
   const currentPlayerIsBot = botNamePrefixes.some((prefix) =>
     currentActorGameState.name.startsWith(prefix)
   );
@@ -38,6 +37,18 @@ export const handleIfBotPlayerTurn = (
       })
     );
   }
+
+  return pipe(
+    botActionPhase(gameState, pool),
+    E.flatMap((postActionPhaseGamestate) =>
+      botBuyPhase(postActionPhaseGamestate, pool)
+    )
+  );
+};
+
+const botActionPhase = (gameState: GameState, pool: Pool) => {
+  const currentActorGameState =
+    gameState.actor_state[gameState.turn % gameState.actor_state.length];
 
   // actionPhase
   if (
@@ -60,73 +71,56 @@ export const handleIfBotPlayerTurn = (
           cardName: cardToPlay,
           toDiscardFromHand: [cardToPlay],
         }),
-        E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool)),
         E.flatMap((gameState) => handleIfBotPlayerTurn(gameState, pool))
       );
     }
   }
 
-  // buyPhase
+  return E.succeed(gameState);
+};
+
+const botBuyPhase = (gameState: GameState, pool: Pool) => {
+  const currentActorGameState =
+    gameState.actor_state[gameState.turn % gameState.actor_state.length];
+
   if (
     currentActorGameState.phase === Phases.Buy &&
     currentActorGameState.buys > 0
   ) {
-    const treasureCardsInHand = Object.entries(
-      currentActorGameState.hand
-    ).filter(
-      ([cardName, count]) =>
-        cardNameToCard(cardName as CardName).type === "treasure" && count > 0
-    ) as [CardName, number][];
-
-    if (treasureCardsInHand.length > 0) {
-      const randomIndex = Math.floor(
-        Math.random() * treasureCardsInHand.length
-      );
-      const treasureToPlay = treasureCardsInHand[randomIndex][0];
-
-      return pipe(
-        // todo do this in a loop or until all treasures played
-        playTreasure({
-          gameState,
-          userId: currentActorGameState.id,
-          cardName: treasureToPlay,
-        }),
-        E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool)),
-        E.flatMap((gameState) => {
-          const affordableCards = Object.entries(
-            gameState.global_state.supply
-          ).filter(([cardName, count]) => {
-            const card = cardNameToCard(cardName as CardName);
-            return (
-              card.cost <=
-                getTreasureValue(currentActorGameState.cardsInPlay) && count > 0
-            );
-          }) as [CardName, number][];
-
-          const randomIndex = Math.floor(
-            Math.random() * affordableCards.length
+    return pipe(
+      playAllTreasures(gameState),
+      E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool)),
+      E.flatMap((newGameState) => {
+        const newActorGameState =
+          newGameState.actor_state[
+            newGameState.turn % newGameState.actor_state.length
+          ];
+        const affordableCards = Object.entries(
+          newGameState.global_state.supply
+        ).filter(([cardName, count]) => {
+          const card = cardNameToCard(cardName as CardName);
+          return (
+            card.cost <= getTreasureValue(newActorGameState.cardsInPlay) &&
+            count > 0
           );
-          const cardToBuy = affordableCards[randomIndex][0];
+        }) as [CardName, number][];
 
-          return buyCard({
-            gameState: gameState,
-            userId: currentActorGameState.id,
-            cardName: cardToBuy,
-            toDiscardFromHand: [cardToBuy],
-          });
-        }),
-        E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool)),
-        E.flatMap((gameState) => handleIfBotPlayerTurn(gameState, pool))
-      );
-    }
+        const randomIndex = Math.floor(Math.random() * affordableCards.length);
+
+        if (affordableCards.length === 0) {
+          return E.succeed(newGameState);
+        }
+        const cardToBuy = affordableCards[randomIndex][0];
+        return buyCard({
+          gameState: newGameState,
+          userId: newActorGameState.id,
+          cardName: cardToBuy,
+          toDiscardFromHand: [],
+        });
+      }),
+      E.flatMap((gameState) => handleIfBotPlayerTurn(gameState, pool))
+    );
   }
 
-  return pipe(
-    cleanUp(gameState),
-    E.flatMap((gamestate) =>
-      incrementTurn(gamestate, currentActorGameState.name)
-    ),
-    E.flatMap(resetBuysAndActions),
-    E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
-  );
+  return E.succeed(gameState);
 };
