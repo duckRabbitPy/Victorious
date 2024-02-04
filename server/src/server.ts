@@ -10,7 +10,7 @@ dotenv.config();
 const SERVER_PORT = Number(process.env?.PORT) || 3000;
 export const SERVER_API_ENDPOINT =
   process.env.NODE_ENV === "production"
-    ? "https://victorious-duckrabbit.koyeb.app/api"
+    ? "https://victorious.onrender.com/api"
     : `http://localhost:${SERVER_PORT}/api`;
 
 const expressApp = express();

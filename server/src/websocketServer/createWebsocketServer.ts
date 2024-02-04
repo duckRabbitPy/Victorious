@@ -7,6 +7,7 @@ import {
   clientNotInConnectionList,
   getClientMessage,
   delay,
+  tapPipeLine,
 } from "../utils";
 
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
@@ -103,6 +104,7 @@ export function createWebsocketServer(app: wsApplication) {
                   userInfo,
                   pool,
                 }),
+                tapPipeLine,
                 E.flatMap((gameState) => {
                   return broadcastToRoom({
                     broadcastType: "gameState",

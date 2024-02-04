@@ -90,7 +90,7 @@ const Room = ({
   const coreUserInfo = {
     loggedInUsername,
     currentUserState: gameState?.actor_state.find(
-      (a) => a.name === localStorage.getItem("dominion_user_name")
+      (a) => a.name === localStorage.getItem("victorious_user_name")
     ),
   };
 
@@ -98,6 +98,7 @@ const Room = ({
     return (
       <div>
         Error fetching game state from server...
+        <p>No {socket ? "game state" : "socket"} found.</p>
         <Link to="/"> Go home</Link>
       </div>
     );

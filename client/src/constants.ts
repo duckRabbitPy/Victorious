@@ -1,11 +1,11 @@
 export const API_ENDPOINT =
   import.meta.env.MODE === "production"
-    ? "https://victorious-duckrabbit.koyeb.app/api"
+    ? "https://victorious.onrender.com/api"
     : "http://localhost:3000/api";
 
 export const WEB_SOCKET_URL =
   import.meta.env.MODE === "production"
-    ? "wss://victorious-duckrabbit.koyeb.app/api"
+    ? "wss://victorious.onrender.com"
     : "ws://localhost:3000";
 
 export const Backgrounds = [

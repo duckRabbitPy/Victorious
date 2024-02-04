@@ -8,6 +8,7 @@ const common_1 = require("../../../shared/common");
 const handleChatMessage_1 = require("./handleChatMessage");
 const handleGameMessage_1 = require("./handleGameMessage");
 const broadcast_1 = require("./broadcast");
+const sendBotMessage_1 = require("./bots/sendBotMessage");
 function createWebsocketServer(app) {
     // !! mutable state
     let roomConnections = [];
@@ -56,7 +57,7 @@ function createWebsocketServer(app) {
                     msg,
                     userInfo,
                     pool,
-                }), effect_1.Effect.flatMap((gameState) => {
+                }), utils_1.tapPipeLine, effect_1.Effect.flatMap((gameState) => {
                     return (0, broadcast_1.broadcastToRoom)({
                         broadcastType: "gameState",
                         payload: gameState,
@@ -64,11 +65,26 @@ function createWebsocketServer(app) {
                         roomConnections,
                     });
                 }), effect_1.Effect.flatMap(() => effect_1.Effect.succeed("game message sent successfully")));
-            }))), utils_1.tapPipeLine, 
+            }))), 
             // todo: differentiate between errors that should be sent to client and errors that should be only be logged
             effect_1.Effect.catchAll((error) => (0, utils_1.sendErrorMsgToClient)(error, clientMsg, roomConnections)), effect_1.Logger.withMinimumLogLevel(effect_1.LogLevel.All));
-            const runnable = effect_1.Effect.provideService(processMessage, connection_1.DBConnection, connection_1.DBConnectionLive);
-            effect_1.Effect.runPromise(runnable);
+            const processMessageRunnable = effect_1.Effect.provideService(processMessage, connection_1.DBConnection, connection_1.DBConnectionLive);
+            const sendBotMessages = connection_1.DBConnection.pipe(effect_1.Effect.flatMap((connection) => connection.pool), effect_1.Effect.flatMap((pool) => (0, effect_1.pipe)(effect_1.Effect.all({
+                msg: (0, utils_1.parseJSONToClientMsg)(msg),
+                pool: effect_1.Effect.succeed(pool),
+            }), effect_1.Effect.flatMap(({ pool, msg }) => {
+                if (msg.chatMessage) {
+                    return (0, sendBotMessage_1.sendBotMessage)(msg, roomConnections, pool);
+                }
+                return effect_1.Effect.succeed(effect_1.Effect.unit);
+            }), effect_1.Effect.catchAll((e) => {
+                console.log(e);
+                return effect_1.Effect.succeed(effect_1.Effect.unit);
+            }))));
+            const sendBotMessagesRunnable = effect_1.Effect.provideService(sendBotMessages, connection_1.DBConnection, connection_1.DBConnectionLive);
+            effect_1.Effect.runPromise(processMessageRunnable)
+                .then(() => effect_1.Effect.runPromise(utils_1.delay))
+                .then(() => effect_1.Effect.runPromise(sendBotMessagesRunnable));
         });
         ws.on("close", () => {
             console.log(`Client disconnected. Total connections: ${roomConnections.length}`);
