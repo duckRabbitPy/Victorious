@@ -9,7 +9,7 @@ export const WEB_SOCKET_URL =
     : "ws://localhost:3000";
 
 export const LOCAL_STORAGE_AUTH_KEY = "victorious_auth_token";
-export const LOCAL_STORAGE_USERNAME_KEY = "victorious_username";
+export const LOCAL_STORAGE_USERNAME_KEY = "victorious_user_name";
 
 export const Backgrounds = [
   "https://res.cloudinary.com/dkytnwn87/image/upload/v1704665159/dominion/Leonardo_Diffusion_XL_snow_background_plain_featureless_in_cen_1_q2dzmc.jpg",
