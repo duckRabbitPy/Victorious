@@ -28,6 +28,7 @@ const getLoggedInUserName = async () => {
 
 export const useGetLoggedInUsername = () => {
   const [loggedInUsername, setLoggedInUsername] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [refetchKey, setRefetchKey] = useState<string>(uuidv4());
 
   const refetchLoginStatus = () => {
@@ -38,8 +39,8 @@ export const useGetLoggedInUsername = () => {
     const fetchData = async () => {
       try {
         const result = await getLoggedInUserName();
-        console.log("result", result);
         setLoggedInUsername(result);
+        setLoading(false);
       } catch (error) {
         setLoggedInUsername(null);
       }
@@ -48,5 +49,5 @@ export const useGetLoggedInUsername = () => {
     fetchData();
   }, [refetchKey]);
 
-  return { loggedInUsername, refetchLoginStatus };
+  return { loggedInUsername, refetchLoginStatus, loading };
 };
