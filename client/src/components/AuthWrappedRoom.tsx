@@ -3,9 +3,11 @@ import { useGetLoggedInUsername } from "../hooks/auth";
 import Room from "../pages/Room";
 import React, { useState } from "react";
 import { Backgrounds } from "../constants";
+import { Spinner } from "./Utils";
 
 const AuthWrappedRoom = () => {
-  const { loggedInUsername } = useGetLoggedInUsername();
+  const { loggedInUsername, loading: loadingLoginData } =
+    useGetLoggedInUsername();
   const [backgroundLoaded, setBackgroundLoaded] = useState(false);
   const [backgroundIndex, setBackgroundIndex] = useState(0);
 
@@ -55,7 +57,7 @@ const AuthWrappedRoom = () => {
         <Link to={"/"}>Home</Link>
         <Link to={"/login"}>Login</Link>
       </div>
-      <h1>Not logged in</h1>
+      <>{loadingLoginData ? <Spinner /> : <h1>Not logged in </h1>}</>
     </>
   );
 };

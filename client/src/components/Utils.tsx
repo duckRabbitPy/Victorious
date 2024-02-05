@@ -1,4 +1,4 @@
-const Spacer = ({ size }: { size?: "small" | "medium" | "large" }) => {
+export const Spacer = ({ size }: { size?: "small" | "medium" | "large" }) => {
   const getSize = () => {
     switch (size) {
       case "small":
@@ -15,4 +15,4 @@ const Spacer = ({ size }: { size?: "small" | "medium" | "large" }) => {
   return <div style={{ margin: getSize() }} />;
 };
 
-export default Spacer;
+export const Spinner = () => <div className="spinner" />;
