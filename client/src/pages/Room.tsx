@@ -11,7 +11,7 @@ import ChatLog from "../components/ChatLog";
 import { useGameState } from "../hooks/useGameState";
 import HistoryLog from "../components/HistoryLog";
 import OpponentHands from "../components/OpponentHands";
-import Spacer from "../components/Spacer";
+
 import React, { useEffect } from "react";
 import {
   LOCAL_STORAGE_AUTH_KEY,
@@ -29,6 +29,7 @@ import { BackgroundSelector } from "../components/BackgroundSelector";
 
 import { ResetPlayedTreasuresButton } from "../components/ResetPlayedTreasures";
 import { handleBotPlayerTurn } from "../effects/effects";
+import { Spacer, Spinner } from "../components/Utils";
 
 const Room = ({
   loggedInUsername,
@@ -101,8 +102,9 @@ const Room = ({
   if (!gameState || !socket)
     return (
       <div>
-        Error fetching game state from server...
-        <p>No {socket ? "game state" : "socket"} found.</p>
+        <p>{!socket && "connecting to server"}</p>
+        <p>{!gameState && "loading gamesate"}</p>
+        <Spinner />
         <Link to="/"> Go home</Link>
       </div>
     );
