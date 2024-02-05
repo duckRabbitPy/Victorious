@@ -35,7 +35,7 @@
   "main": "app.js",
   "scripts": {
     "build": "yarn build:client && yarn build:server",
-    "build:server": "cd ./server && npx tsc",
+    "build:server": "cd ./server && tsc",
     "build:client": "cd ./client && yarn && npx vite build",
     "start": "node server/dist/server/src/server.js",
     "regen": "rm -rf ./client/node_modules && cd ./client && yarn && npx vite",
