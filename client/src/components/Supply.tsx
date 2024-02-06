@@ -43,16 +43,22 @@ const treasureCardUrls = {
     "https://res.cloudinary.com/dkytnwn87/image/upload/v1706955296/dominion/Leonardo_Diffusion_XL_workshop_medival_tools_at_table_3_wxhz9k.jpg",
 } as Record<CardName, string>;
 
-const Supply = ({ props }: { props: CoreProps }) => {
+const Supply = ({
+  props,
+}: {
+  props: CoreProps & {
+    supplyCardInFocus: CardName | null;
+    setSupplyCardInFocus: React.Dispatch<React.SetStateAction<CardName | null>>;
+  };
+}) => {
   const {
     gameState,
     coreRoomInfo: { socket, authToken, roomNumber },
     coreUserInfo: { loggedInUsername, currentUserState },
     setErrorMessage,
+    supplyCardInFocus,
+    setSupplyCardInFocus,
   } = props;
-
-  const [supplyCardInFocus, setSupplyCardInFocus] =
-    React.useState<CardName | null>(null);
 
   if (!currentUserState) return null;
 

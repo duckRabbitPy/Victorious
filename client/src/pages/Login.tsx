@@ -38,6 +38,7 @@ export const Login = () => {
           localStorage.setItem(LOCAL_STORAGE_AUTH_KEY, data.authToken);
           localStorage.setItem(LOCAL_STORAGE_USERNAME_KEY, username);
           refetchLoginStatus();
+          window.location.href = "/";
         } else {
           setErrorMessage(
             "A login error occurred, are you sure you have registered and entered the correct username and password?"

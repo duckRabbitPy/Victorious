@@ -12,7 +12,7 @@ import { useGameState } from "../hooks/useGameState";
 import HistoryLog from "../components/HistoryLog";
 import OpponentHands from "../components/OpponentHands";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   LOCAL_STORAGE_AUTH_KEY,
   LOCAL_STORAGE_USERNAME_KEY,
@@ -21,6 +21,8 @@ import {
 import { BiSolidCastle } from "react-icons/bi";
 
 import {
+  CardName,
+  Phases,
   botNamePrefixes,
   countToCardNamesArray,
   getUserNameColors,
@@ -30,6 +32,7 @@ import { BackgroundSelector } from "../components/BackgroundSelector";
 import { ResetPlayedTreasuresButton } from "../components/ResetPlayedTreasures";
 import { handleBotPlayerTurn } from "../effects/effects";
 import { Spacer, Spinner } from "../components/Utils";
+import { EndActionsButton } from "../components/EndActionsButton";
 
 const Room = ({
   loggedInUsername,
@@ -41,7 +44,9 @@ const Room = ({
   const { "*": roomParam } = useParams();
   const roomNumber = Number(roomParam);
   const authToken = localStorage.getItem(LOCAL_STORAGE_AUTH_KEY);
-
+  const [supplyCardInFocus, setSupplyCardInFocus] = useState<CardName | null>(
+    null
+  );
   const { gameState, socket, chatLog, errorMessage, setErrorMessage } =
     useGameState();
 
@@ -201,13 +206,16 @@ const Room = ({
                 />
               )}
               <div>
-                {gameState.actor_state.length > 1 && gameState.turn < 1 && (
-                  <StartGameButton
-                    gameState={gameState}
-                    coreRoomInfo={coreRoomInfo}
-                    setErrorMessage={setErrorMessage}
-                  />
-                )}
+                {gameState.actor_state.find(
+                  (a) => a.name === loggedInUsername
+                ) &&
+                  gameState.turn < 1 && (
+                    <StartGameButton
+                      gameState={gameState}
+                      coreRoomInfo={coreRoomInfo}
+                      setErrorMessage={setErrorMessage}
+                    />
+                  )}
               </div>
 
               {gameStarted && (
@@ -230,33 +238,52 @@ const Room = ({
                       coreRoomInfo,
                       coreUserInfo,
                       setErrorMessage,
+                      setSupplyCardInFocus,
+                      supplyCardInFocus,
                     }}
                   />
 
-                  {isUsersTurn(gameState, loggedInUsername) && (
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        gap: "0.5rem",
-                      }}
-                    >
-                      <EndTurnButton
-                        props={{
-                          gameState,
-                          coreRoomInfo,
-                          coreUserInfo,
-                          setErrorMessage,
+                  <div
+                    style={{
+                      minHeight: "50px",
+                    }}
+                  >
+                    {isUsersTurn(gameState, loggedInUsername) && (
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          gap: "0.5rem",
                         }}
-                      />
-                      <ResetPlayedTreasuresButton
-                        gameState={gameState}
-                        coreRoomInfo={coreRoomInfo}
-                        coreUserInfo={coreUserInfo}
-                        setErrorMessage={setErrorMessage}
-                      />
-                    </div>
-                  )}
+                      >
+                        {coreUserInfo?.currentUserState?.phase ===
+                          Phases.Action && (
+                          <EndActionsButton
+                            props={{
+                              gameState,
+                              coreRoomInfo,
+                              coreUserInfo,
+                              setErrorMessage,
+                            }}
+                          />
+                        )}
+                        <EndTurnButton
+                          props={{
+                            gameState,
+                            coreRoomInfo,
+                            coreUserInfo,
+                            setErrorMessage,
+                          }}
+                        />
+                        <ResetPlayedTreasuresButton
+                          gameState={gameState}
+                          coreRoomInfo={coreRoomInfo}
+                          coreUserInfo={coreUserInfo}
+                          setErrorMessage={setErrorMessage}
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -267,6 +294,7 @@ const Room = ({
                 coreUserInfo={coreUserInfo}
                 gameState={gameState}
                 setErrorMessage={setErrorMessage}
+                setSupplyCardInFocus={setSupplyCardInFocus}
               />
             </div>
 

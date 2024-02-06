@@ -437,3 +437,25 @@ const getGainRequirementFromAction = (
       return undefined;
   }
 };
+
+export const goToBuyPhase = (gameState: GameState) => {
+  const currentActorGameState =
+    gameState.actor_state[gameState.turn % gameState.actor_state.length];
+
+  const newActorState = gameState.actor_state.map((actor) => {
+    if (actor.id === currentActorGameState.id) {
+      return {
+        ...actor,
+        actions: 0,
+        actionPhaseDemand: null,
+        phase: Phases.Buy,
+      };
+    }
+    return actor;
+  });
+
+  return E.succeed({
+    ...gameState,
+    actor_state: newActorState,
+  });
+};
