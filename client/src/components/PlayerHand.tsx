@@ -30,9 +30,11 @@ const CardInHand = ({
   buttonStyle,
   index,
   disabled,
+  onContextMenu,
 }: {
   cardName: CardName;
   onClick: () => void;
+  onContextMenu: (e: React.MouseEvent<HTMLButtonElement>) => void;
   buttonStyle: React.CSSProperties;
   index: number;
   disabled: boolean;
@@ -41,6 +43,7 @@ const CardInHand = ({
     <button
       key={index}
       style={buttonStyle}
+      onContextMenu={onContextMenu}
       disabled={disabled}
       onClick={onClick}
     >
@@ -59,6 +62,9 @@ const constructDemandText = (actionPhaseDemand: ActionPhaseDemand) => {
   }
 
   if (demandType === "Trash") {
+    if (requirement?.maxValue === 1) {
+      return "Trash a copper from your hand";
+    }
     return `Trash ${count} ${count > 1 ? "cards" : "card"} ${
       requirement?.maxValue ? `worth up to ${requirement.maxValue}` : ""
     } ${requirement?.minValue ? `worth at least ${requirement.minValue}` : ""}`;
@@ -72,12 +78,10 @@ const PlayerHand = ({
   coreRoomInfo: { socket, authToken, roomNumber },
   coreUserInfo: { loggedInUsername, currentUserState },
   setErrorMessage,
-}: Props) => {
-  console.log("player hand", {
-    gameState,
-    coreRoomInfo: { socket, authToken, roomNumber },
-    coreUserInfo: { loggedInUsername, currentUserState },
-  });
+  setSupplyCardInFocus,
+}: Props & {
+  setSupplyCardInFocus: React.Dispatch<React.SetStateAction<CardName | null>>;
+}) => {
   if (gameState.turn < 1 || !currentUserState) return null;
 
   const currentHand = currentUserState.hand;
@@ -104,12 +108,12 @@ const PlayerHand = ({
     >
       <>
         <h3 style={{ margin: 0 }}>Hand</h3>
-        {!isUsersTurn(gameState, loggedInUsername)
-          ? "Waiting for your turn..."
-          : "Click on a card to play it."}
+        {!isUsersTurn(gameState, loggedInUsername) &&
+          "Waiting for your turn..."}
 
         <div
           style={{
+            minHeight: "2rem",
             color:
               currentUserState.actionPhaseDemand?.demandType === "Trash"
                 ? THEME_COLORS.lightRed
@@ -122,24 +126,42 @@ const PlayerHand = ({
       </>
 
       <div
-        style={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          flexWrap: "wrap",
+          minHeight: "50px",
+        }}
       >
         {visibleHandCountKVP.map(([cardName, count]) => {
           const isActionCard = getCardTypeByName(cardName) === "action";
           const isTreasureCard = getCardTypeByName(cardName) === "treasure";
 
-          const disabled =
-            !isUsersTurn(gameState, loggedInUsername) ||
-            (((currentUserState.phase === Phases.Action &&
+          const isNotUsersTurn = !isUsersTurn(gameState, loggedInUsername);
+          const isNotAppropriatePhase =
+            (currentUserState.phase === Phases.Action &&
               getCardTypeByName(cardName) !== "action") ||
-              (currentUserState.phase === Phases.Buy &&
-                getCardTypeByName(cardName) !== "treasure") ||
-              !currentUserState.buys ||
-              cardNameToCard(cardName).type === "victory") &&
-              currentUserState.actionPhaseDemand?.demandType !== "Trash") ||
-            playerMustGain ||
-            (currentUserState.actions < 1 &&
-              currentUserState.actionPhaseDemand === null);
+            (currentUserState.phase === Phases.Buy &&
+              getCardTypeByName(cardName) !== "treasure") ||
+            !currentUserState.buys ||
+            cardNameToCard(cardName).type === "victory";
+
+          const NoActionsLeftOrInProgressInActionPhase =
+            currentUserState.phase === Phases.Action &&
+            currentUserState.actions < 1 &&
+            currentUserState.actionPhaseDemand === null;
+
+          const MoneyLenderInPlayAndIsCopper =
+            playerMustTrash &&
+            currentUserState?.actionPhaseDemand?.requirement?.maxValue === 1 &&
+            cardName === "copper";
+
+          const disabled =
+            (isNotUsersTurn ||
+              isNotAppropriatePhase ||
+              playerMustGain ||
+              NoActionsLeftOrInProgressInActionPhase) &&
+            !MoneyLenderInPlayAndIsCopper;
 
           const getCardInHandColor = () => {
             if (playerMustTrash) {
@@ -217,6 +239,10 @@ const PlayerHand = ({
                   <CardInHand
                     key={`${cardName}-${index}`}
                     cardName={cardName}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setSupplyCardInFocus(cardName);
+                    }}
                     onClick={onClick}
                     buttonStyle={buttonStyle}
                     index={index}

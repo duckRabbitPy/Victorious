@@ -404,6 +404,7 @@ export enum SupportedEffects {
   resetPlayedTreasures = "resetPlayedTreasures",
   playAction = "playAction",
   incrementTurn = "incrementTurn",
+  endActions = "endActions",
   getCurrentChatLog = "getCurrentChatLog",
   sendChatMessage = "sendChatMessage",
   trashCardToMeetDemand = "trashCardToMeetDemand",

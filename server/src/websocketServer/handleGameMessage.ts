@@ -23,7 +23,11 @@ import {
 import { handleIfBotPlayerTurn } from "./evolve/bots";
 import { buyCard, gainCard, resetBuysAndActions } from "./evolve/buys";
 import { incrementTurn } from "./evolve/turn";
-import { playAction, trashCardToMeetDemand } from "./evolve/actions";
+import {
+  goToBuyPhase,
+  playAction,
+  trashCardToMeetDemand,
+} from "./evolve/actions";
 import { deduceVictoryPoints, determineIfGameIsOver } from "./evolve/victory";
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
@@ -163,7 +167,16 @@ export const handleGameMessage = ({
         currentGameState,
         E.flatMap((currentGameState) => cleanUp(currentGameState)),
         E.flatMap((gamestate) => incrementTurn(gamestate, userInfo.username)),
+        E.flatMap(deduceVictoryPoints),
         E.flatMap(resetBuysAndActions),
+        E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
+      );
+    }
+
+    case SupportedEffects.endActions: {
+      return pipe(
+        currentGameState,
+        E.flatMap((currentGameState) => goToBuyPhase(currentGameState)),
         E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
       );
     }

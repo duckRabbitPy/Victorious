@@ -95,13 +95,23 @@ const botBuyPhase = (gameState: GameState, pool: Pool) => {
           newGameState.actor_state[
             newGameState.turn % newGameState.actor_state.length
           ];
+
+        const unsupportedCardsForBots = [
+          "mine",
+          "moneylender",
+          "workshop",
+          "councilRoom",
+          "laboratory",
+        ];
+
         const affordableCards = Object.entries(
           newGameState.global_state.supply
         ).filter(([cardName, count]) => {
           const card = cardNameToCard(cardName as CardName);
           return (
             card.cost <= getTreasureValue(newActorGameState.cardsInPlay) &&
-            count > 0
+            count > 0 &&
+            !unsupportedCardsForBots.includes(cardName)
           );
         }) as [CardName, number][];
 
@@ -110,7 +120,17 @@ const botBuyPhase = (gameState: GameState, pool: Pool) => {
         if (affordableCards.length === 0) {
           return E.succeed(newGameState);
         }
-        const cardToBuy = affordableCards[randomIndex][0];
+
+        const favouredCards: CardName[] =
+          newGameState.turn < 12
+            ? ["smithy", "silver", "gold"]
+            : ["duchy", "province", "estate"];
+
+        const cardToBuy =
+          favouredCards.find((card) =>
+            affordableCards.map(([cardName, count]) => cardName).includes(card)
+          ) || affordableCards[randomIndex][0];
+
         return buyCard({
           gameState: newGameState,
           userId: newActorGameState.id,

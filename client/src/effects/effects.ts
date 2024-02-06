@@ -395,6 +395,35 @@ export const startGame = ({
   );
 };
 
+export const endActions = ({
+  socket,
+  authToken,
+  roomNumber,
+  mutationIndex,
+  setErrorMessage,
+}: {
+  socket: WebSocket | null;
+  authToken: string | null;
+  roomNumber: number;
+  mutationIndex: number;
+  setErrorMessage: (message: string | null) => void;
+}) => {
+  if (!socket || !authToken) {
+    setErrorMessage(!socket ? "Socket is null" : "Auth token is null");
+    return;
+  }
+
+  socket.send(
+    prepareMessage({
+      mutationIndex,
+      effect: SupportedEffects.endActions,
+      authToken,
+      room: roomNumber,
+      toDiscardFromHand: [],
+    })
+  );
+};
+
 export const getInititalChatLog = ({
   socket,
   authToken,

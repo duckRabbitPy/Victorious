@@ -25,10 +25,14 @@ const TurnInfo = ({
       style={{
         border: "1px black solid",
         background: THEME_COLORS.translucentStraw,
+        minHeight: "100px",
       }}
     >
       {!isUsersTurn(gameState, loggedInUsername) && (
-        <p>Waiting for other player...</p>
+        <>
+          <p>Victory points: {currentUserState.victoryPoints}</p>
+          <p>Waiting for other player...</p>
+        </>
       )}
       {isUsersTurn(gameState, loggedInUsername) && (
         <>
