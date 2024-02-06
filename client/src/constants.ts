@@ -1,11 +1,11 @@
 export const API_ENDPOINT =
   import.meta.env.MODE === "production"
-    ? "https://victorious.onrender.com/api"
+    ? "https://victorious-duckrabbit.koyeb.app/api"
     : "http://localhost:3000/api";
 
 export const WEB_SOCKET_URL =
   import.meta.env.MODE === "production"
-    ? "wss://victorious.onrender.com"
+    ? "wss://victorious-duckrabbit.koyeb.app"
     : "ws://localhost:3000";
 
 export const LOCAL_STORAGE_AUTH_KEY = "victorious_auth_token";
