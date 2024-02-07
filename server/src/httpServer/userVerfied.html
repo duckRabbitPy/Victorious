@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Account Verified</title>
+    <style>
+      :root {
+        background: rgb(252, 243, 223);
+        background: radial-gradient(
+          circle,
+          rgba(252, 243, 223, 0.3290870488322718) 0%,
+          rgba(189, 200, 207, 1) 100%
+        );
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      h1 {
+        color: green;
+      }
+
+      a {
+        font-weight: 500;
+        color: #646cff;
+        text-decoration: inherit;
+      }
+
+      a:hover {
+        color: #535bf2;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <h1>You have verified your account ✅</h1>
+      <p>You may now log into victorious 🏰</p>
+      <a id="loginButton" href="#">Log in</a>
+    </div>
+    <script>
+      const isLocalhost = window.location.href.includes("localhost");
+      const loginUrl = isLocalhost
+        ? "http://localhost:3000/login"
+        : "https://victorious-duckrabbit.koyeb.app/login";
+      document.getElementById("loginButton").href = loginUrl;
+    </script>
+  </body>
+</html>

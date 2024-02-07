@@ -142,7 +142,7 @@ const Room = ({
             onClick={() => setErrorMessage(null)}
             style={{ maxWidth: "fit-content", alignSelf: "center" }}
           >
-            clear
+            continue from savepoint
           </button>
         </>
       )}
