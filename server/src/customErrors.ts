@@ -41,3 +41,7 @@ export class ExternalServiceError extends Data.TaggedClass(
 )<{
   message: string;
 }> {}
+
+export class RuntimeError extends Data.TaggedClass("RuntimeError")<{
+  message: string;
+}> {}

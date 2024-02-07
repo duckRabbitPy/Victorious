@@ -7,20 +7,20 @@ import {
   countToCardNamesArray,
   hasActionCard,
   subtractCardCount,
-  sumCardCounts,
   zeroCardCount,
 } from "../../../../shared/common";
 import { isUsersTurn } from "../../../../shared/utils";
-import { sum } from "effect/Duration";
 
 export const dealCards = ({
   deck,
   numberOfCardsToDraw,
   discardPile,
+  cardThatMustRemainInDiscardPile,
 }: {
   deck: readonly CardName[];
   numberOfCardsToDraw: number;
   discardPile: readonly CardName[];
+  cardThatMustRemainInDiscardPile?: CardName;
 }) => {
   if (deck.length < numberOfCardsToDraw) {
     const lastCardsInDeck = deck.slice(0, deck.length);
@@ -31,9 +31,15 @@ export const dealCards = ({
       ...discardPile,
     ]);
 
-    const newCardsToHand = restOfDeck.slice(
+    const cardsForNewHand = restOfDeck.slice(
       0,
       numberOfCardsToDraw - numberOfCardsLeftInDeck
+    );
+
+    const newCardsToHand = cardsForNewHand.filter(
+      (_, index, arr) =>
+        !cardThatMustRemainInDiscardPile ||
+        index !== arr.indexOf(cardThatMustRemainInDiscardPile)
     );
 
     return {
