@@ -1,9 +1,10 @@
 import { RequestHandler } from "express";
 import { pipe, Effect as E } from "effect";
 import { getOpenGameSessionsQuery } from "../models/gamestate/queries";
-
+import path from "path";
 import { safeParseNumber, safeParseNumberArray } from "../utils";
 import {
+  respondWithError,
   sendGameStateResponse,
   sendOpenRoomsResponse,
 } from "./responseHandlers";
@@ -31,7 +32,6 @@ import {
 
 import { safeParseJWT, verifyJwt } from "../utils";
 import {
-  sendConfirmUserResponse,
   sendAuthenticatedUserResponse,
   sendLoginResponse,
   sendRegisterResponse,
@@ -201,16 +201,14 @@ export const verify: RequestHandler = (req, res) => {
     E.flatMap(({ confirmation_token, pool }) =>
       verifyUserQuery(confirmation_token, pool)
     ),
-    E.flatMap((username) =>
-      E.succeed(`Verified ${username}. You can now log in with your account.`)
+    E.flatMap(() =>
+      E.succeed(
+        res.sendFile(
+          path.join(process.cwd(), "server/src/httpServer/userVerfied.html")
+        )
+      )
     ),
-    (dataOrError) =>
-      sendConfirmUserResponse({
-        dataOrError: dataOrError,
-        res,
-        successStatus: 200,
-        label: "message",
-      })
+    E.orElseFail(() => respondWithError(res, 500, "Internal server error"))
   );
 
   const runnable = E.provideService(

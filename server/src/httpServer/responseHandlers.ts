@@ -43,12 +43,6 @@ export const sendRegisterResponse = createResponseHandler<string>(
   (successMsg) => successMsg
 );
 
-export const sendConfirmUserResponse = createResponseHandler<string>(
-  (confirmMessage) => ({
-    confirmMessage,
-  })
-);
-
 export const sendGameStateResponse = createResponseHandler<GameState>(
   (gameState) => ({
     gameState,
@@ -65,7 +59,7 @@ export const sendAuthenticatedUserResponse = createResponseHandler<string>(
   (username) => username
 );
 
-const respondWithError = (
+export const respondWithError = (
   res: Response,
   status: number,
   message: string,
