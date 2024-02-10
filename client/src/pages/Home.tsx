@@ -1,7 +1,11 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useGetLoggedInUsername } from "../hooks/auth";
-import { API_ENDPOINT, THEME_COLORS } from "../constants";
+import {
+  API_ENDPOINT,
+  LOCAL_STORAGE_AUTH_KEY,
+  THEME_COLORS,
+} from "../constants";
 
 export const Home = () => {
   const [room, setRoom] = useState<number | null>(null);
@@ -22,6 +26,7 @@ export const Home = () => {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_AUTH_KEY)}`,
       },
       body: JSON.stringify(data),
     })
@@ -46,6 +51,7 @@ export const Home = () => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        authorization: `Bearer ${localStorage.getItem(LOCAL_STORAGE_AUTH_KEY)}`,
       },
     })
       .then((res) => res.json())

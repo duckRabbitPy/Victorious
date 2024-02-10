@@ -17,7 +17,7 @@ export const TEST_ROOM = 1;
 export const testUser1 = {
   userId: "839152db-48f5-41e1-8db6-4ee5667c03c8",
   username: "testUser1",
-  email: "test@test",
+  email: "test@bot",
   password: process.env.TEST_PASSWORD,
   hashedPassword:
     "$2b$10$QB7PoZbnUborzB0DptDdHOcLjNGdSe2o19xvCB7pvup5L20aybMEy",
@@ -28,7 +28,7 @@ export const testUser1 = {
 export const testUser2 = {
   userId: "b47ac10b-58cc-4372-a567-0e02b2c3d472",
   username: "testUser2",
-  email: "test2@test",
+  email: "test2@bot",
   password: process.env.TEST_PASSWORD,
   hashedPassword:
     "$2b$10$QB7PoZbnUborzB0DptDdHOcLjNGdSe2o19xvCB7pvup5L20aybMEy",

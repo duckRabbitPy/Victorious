@@ -33,7 +33,7 @@
     "regen": "rm -rf ./client/node_modules && cd ./client && yarn && npx vite",
     "dev:client": "npx vite",
     "dev:server": "NODE_ENV=development TEST_PASSWORD=test nodemon --exec ts-node ./server/src/server.ts",
-    "test": "TEST_PASSWORD=test vitest run"
+    "test": "TEST_PASSWORD=test DEV_PG_NAME=dominion_pg_test vitest run"
   },
   "author": "",
   "license": "ISC",

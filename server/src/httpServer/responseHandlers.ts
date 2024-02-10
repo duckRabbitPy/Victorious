@@ -1,6 +1,6 @@
 import { pipe, Effect as E } from "effect";
 import { ParseError } from "@effect/schema/ParseResult";
-import { ServerError } from "../customErrors";
+import { AuthenticationError, ServerError } from "../customErrors";
 import { Response } from "express";
 import { GameState } from "../../../shared/common";
 import { DBConnection } from "../db/connection";
@@ -30,7 +30,9 @@ const createResponseHandler =
             ? error.message
             : "An unknown server error occured";
 
-        console.log("error", error);
+        if (error instanceof AuthenticationError) {
+          return respondWithError(res, 401, errorMessage);
+        }
         return respondWithError(res, 500, errorMessage);
       })
     );

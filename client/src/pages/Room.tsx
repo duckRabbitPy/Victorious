@@ -73,8 +73,6 @@ const Room = ({
         currentActivePlayerState?.name.startsWith(prefix)
       );
 
-      // find first non bot player
-
       setTimeout(() => {
         if (currentPlayerIsBot) {
           handleBotPlayerTurn({

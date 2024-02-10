@@ -43,6 +43,8 @@ export const safeParseNumber = Schema.parse(
   Schema.number.pipe(Schema.positive(), Schema.int(), Schema.nonNaN())
 );
 
+export const safeParseBoolean = Schema.parse(Schema.boolean);
+
 export const safeParseJWT = Schema.parse(
   Schema.struct({
     userId: Schema.string,

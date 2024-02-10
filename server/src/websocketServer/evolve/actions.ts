@@ -110,11 +110,6 @@ export const applyAction = (
           cardThatMustRemainInDiscardPile: "laboratory",
         });
 
-        console.log({
-          newCardsIntoHand,
-          newDeck,
-          newDiscardPile,
-        });
         if (actor.id === userId) {
           return {
             ...actor,

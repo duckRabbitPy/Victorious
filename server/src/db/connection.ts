@@ -30,6 +30,7 @@ export const DBConnectionLive = DBConnection.of({
 
 export const DBConnectionTest = DBConnection.of({
   pool: E.sync(() => {
+    console.log("env name", process.env.VITE_DEV_PG_NAME);
     return new Pool({
       user: "postgres",
       host: "localhost",
