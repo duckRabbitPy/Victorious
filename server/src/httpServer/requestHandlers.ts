@@ -1,8 +1,13 @@
-import { RequestHandler } from "express";
-import { pipe, Effect as E } from "effect";
+import { Request, RequestHandler } from "express";
+import { pipe, Effect as E, Effect } from "effect";
 import { getOpenGameSessionsQuery } from "../models/gamestate/queries";
 import path from "path";
-import { safeParseNumber, safeParseNumberArray } from "../utils";
+import {
+  safeParseBoolean,
+  safeParseNumber,
+  safeParseNumberArray,
+  tapPipeLine,
+} from "../utils";
 import {
   respondWithError,
   sendGameStateResponse,
@@ -23,6 +28,7 @@ import {
   RegistrationError,
 } from "../customErrors";
 import {
+  isVerifiedUserQuery,
   getAllRegisteredUserNamesQuery,
   getHashedPasswordByUsernameQuery,
   getUserIdByUsernameQuery,
@@ -40,10 +46,29 @@ import {
 import { safeParseNonEmptyString } from "../../../shared/common";
 import { Pool } from "pg";
 import { sendConfirmationEmail } from "./sendConfirmationEmail";
+import { NEW_API_TEST_USER } from "../test/helpers";
+
+const checkHasValidToken = (req: Request, pool: Pool) => {
+  return pipe(
+    req.headers.authorization?.split(" ")[1],
+    safeParseNonEmptyString,
+    E.flatMap((authToken) => verifyJwt(authToken, process.env.JWT_SECRET_KEY)),
+    E.flatMap((decoded) => safeParseJWT(decoded)),
+    E.flatMap(() => E.succeed(pool)),
+    E.orElseFail(
+      () =>
+        new AuthenticationError({
+          message: "Invalid or missing token, retry login for fresh token",
+        })
+    )
+  );
+};
 
 export const createGameSession: RequestHandler = (req, res) => {
+  safeParseNonEmptyString(req.headers.authorization);
   const createGameSession = DBConnection.pipe(
     E.flatMap((connection) => connection.pool),
+    E.flatMap((pool) => checkHasValidToken(req, pool)),
     E.flatMap((pool) => endStaleGameSessionsMutation(pool)),
     E.flatMap((pool) =>
       E.all({
@@ -80,6 +105,7 @@ export const createGameSession: RequestHandler = (req, res) => {
 export const getOpenGameSessions: RequestHandler = (req, res) => {
   const getOpenGameSessions = DBConnection.pipe(
     E.flatMap((connection) => connection.pool),
+    E.flatMap((pool) => checkHasValidToken(req, pool)),
     E.flatMap((pool) => endStaleGameSessionsMutation(pool)),
     E.flatMap((pool) => getOpenGameSessionsQuery(pool)),
     E.flatMap((rooms) => safeParseNumberArray(rooms)),
@@ -146,8 +172,7 @@ export const register: RequestHandler = (req, res) => {
         E.flatMap((usernames) => {
           const conflictWithBotNames =
             botNamePrefixes.includes(username) ||
-            botNamePrefixes.some((botName) => botName.includes(username));
-
+            botNamePrefixes.some((botName) => username.includes(botName));
           if (
             (usernames && usernames.includes(username)) ||
             conflictWithBotNames
@@ -163,9 +188,16 @@ export const register: RequestHandler = (req, res) => {
         E.flatMap(() =>
           registerNewUserQuery(username, email, hashedPassword, pool)
         ),
-        E.flatMap(({ email, confirmation_token }) =>
-          sendConfirmationEmail({ email, confirmation_token })
-        ),
+        E.flatMap(({ email, confirmation_token }) => {
+          if (
+            !email.includes("@bot") &&
+            !email.includes(NEW_API_TEST_USER.email)
+          ) {
+            return sendConfirmationEmail({ email, confirmation_token });
+          }
+
+          return E.succeed("skipping email sending for bots");
+        }),
         E.flatMap(() => E.succeed("Email sent"))
       );
     }),
@@ -184,7 +216,7 @@ export const register: RequestHandler = (req, res) => {
     DBConnectionLive
   );
 
-  return E.runPromise(runnable);
+  E.runPromise(runnable);
 };
 
 export const verify: RequestHandler = (req, res) => {
@@ -260,11 +292,25 @@ const getAuthToken = (username: string, passwordMatch: boolean, pool: Pool) => {
 
 const authenticateUser = (username: string, password: string, pool: Pool) => {
   return pipe(
-    getHashedPasswordByUsernameQuery(username, pool),
-    E.flatMap((hashedPassword) => safeParseNonEmptyString(hashedPassword)),
-    E.orElseFail(
-      () => new AuthenticationError({ message: "User not registered" })
-    ),
+    isVerifiedUserQuery(username, pool),
+    E.flatMap((verified) => safeParseBoolean(verified)),
+    E.flatMap((verified) => {
+      if (!verified) {
+        return E.fail(
+          new AuthenticationError({
+            message: "User not verified",
+          })
+        );
+      }
+      return pipe(
+        getHashedPasswordByUsernameQuery(username, pool),
+        E.flatMap((hashedPassword) => safeParseNonEmptyString(hashedPassword)),
+        E.orElseFail(
+          () =>
+            new AuthenticationError({ message: "password not found for user" })
+        )
+      );
+    }),
     E.flatMap((hashedPassword) =>
       E.tryPromise({
         try: () => bcrypt.compare(password, hashedPassword),

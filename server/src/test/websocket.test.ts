@@ -1,4 +1,4 @@
-import { pipe, Effect as E, Effect } from "effect";
+import { pipe, Effect as E } from "effect";
 import { beforeAll, describe, expect, it } from "vitest";
 import { DBConnectionTest, DBConnection } from "../db/connection";
 import {
@@ -9,15 +9,13 @@ import {
 } from "../db/seed";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
 import {
-  CardName,
   ClientPayload,
-  GameState,
   SupportedEffects,
   safeParseChatLog,
   safeParseGameState,
 } from "../../../shared/common";
-import { handleGameMessage } from "../websocketServer/handleGameMessage";
 import { handleChatMessage } from "../websocketServer/handleChatMessage";
+import { executeGameOperation } from "./helpers";
 
 const getTestSession = E.provideService(
   DBConnection.pipe(
@@ -38,66 +36,6 @@ describe("gamestate tests", () => {
   it("add players, start game, buy card, end turn", async () => {
     // Fetch initial game state
     const initialGameState = await E.runPromise(getTestSession);
-
-    const createTestMessage = (
-      effect: SupportedEffects,
-      userId: string,
-      cardName: CardName | undefined,
-      lastGameState: GameState | undefined
-    ): ClientPayload => ({
-      mutationIndex: lastGameState?.mutation_index || 0,
-      authToken:
-        userId === testUser1.userId ? testUser1.authToken : testUser2.authToken,
-      effect,
-      room: initialGameState.room,
-      cardName: cardName || undefined,
-      chatMessage: undefined,
-      toDiscardFromHand: [],
-    });
-
-    const executeGameOperation = ({
-      effect,
-      userId,
-      cardName,
-      lastGameState,
-    }: {
-      lastGameState: GameState | undefined;
-      effect: SupportedEffects;
-      userId: string;
-      cardName?: CardName;
-    }) => {
-      const testMsg = createTestMessage(
-        effect,
-        userId,
-        cardName,
-        lastGameState
-      );
-      const operation = DBConnection.pipe(
-        E.flatMap((connection) => connection.pool),
-        E.flatMap((pool) =>
-          E.all({
-            pool: E.succeed(pool),
-            msg: E.succeed(testMsg),
-          })
-        ),
-        E.flatMap(({ msg, pool }) =>
-          handleGameMessage({
-            msg,
-            pool,
-            userInfo: {
-              userId,
-              username:
-                userId === testUser1.userId
-                  ? testUser1.username
-                  : testUser2.username,
-            },
-          })
-        ),
-        E.flatMap(safeParseGameState)
-      );
-
-      return E.provideService(operation, DBConnection, DBConnectionTest);
-    };
 
     // Execute operations sequentially
     const runnable = pipe(
@@ -137,7 +75,7 @@ describe("gamestate tests", () => {
       )
     );
 
-    const newGameState = await Effect.runPromise(runnable);
+    const newGameState = await E.runPromise(runnable);
 
     // Assertions
     expect(newGameState.turn).toEqual(2);

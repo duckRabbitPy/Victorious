@@ -66,19 +66,26 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
                 <p>Waiting for players to join...</p>
               )}
               <div style={{ display: "flex", gap: "1rem" }}>
-                <button
-                  onClick={() =>
-                    addBotPlayer({
-                      mutationIndex: 0,
-                      socket,
-                      authToken,
-                      roomNumber,
-                      setErrorMessage,
-                    })
-                  }
-                >
-                  Add bot 🤖
-                </button>
+                {gameState.actor_state.length < 4 && (
+                  <button
+                    disabled={
+                      !gameState.actor_state
+                        .map((a) => a.name)
+                        .includes(loggedInUsername)
+                    }
+                    onClick={() =>
+                      addBotPlayer({
+                        mutationIndex: 0,
+                        socket,
+                        authToken,
+                        roomNumber,
+                        setErrorMessage,
+                      })
+                    }
+                  >
+                    Add bot 🤖
+                  </button>
+                )}
                 <CopyRoomLinkButton />
               </div>
             </div>
@@ -87,7 +94,9 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
       </div>
 
       <div style={{}}>
-        {gameState.actor_state.every((a) => a.name !== loggedInUsername) && (
+        {gameState.actor_state.every(
+          (a) => a.name !== loggedInUsername && gameState.actor_state.length < 4
+        ) && (
           <button
             id="player-ready"
             onClick={() =>

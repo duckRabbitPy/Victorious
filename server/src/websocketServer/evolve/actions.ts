@@ -26,6 +26,7 @@ export const applyAction = (
             deck: actor.deck,
             discardPile: actor.discardPile,
             numberOfCardsToDraw: 1,
+            cardThatMustRemainInDiscardPile: "village",
           });
 
           return {
@@ -52,6 +53,7 @@ export const applyAction = (
             deck: actor.deck,
             discardPile: actor.discardPile,
             numberOfCardsToDraw: 3,
+            cardThatMustRemainInDiscardPile: "smithy",
           });
 
           return {
@@ -76,6 +78,7 @@ export const applyAction = (
           deck: actor.deck,
           discardPile: actor.discardPile,
           numberOfCardsToDraw: 1,
+          cardThatMustRemainInDiscardPile: "market",
         });
 
         if (actor.id === userId) {
@@ -104,7 +107,9 @@ export const applyAction = (
           deck: actor.deck,
           discardPile: actor.discardPile,
           numberOfCardsToDraw: 2,
+          cardThatMustRemainInDiscardPile: "laboratory",
         });
+
         if (actor.id === userId) {
           return {
             ...actor,
@@ -152,6 +157,7 @@ export const applyAction = (
           deck: actor.deck,
           discardPile: actor.discardPile,
           numberOfCardsToDraw: 4,
+          cardThatMustRemainInDiscardPile: "councilRoom",
         });
         if (actor.id === userId) {
           return {
@@ -265,7 +271,6 @@ export const playAction = ({
           actor.hand,
           cardNamesToCount(toDiscardFromHand)
         ),
-        discardPile: [...actor.discardPile, ...toDiscardFromHand],
         actions: remainingActions,
       };
     }
@@ -297,6 +302,7 @@ export const playAction = ({
       if (actor.id === userId) {
         return {
           ...actor,
+          discardPile: [...actor.discardPile, ...toDiscardFromHand],
           phase:
             (actor.actions < 1 && actor.actionPhaseDemand === null) ||
             (!hasActionCard(actor.hand) && actor.actionPhaseDemand === null)

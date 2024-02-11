@@ -23,8 +23,8 @@ const OpponentHands = ({
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "column",
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
         gap: "0.5rem",
       }}
     >

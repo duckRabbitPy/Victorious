@@ -19,7 +19,7 @@ const getLoggedInUserName = async () => {
     });
 
     const json = await response.json();
-    console.log("json", json);
+
     return (json?.username as string) || null;
   } catch (error) {
     return null;

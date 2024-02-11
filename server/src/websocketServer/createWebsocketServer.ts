@@ -7,7 +7,6 @@ import {
   clientNotInConnectionList,
   getClientMessage,
   delay,
-  tapPipeLine,
 } from "../utils";
 
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
@@ -17,6 +16,7 @@ import { getCurrentChatLog, handleChatMessage } from "./handleChatMessage";
 import { handleGameMessage } from "./handleGameMessage";
 import { broadcastToRoom } from "./broadcast";
 import { sendBotMessage } from "./bots/sendBotMessage";
+import { RuntimeError } from "../customErrors";
 
 export type RoomConnections = {
   socket: WebSocket;
@@ -104,7 +104,6 @@ export function createWebsocketServer(app: wsApplication) {
                   userInfo,
                   pool,
                 }),
-                tapPipeLine,
                 E.flatMap((gameState) => {
                   return broadcastToRoom({
                     broadcastType: "gameState",
@@ -122,7 +121,17 @@ export function createWebsocketServer(app: wsApplication) {
         E.catchAll((error) =>
           sendErrorMsgToClient(error, clientMsg, roomConnections)
         ),
-        Logger.withMinimumLogLevel(LogLevel.All)
+        E.catchAllDefect((defect) => {
+          return sendErrorMsgToClient(
+            new RuntimeError({
+              message:
+                "A serious server error occured, you may not be able to continue",
+            }),
+            clientMsg,
+            roomConnections
+          );
+        }),
+        Logger.withMinimumLogLevel(LogLevel.Error)
       );
 
       const processMessageRunnable = E.provideService(
