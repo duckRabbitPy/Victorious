@@ -257,6 +257,15 @@ export const cardNameToVictoryPoints = (cardName: CardName): number => {
   return cardNameToCard(cardName).value;
 };
 
+export const getTotalCardsForActor = (actor: ActorState) => {
+  return (
+    countToCardNamesArray(actor.cardsInPlay).length +
+    countToCardNamesArray(actor.hand).length +
+    actor.deck.length +
+    actor.discardPile.length
+  );
+};
+
 export const cardNameToCard = (cardName: CardName): Card => {
   switch (cardName) {
     case "copper":

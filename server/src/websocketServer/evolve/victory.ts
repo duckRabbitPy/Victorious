@@ -25,7 +25,6 @@ export const deduceVictoryPoints = (gameState: GameState) => {
   });
 };
 
-// todo fix game ove
 export const determineIfGameIsOver = (gameState: GameState) => {
   const provinceSupplyEmpty = gameState.global_state.supply.province === 0;
   const threeSupplyPilesEmpty =

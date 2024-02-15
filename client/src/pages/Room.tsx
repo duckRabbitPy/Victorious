@@ -146,10 +146,11 @@ const Room = ({
       )}
       {gameState.game_over ? (
         <div>
+          <Link to="/">Back to home</Link>
           <h1 style={{ margin: 0 }}>Game over!</h1>
           {gameState.actor_state
             .slice()
-            .sort((a, b) => a.victoryPoints - b.victoryPoints)
+            .sort((a, b) => b.victoryPoints - a.victoryPoints)
             .map((actor) => actor.name)[0] === loggedInUsername
             ? "You win!"
             : "You lose!"}
@@ -177,7 +178,7 @@ const Room = ({
               {
                 gameState.actor_state
                   .slice()
-                  .sort((a, b) => a.victoryPoints - b.victoryPoints)
+                  .sort((a, b) => b.victoryPoints - a.victoryPoints)
                   .map((actor) => actor.name)[0]
               }
             </div>

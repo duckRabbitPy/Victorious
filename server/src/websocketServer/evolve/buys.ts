@@ -15,7 +15,19 @@ import {
 } from "../../../../shared/common";
 import { indefiniteArticle } from "../../../../shared/utils";
 import { IllegalGameStateError } from "../../customErrors";
-import { get } from "http";
+
+const selectTreasureCardsToPayWith = (
+  cardNames: readonly CardName[],
+  targetValue: number
+): CardName[] => {
+  return cardNames.reduce((acc, cardName) => {
+    const currentTotalValue = getTreasureValue(cardNamesToCount(acc));
+    if (currentTotalValue <= targetValue) {
+      return [...acc, cardName];
+    }
+    return acc;
+  }, [] as CardName[]);
+};
 
 export const resetBuysAndActions = (gameState: GameState) => {
   return E.succeed({
@@ -76,19 +88,17 @@ export const buyCard = ({
     if (actor.id === userId) {
       const remainingBuys = actor.buys - 1;
 
-      const cardsToPayWith = countToCardNamesArray(actor.cardsInPlay).reduce(
-        (acc, cardName) => {
-          const targetValue = getTreasureValue(cardNamesToCount([cardName]));
+      if (cardName === "copper") {
+        return {
+          ...actor,
+          buys: remainingBuys,
+          deck: [...actor.deck, cardName],
+        };
+      }
 
-          const card = cardNameToCard(cardName);
-
-          if (getTreasureValue(cardNamesToCount(acc)) < targetValue) {
-            return [...acc, cardName];
-          }
-
-          return acc;
-        },
-        [] as CardName[]
+      const cardsToPayWith = selectTreasureCardsToPayWith(
+        countToCardNamesArray(actor.cardsInPlay),
+        getTreasureValue(cardNamesToCount([cardName]))
       );
 
       const newCardsInPlay = subtractCardCount(
