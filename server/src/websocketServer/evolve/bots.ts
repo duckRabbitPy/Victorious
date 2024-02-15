@@ -8,7 +8,7 @@ import {
   cardNameToCard,
   getTreasureValue,
 } from "../../../../shared/common";
-import { buyCard, resetBuysAndActions } from "./buys";
+import { buyCard } from "./buys";
 import { IllegalGameStateError, PostgresError } from "../../customErrors";
 import { writeNewGameStateToDB } from "../../models/gamestate/mutations";
 import { ParseError } from "@effect/schema/ParseResult";
@@ -69,7 +69,6 @@ const botActionPhase = (gameState: GameState, pool: Pool) => {
           gameState: gameState,
           userId: currentActorGameState.id,
           cardName: cardToPlay,
-          toDiscardFromHand: [cardToPlay],
         }),
         E.flatMap((gameState) => handleIfBotPlayerTurn(gameState, pool))
       );
@@ -128,14 +127,13 @@ const botBuyPhase = (gameState: GameState, pool: Pool) => {
 
         const cardToBuy =
           favouredCards.find((card) =>
-            affordableCards.map(([cardName, count]) => cardName).includes(card)
+            affordableCards.map(([cardName]) => cardName).includes(card)
           ) || affordableCards[randomIndex][0];
 
         return buyCard({
           gameState: newGameState,
           userId: newActorGameState.id,
           cardName: cardToBuy,
-          toDiscardFromHand: [],
         });
       }),
       E.flatMap((gameState) => handleIfBotPlayerTurn(gameState, pool))

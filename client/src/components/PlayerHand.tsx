@@ -108,8 +108,9 @@ const PlayerHand = ({
     >
       <>
         <h3 style={{ margin: 0 }}>Hand</h3>
-        {!isUsersTurn(gameState, loggedInUsername) &&
-          "Waiting for your turn..."}
+        {!isUsersTurn(gameState, loggedInUsername)
+          ? "Waiting for your turn..."
+          : "It's your turn!"}
 
         <div
           style={{
@@ -156,12 +157,18 @@ const PlayerHand = ({
             currentUserState?.actionPhaseDemand?.requirement?.maxValue === 1 &&
             cardName === "copper";
 
+          const CanTrashCard =
+            playerMustTrash &&
+            (currentUserState?.actionPhaseDemand?.requirement?.minValue || 0) <=
+              cardNameToCard(cardName).cost;
+
           const disabled =
             (isNotUsersTurn ||
               isNotAppropriatePhase ||
               playerMustGain ||
               NoActionsLeftOrInProgressInActionPhase) &&
-            !MoneyLenderInPlayAndIsCopper;
+            !MoneyLenderInPlayAndIsCopper &&
+            !CanTrashCard;
 
           const getCardInHandColor = () => {
             if (playerMustTrash) {

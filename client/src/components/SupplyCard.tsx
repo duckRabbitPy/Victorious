@@ -1,9 +1,5 @@
 import React from "react";
-import {
-  CardName,
-  countToCardNamesArray,
-  getTreasureValue,
-} from "../../../shared/common";
+import { CardName, getTreasureValue } from "../../../shared/common";
 import { isUsersTurn } from "../../../shared/utils";
 import { canBuyCard, canGainCard } from "../effects/clientValidation";
 import { buyCard, gainCard } from "../effects/effects";
@@ -94,7 +90,6 @@ export const SupplyCard = ({
               roomNumber,
               cardName,
               setErrorMessage,
-              toDiscardFromHand: countToCardNamesArray(currentUserState.hand),
             });
         }}
       >

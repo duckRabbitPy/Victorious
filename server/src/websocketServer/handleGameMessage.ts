@@ -42,6 +42,7 @@ import {
   checkClientStateIsUptoDate,
   checkEnoughPlayers,
   checkNotAlreadyInRoom,
+  tapPipeLine,
 } from "../utils";
 import { uuidv4 } from "../../../shared/utils";
 import { registerNewUserQuery } from "../models/users";
@@ -88,7 +89,6 @@ export const handleGameMessage = ({
         new CustomParseError({ message: "Invalid card name in client payload" })
     )
   );
-  const toDiscardFromHand = msg.toDiscardFromHand;
 
   switch (msg.effect) {
     // read only operation
@@ -211,7 +211,6 @@ export const handleGameMessage = ({
             gameState: currentGameState,
             userId: userInfo.userId,
             cardName,
-            toDiscardFromHand,
           })
         ),
         E.flatMap(deduceVictoryPoints),
@@ -277,7 +276,6 @@ export const handleGameMessage = ({
             gameState: currentGameState,
             userId: userInfo.userId,
             cardName,
-            toDiscardFromHand,
           })
         ),
         E.flatMap(deduceVictoryPoints),

@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { Effect as E } from "effect";
 import { resetAndSeedDatabase } from "../db/seed";
 import { NEW_API_TEST_USER } from "./helpers";
@@ -10,7 +10,9 @@ const REGISTER_ENDPOINT = "http://localhost:3000/api/register";
 const TEST_ROOM = 123;
 
 describe("http api endpoints", async () => {
-  await resetAndSeedDatabase();
+  beforeAll(async () => {
+    await resetAndSeedDatabase();
+  });
   const runTests = DBConnection.pipe(
     E.flatMap((connection) => connection.pool),
     E.flatMap((pool) => runAllTests(pool))
