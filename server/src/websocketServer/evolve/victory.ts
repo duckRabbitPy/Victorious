@@ -1,11 +1,20 @@
 import { Effect as E } from "effect";
-import { GameState, cardNameToVictoryPoints } from "../../../../shared/common";
+import {
+  GameState,
+  cardNameToVictoryPoints,
+  countToCardNamesArray,
+} from "../../../../shared/common";
 
 export const deduceVictoryPoints = (gameState: GameState) => {
   return E.succeed({
     ...gameState,
     actor_state: gameState.actor_state.map((actor) => {
-      const victoryPoints = actor.deck.reduce((acc, cardName) => {
+      const victoryPoints = [
+        ...countToCardNamesArray(actor.hand),
+        ...actor.discardPile,
+        ...actor.deck,
+        ...countToCardNamesArray(actor.cardsInPlay),
+      ].reduce((acc, cardName) => {
         return acc + cardNameToVictoryPoints(cardName);
       }, 0);
       return {

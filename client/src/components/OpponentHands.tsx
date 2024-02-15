@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { GameState, getUserNameColors } from "../../../shared/common";
-import { isUsersTurn } from "../../../shared/utils";
 import { THEME_COLORS } from "../constants";
 
 const OpponentHands = ({
@@ -99,16 +98,8 @@ const OpponentHands = ({
                     }}
                     key={index}
                     style={{
-                      height:
-                        isUsersTurn(gameState, loggedInUsername) ||
-                        gameState.actor_state.length > 2
-                          ? "50px"
-                          : "150px",
-                      width:
-                        isUsersTurn(gameState, loggedInUsername) ||
-                        gameState.actor_state.length > 2
-                          ? "30px"
-                          : "90px",
+                      height: "50px",
+                      width: "30px",
                       border: "2px black solid",
                     }}
                   />

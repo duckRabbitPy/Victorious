@@ -6,6 +6,7 @@ import {
   Phases,
   cardNameToCard,
   cardNamesToCount,
+  countToCardNamesArray,
   getTreasureValue,
   hasActionCard,
   subtractCardCount,
@@ -14,6 +15,7 @@ import {
 } from "../../../../shared/common";
 import { indefiniteArticle } from "../../../../shared/utils";
 import { IllegalGameStateError } from "../../customErrors";
+import { get } from "http";
 
 export const resetBuysAndActions = (gameState: GameState) => {
   return E.succeed({
@@ -34,12 +36,10 @@ export const buyCard = ({
   gameState,
   userId,
   cardName,
-  toDiscardFromHand,
 }: {
   gameState: GameState;
   userId: string;
   cardName: CardName;
-  toDiscardFromHand: readonly CardName[];
 }): E.Effect<never, IllegalGameStateError, GameState> => {
   if (gameState.global_state.supply[cardName] < 1) {
     return E.fail(
@@ -59,10 +59,7 @@ export const buyCard = ({
 
   if (
     getTreasureValue(
-      sumCardCounts(
-        cardNamesToCount(toDiscardFromHand),
-        gameState.actor_state.filter((a) => a.id === userId)[0].cardsInPlay
-      )
+      gameState.actor_state.filter((a) => a.id === userId)[0].cardsInPlay
     ) +
       gameState.actor_state.filter((a) => a.id === userId)[0]
         .bonusTreasureValue <
@@ -78,18 +75,42 @@ export const buyCard = ({
   const newActorState = gameState.actor_state.map((actor) => {
     if (actor.id === userId) {
       const remainingBuys = actor.buys - 1;
+
+      const cardsToPayWith = countToCardNamesArray(actor.cardsInPlay).reduce(
+        (acc, cardName) => {
+          const targetValue = getTreasureValue(cardNamesToCount([cardName]));
+
+          const card = cardNameToCard(cardName);
+
+          if (getTreasureValue(cardNamesToCount(acc)) < targetValue) {
+            return [...acc, cardName];
+          }
+
+          return acc;
+        },
+        [] as CardName[]
+      );
+
+      const newCardsInPlay = subtractCardCount(
+        actor.cardsInPlay,
+        cardNamesToCount(cardsToPayWith)
+      );
+
+      const discardedFromPlayTeasures = subtractCardCount(
+        actor.cardsInPlay,
+        newCardsInPlay
+      );
+
       return {
         ...actor,
-        deck: [...actor.deck, cardName],
         buys: remainingBuys,
-        hand: subtractCardCount(
-          actor.hand,
-          cardNamesToCount(toDiscardFromHand)
-        ),
         // todo: prevent 'overpaying' if more cards in play than needed
-        cardsInPlay: zeroCardCount,
-        phase: remainingBuys < 1 ? Phases.Buy : Phases.Action,
-        discardPile: [...actor.discardPile, ...toDiscardFromHand],
+        cardsInPlay: newCardsInPlay,
+        deck: [...actor.deck, cardName],
+        discardPile: [
+          ...actor.discardPile,
+          ...countToCardNamesArray(discardedFromPlayTeasures),
+        ],
       };
     }
     return actor;

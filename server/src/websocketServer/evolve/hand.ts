@@ -10,41 +10,39 @@ import {
   zeroCardCount,
 } from "../../../../shared/common";
 import { isUsersTurn } from "../../../../shared/utils";
+import { number } from "effect/Equivalence";
+import { a } from "vitest/dist/suite-ghspeorC";
+import { cons } from "effect/List";
+
+const partitionAtIndexOf = <T>(
+  arr: readonly T[],
+  index: number
+): [T[], T[]] => {
+  return [arr.slice(0, index), arr.slice(index, arr.length)];
+};
 
 export const dealCards = ({
   deck,
   numberOfCardsToDraw,
   discardPile,
-  cardThatMustRemainInDiscardPile,
 }: {
   deck: readonly CardName[];
   numberOfCardsToDraw: number;
   discardPile: readonly CardName[];
-  cardThatMustRemainInDiscardPile?: CardName;
 }) => {
-  if (deck.length < numberOfCardsToDraw) {
-    const lastCardsInDeck = deck.slice(0, deck.length);
-    const numberOfCardsLeftInDeck = deck.length;
+  if (numberOfCardsToDraw >= deck.length) {
+    const newDeck = shuffleDeck(discardPile);
 
-    const restOfDeck = shuffleDeck([
-      ...deck.slice(deck.length),
-      ...discardPile,
-    ]);
+    const numberOfCardsNeededFromNewDeck = numberOfCardsToDraw - deck.length;
 
-    const cardsForNewHand = restOfDeck.slice(
-      0,
-      numberOfCardsToDraw - numberOfCardsLeftInDeck
-    );
-
-    const newCardsToHand = cardsForNewHand.filter(
-      (_, index, arr) =>
-        !cardThatMustRemainInDiscardPile ||
-        index !== arr.indexOf(cardThatMustRemainInDiscardPile)
+    const [cardsToHandFromNewDeck, newCardsToDeck] = partitionAtIndexOf(
+      newDeck,
+      numberOfCardsNeededFromNewDeck
     );
 
     return {
-      newCardsIntoHand: lastCardsInDeck.concat(newCardsToHand),
-      newDeck: restOfDeck.slice(numberOfCardsToDraw - numberOfCardsLeftInDeck),
+      newCardsIntoHand: shuffleDeck(deck.concat(cardsToHandFromNewDeck)),
+      newDeck: newCardsToDeck,
       newDiscardPile: [],
     };
   }
@@ -78,6 +76,7 @@ export const dealToAllActors = (gameState: GameState) => {
         numberOfCardsToDraw: 5,
         discardPile: actor.discardPile,
       });
+
       const newHand = cardNamesToCount(newCardsIntoHand);
       return {
         ...actor,

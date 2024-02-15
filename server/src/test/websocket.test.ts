@@ -11,6 +11,7 @@ import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
 import {
   ClientPayload,
   SupportedEffects,
+  countToCardNamesArray,
   safeParseChatLog,
   safeParseGameState,
 } from "../../../shared/common";
@@ -58,6 +59,17 @@ describe("gamestate tests", () => {
           lastGameState: gamestate,
         })
       ),
+      E.tap((gamestate) => {
+        const actor = gamestate.actor_state.filter(
+          (actor) => actor.id === testUser1.userId
+        )[0];
+        const totalCards =
+          countToCardNamesArray(actor.cardsInPlay).length +
+          +countToCardNamesArray(actor.hand).length +
+          actor.deck.length +
+          actor.discardPile.length;
+        expect(totalCards).toEqual(10);
+      }),
       E.flatMap((gamestate) =>
         executeGameOperation({
           effect: SupportedEffects.buyCard,
@@ -66,6 +78,17 @@ describe("gamestate tests", () => {
           lastGameState: gamestate,
         })
       ),
+      E.tap((gamestate) => {
+        const actor = gamestate.actor_state.filter(
+          (actor) => actor.id === testUser1.userId
+        )[0];
+        const totalCards =
+          countToCardNamesArray(actor.cardsInPlay).length +
+          +countToCardNamesArray(actor.hand).length +
+          actor.deck.length +
+          actor.discardPile.length;
+        expect(totalCards).toEqual(11);
+      }),
       E.flatMap((gamestate) =>
         executeGameOperation({
           lastGameState: gamestate,
@@ -109,7 +132,6 @@ describe("chat tests", () => {
       room: room,
       cardName: undefined,
       userId: testUser1.userId,
-      toDiscardFromHand: [],
       chatMessage: "test chat message",
     } as ClientPayload;
 

@@ -26,7 +26,6 @@ export const applyAction = (
             deck: actor.deck,
             discardPile: actor.discardPile,
             numberOfCardsToDraw: 1,
-            cardThatMustRemainInDiscardPile: "village",
           });
 
           return {
@@ -53,9 +52,7 @@ export const applyAction = (
             deck: actor.deck,
             discardPile: actor.discardPile,
             numberOfCardsToDraw: 3,
-            cardThatMustRemainInDiscardPile: "smithy",
           });
-
           return {
             ...actor,
             hand: sumCardCounts(actor.hand, cardNamesToCount(newCardsIntoHand)),
@@ -78,7 +75,6 @@ export const applyAction = (
           deck: actor.deck,
           discardPile: actor.discardPile,
           numberOfCardsToDraw: 1,
-          cardThatMustRemainInDiscardPile: "market",
         });
 
         if (actor.id === userId) {
@@ -107,7 +103,6 @@ export const applyAction = (
           deck: actor.deck,
           discardPile: actor.discardPile,
           numberOfCardsToDraw: 2,
-          cardThatMustRemainInDiscardPile: "laboratory",
         });
 
         if (actor.id === userId) {
@@ -157,7 +152,6 @@ export const applyAction = (
           deck: actor.deck,
           discardPile: actor.discardPile,
           numberOfCardsToDraw: 4,
-          cardThatMustRemainInDiscardPile: "councilRoom",
         });
         if (actor.id === userId) {
           return {
@@ -255,22 +249,17 @@ export const playAction = ({
   gameState,
   userId,
   cardName,
-  toDiscardFromHand,
 }: {
   gameState: GameState;
   userId: string;
   cardName: CardName;
-  toDiscardFromHand: readonly CardName[];
 }) => {
   const newActorState = gameState.actor_state.map((actor) => {
     const remainingActions = actor.actions - 1;
     if (actor.id === userId) {
       return {
         ...actor,
-        hand: subtractCardCount(
-          actor.hand,
-          cardNamesToCount(toDiscardFromHand)
-        ),
+        hand: subtractCardCount(actor.hand, cardNamesToCount([cardName])),
         actions: remainingActions,
       };
     }
@@ -302,7 +291,7 @@ export const playAction = ({
       if (actor.id === userId) {
         return {
           ...actor,
-          discardPile: [...actor.discardPile, ...toDiscardFromHand],
+          discardPile: [...actor.discardPile, cardName],
           phase:
             (actor.actions < 1 && actor.actionPhaseDemand === null) ||
             (!hasActionCard(actor.hand) && actor.actionPhaseDemand === null)

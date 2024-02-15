@@ -414,7 +414,6 @@ export const ClientPayloadStruct = S.struct({
   mutationIndex: S.number,
   effect: S.enums(SupportedEffects),
   cardName: S.optional(S.union(TreasureNames, VictoryNames, ActionNames)),
-  toDiscardFromHand: S.array(S.union(TreasureNames, VictoryNames, ActionNames)),
   room: S.number,
   authToken: S.string,
   chatMessage: S.optional(S.string),
@@ -447,7 +446,8 @@ export const subtractCardCount = (a: CardCount, b: CardCount): CardCount => {
 
     if (typeof countB === "number") {
       const cardDiff = countA - countB;
-      result[cardName as keyof CardCount] = cardDiff;
+      // cardCount cannot be below 0
+      result[cardName as keyof CardCount] = cardDiff > 0 ? cardDiff : 0;
     }
   }
   return result;

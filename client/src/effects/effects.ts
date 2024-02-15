@@ -9,7 +9,7 @@ const prepareMessage = ({
   authToken,
   room,
   cardName,
-  toDiscardFromHand,
+
   chatMessage,
   mutationIndex,
 }: ClientPayload) => {
@@ -19,7 +19,7 @@ const prepareMessage = ({
     authToken,
     room,
     cardName,
-    toDiscardFromHand,
+
     chatMessage,
   });
 };
@@ -46,7 +46,6 @@ export const getInitialGameState = ({
       effect: SupportedEffects.getCurrentGameState,
       room: roomNumber,
       authToken,
-      toDiscardFromHand: [],
     })
   );
 };
@@ -75,7 +74,6 @@ export const addNewPlayer = ({
       effect: SupportedEffects.addLivePlayer,
       authToken,
       room: roomNumber,
-      toDiscardFromHand: [],
     })
   );
 };
@@ -104,7 +102,6 @@ export const addBotPlayer = ({
       effect: SupportedEffects.addBotPlayer,
       authToken,
       room: roomNumber,
-      toDiscardFromHand: [],
     })
   );
 };
@@ -136,8 +133,6 @@ export const incrementTurn = ({
       effect: SupportedEffects.incrementTurn,
       authToken,
       room: roomNumber,
-      // todo: discard all
-      toDiscardFromHand: [],
     })
   );
 };
@@ -166,7 +161,6 @@ export const handleBotPlayerTurn = ({
       effect: SupportedEffects.handleBotPlayerTurn,
       authToken,
       room: roomNumber,
-      toDiscardFromHand: [],
     })
   );
 };
@@ -177,7 +171,7 @@ export const buyCard = ({
   roomNumber,
   cardName,
   mutationIndex,
-  toDiscardFromHand,
+
   setErrorMessage,
 }: {
   socket: WebSocket | null;
@@ -185,7 +179,6 @@ export const buyCard = ({
   roomNumber: number;
   cardName: CardName;
   mutationIndex: number;
-  toDiscardFromHand: CardName[];
   setErrorMessage: (message: string | null) => void;
 }) => {
   if (!socket || !authToken) {
@@ -200,7 +193,6 @@ export const buyCard = ({
       authToken,
       room: roomNumber,
       cardName,
-      toDiscardFromHand,
     })
   );
 };
@@ -232,7 +224,6 @@ export const gainCard = ({
       authToken,
       room: roomNumber,
       cardName,
-      toDiscardFromHand: [],
     })
   );
 };
@@ -264,7 +255,6 @@ export const playTreasure = ({
       mutationIndex,
       room: roomNumber,
       cardName,
-      toDiscardFromHand: [],
     })
   );
 };
@@ -297,7 +287,6 @@ export const trashCardToMeetDemand = ({
       mutationIndex,
       room: roomNumber,
       cardName,
-      toDiscardFromHand: [],
     })
   );
 };
@@ -326,7 +315,6 @@ export const resetPlayedTreasures = ({
       authToken,
       room: roomNumber,
       mutationIndex,
-      toDiscardFromHand: [],
     })
   );
 };
@@ -358,7 +346,6 @@ export const playAction = ({
       room: roomNumber,
       cardName,
       mutationIndex,
-      toDiscardFromHand: [cardName],
     })
   );
 };
@@ -390,7 +377,6 @@ export const startGame = ({
       effect: SupportedEffects.startGame,
       authToken,
       room: roomNumber,
-      toDiscardFromHand: [],
     })
   );
 };
@@ -419,7 +405,6 @@ export const endActions = ({
       effect: SupportedEffects.endActions,
       authToken,
       room: roomNumber,
-      toDiscardFromHand: [],
     })
   );
 };
@@ -446,7 +431,6 @@ export const getInititalChatLog = ({
       effect: SupportedEffects.getCurrentChatLog,
       room: roomNumber,
       authToken,
-      toDiscardFromHand: [],
     })
   );
 };
@@ -483,7 +467,6 @@ export const sendChatMessage = ({
       authToken,
       room: roomNumber,
       chatMessage,
-      toDiscardFromHand: [],
     })
   );
 

@@ -36,7 +36,6 @@ const createTestMessage = (
     room: lastGameState.room,
     cardName: cardName || undefined,
     chatMessage: undefined,
-    toDiscardFromHand: [],
   };
 };
 

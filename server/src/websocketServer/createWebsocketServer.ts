@@ -122,6 +122,7 @@ export function createWebsocketServer(app: wsApplication) {
           sendErrorMsgToClient(error, clientMsg, roomConnections)
         ),
         E.catchAllDefect((defect) => {
+          console.error("defect", defect);
           return sendErrorMsgToClient(
             new RuntimeError({
               message:

@@ -108,8 +108,9 @@ const PlayerHand = ({
     >
       <>
         <h3 style={{ margin: 0 }}>Hand</h3>
-        {!isUsersTurn(gameState, loggedInUsername) &&
-          "Waiting for your turn..."}
+        {!isUsersTurn(gameState, loggedInUsername)
+          ? "Waiting for your turn..."
+          : "It's your turn!"}
 
         <div
           style={{
