@@ -1,5 +1,4 @@
 import { ActorState, GameState } from "../../shared/common";
-import React from "react";
 
 export type CoreRoomInfo = {
   socket: WebSocket | null;
@@ -16,5 +15,5 @@ export type CoreProps = {
   gameState: GameState;
   coreRoomInfo: CoreRoomInfo;
   coreUserInfo: CoreUserInfo;
-  setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;
+  setErrorMessage: (message: string | null) => void;
 };
