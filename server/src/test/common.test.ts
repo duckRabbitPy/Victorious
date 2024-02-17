@@ -331,6 +331,66 @@ describe("common util testing", () => {
     expect(disabled).toEqual(true);
   });
 
+  it("get correct disabled state for village card in hand when playing money lender", () => {
+    const disabled = cardInHandIsDisabled(
+      {
+        phase: Phases.Action,
+        name: "testUser1",
+        victoryPoints: 0,
+        actions: 1,
+        buys: 1,
+        bonusTreasureValue: 0,
+        cardsInPlay: {
+          copper: 0,
+          silver: 0,
+          gold: 0,
+          estate: 0,
+          duchy: 0,
+          province: 0,
+          village: 0,
+          smithy: 0,
+          market: 0,
+          mine: 0,
+          laboratory: 0,
+          festival: 0,
+          councilRoom: 0,
+          workshop: 0,
+          moneylender: 0,
+        },
+        deck: [],
+        discardPile: [],
+        hand: {
+          copper: 0,
+          silver: 0,
+          gold: 0,
+          estate: 0,
+          duchy: 0,
+          province: 0,
+          village: 0,
+          smithy: 0,
+          market: 0,
+          mine: 0,
+          laboratory: 0,
+          festival: 0,
+          councilRoom: 0,
+          workshop: 0,
+          moneylender: 0,
+        },
+        id: "testUser1",
+        actionPhaseDemand: {
+          actionCard: "moneylender",
+          demandType: "Trash",
+          count: 1,
+          requirement: getTrashRequirementFromAction("moneylender"),
+        },
+      },
+      "village",
+      true
+    );
+
+    expect(disabled).toEqual(true);
+  });
+
   it("get correct disabled state for copper card in hand when playing mine", () => {
     const disabled = cardInHandIsDisabled(
       {
@@ -387,7 +447,6 @@ describe("common util testing", () => {
       "copper",
       true
     );
-
     expect(disabled).toEqual(false);
   });
 });
