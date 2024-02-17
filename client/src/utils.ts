@@ -44,16 +44,22 @@ export const cardInHandIsDisabled = (
     !currentUserState.buys ||
     cardNameToCard(cardName).type === "victory";
 
-  const NoActionsLeftOrInProgressInActionPhase =
+  const NoActionPlayAvailableInActionPhase =
     phase === Phases.Action &&
     currentUserState.actions < 1 &&
     actionPhaseDemand === null;
 
-  const MoneyLenderInPlayAndIsCopper =
+  // Mine and MoneyLender require trashing from hand
+  const MoneyLenderInPlay =
     actionPhaseDemand?.demandType === "Trash" &&
     actionPhaseDemand.requirement?.type === "Treasure" &&
-    actionPhaseDemand.requirement?.maxValue === 1 &&
-    cardName === "copper";
+    actionPhaseDemand.requirement?.maxValue === 1;
+
+  const MoneyLenderInPlayAndIsCopper =
+    MoneyLenderInPlay && cardName === "copper";
+
+  const MoneyLenderInPlayButNotCopper =
+    MoneyLenderInPlay && cardName !== "copper";
 
   const MineInPlay =
     actionPhaseDemand?.demandType === "Trash" &&
@@ -61,9 +67,10 @@ export const cardInHandIsDisabled = (
 
   const hasReasonToBeDisabled =
     (isNotAppropriatePhase ||
-      NoActionsLeftOrInProgressInActionPhase ||
+      NoActionPlayAvailableInActionPhase ||
       !isUsersTurn ||
-      actionPhaseDemand?.demandType === "Gain") &&
+      actionPhaseDemand?.demandType === "Gain" ||
+      MoneyLenderInPlayButNotCopper) &&
     !MoneyLenderInPlayAndIsCopper &&
     !MineInPlay;
 
