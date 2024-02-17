@@ -178,6 +178,7 @@ export const applyAction = (
           actionCard: "mine",
           demandType: "Trash",
           count: 1,
+          requirement: getTrashRequirementFromAction("mine"),
         };
 
         if (actor.id === userId) {
@@ -398,13 +399,19 @@ const getGainCountDemandFromAction = (actionCard: CardName) => {
   }
 };
 
-const getTrashRequirementFromAction = (actionCard: CardName) => {
+export const getTrashRequirementFromAction = (actionCard: CardName) => {
   switch (actionCard) {
     case "moneylender":
       return {
         type: "Treasure" as const,
         minValue: 0,
         maxValue: 1,
+      };
+    case "mine":
+      return {
+        type: "Treasure" as const,
+        minValue: 0,
+        maxValue: 6,
       };
     default:
       return undefined;
