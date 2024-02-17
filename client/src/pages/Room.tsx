@@ -31,8 +31,9 @@ import { BackgroundSelector } from "../components/BackgroundSelector";
 
 import { ResetPlayedTreasuresButton } from "../components/ResetPlayedTreasures";
 import { handleBotPlayerTurn } from "../effects/effects";
-import { Spacer, Spinner } from "../components/Utils";
+
 import { EndActionsButton } from "../components/EndActionsButton";
+import { Spacer, Spinner } from "../components/Utils";
 
 const Room = ({
   loggedInUsername,

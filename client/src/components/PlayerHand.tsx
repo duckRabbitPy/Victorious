@@ -2,10 +2,8 @@ import {
   Phases,
   getCardTypeByName,
   CardName,
-  cardNameToCard,
   GameState,
   getTreasureValue,
-  ActionPhaseDemand,
 } from "../../../shared/common";
 import { isUsersTurn } from "../../../shared/utils";
 import { THEME_COLORS } from "../constants";
@@ -16,6 +14,7 @@ import {
 } from "../effects/effects";
 
 import { CoreRoomInfo, CoreUserInfo } from "../types";
+import { constructDemandText, cardInHandIsDisabled } from "../utils";
 
 type Props = {
   gameState: GameState;
@@ -50,27 +49,6 @@ const CardInHand = ({
       {cardName}
     </button>
   );
-};
-
-const constructDemandText = (actionPhaseDemand: ActionPhaseDemand) => {
-  const { demandType, count, requirement } = actionPhaseDemand;
-
-  if (demandType === "Gain") {
-    return `Gain ${count} ${count > 1 ? "cards" : "card"} ${
-      requirement?.maxValue ? `worth up to ${requirement.maxValue}` : ""
-    } ${requirement?.minValue ? `worth at least ${requirement.minValue}` : ""}`;
-  }
-
-  if (demandType === "Trash") {
-    if (requirement?.maxValue === 1) {
-      return "Trash a copper from your hand";
-    }
-    return `Trash ${count} ${count > 1 ? "cards" : "card"} ${
-      requirement?.maxValue ? `worth up to ${requirement.maxValue}` : ""
-    } ${requirement?.minValue ? `worth at least ${requirement.minValue}` : ""}`;
-  }
-
-  return "";
 };
 
 const PlayerHand = ({
@@ -138,37 +116,11 @@ const PlayerHand = ({
           const isActionCard = getCardTypeByName(cardName) === "action";
           const isTreasureCard = getCardTypeByName(cardName) === "treasure";
 
-          const isNotUsersTurn = !isUsersTurn(gameState, loggedInUsername);
-          const isNotAppropriatePhase =
-            (currentUserState.phase === Phases.Action &&
-              getCardTypeByName(cardName) !== "action") ||
-            (currentUserState.phase === Phases.Buy &&
-              getCardTypeByName(cardName) !== "treasure") ||
-            !currentUserState.buys ||
-            cardNameToCard(cardName).type === "victory";
-
-          const NoActionsLeftOrInProgressInActionPhase =
-            currentUserState.phase === Phases.Action &&
-            currentUserState.actions < 1 &&
-            currentUserState.actionPhaseDemand === null;
-
-          const MoneyLenderInPlayAndIsCopper =
-            playerMustTrash &&
-            currentUserState?.actionPhaseDemand?.requirement?.maxValue === 1 &&
-            cardName === "copper";
-
-          const CanTrashCard =
-            playerMustTrash &&
-            (currentUserState?.actionPhaseDemand?.requirement?.minValue || 0) <=
-              cardNameToCard(cardName).cost;
-
-          const disabled =
-            (isNotUsersTurn ||
-              isNotAppropriatePhase ||
-              playerMustGain ||
-              NoActionsLeftOrInProgressInActionPhase) &&
-            !MoneyLenderInPlayAndIsCopper &&
-            !CanTrashCard;
+          const disabled = cardInHandIsDisabled(
+            currentUserState,
+            cardName,
+            isUsersTurn(gameState, loggedInUsername)
+          );
 
           const getCardInHandColor = () => {
             if (playerMustTrash) {

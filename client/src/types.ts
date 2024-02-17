@@ -1,4 +1,5 @@
 import { ActorState, GameState } from "../../shared/common";
+import React from "react";
 
 export type CoreRoomInfo = {
   socket: WebSocket | null;
