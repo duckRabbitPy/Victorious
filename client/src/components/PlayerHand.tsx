@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Phases,
   getCardTypeByName,
@@ -27,8 +28,8 @@ const CardInHand = ({
   cardName,
   onClick,
   buttonStyle,
-  index,
   disabled,
+  key,
   onContextMenu,
 }: {
   cardName: CardName;
@@ -37,14 +38,21 @@ const CardInHand = ({
   buttonStyle: React.CSSProperties;
   index: number;
   disabled: boolean;
+  key: string;
 }) => {
+  const uniqueKey = `${Math.random()}-${key}`;
+  const [clickedMap, setClickedMap] = useState(new Map<string, boolean>());
   return (
     <button
-      key={index}
+      key={key}
       style={buttonStyle}
       onContextMenu={onContextMenu}
-      disabled={disabled}
-      onClick={onClick}
+      disabled={disabled || clickedMap.get(uniqueKey)}
+      onClick={() => {
+        if (disabled) return;
+        onClick();
+        setClickedMap(new Map(clickedMap.set(uniqueKey, true)));
+      }}
     >
       {cardName}
     </button>
