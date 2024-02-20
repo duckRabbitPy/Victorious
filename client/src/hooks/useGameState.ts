@@ -28,7 +28,7 @@ const updateStateElseError = <T>({
     E.mapBoth({
       onFailure: () => {
         // if debounce error, don't set error message
-        if (errorMessage === "Debounce") {
+        if (errorMessage === "Error: Debounce") {
           return E.unit;
         }
         setErrorMessage(errorMessage);
