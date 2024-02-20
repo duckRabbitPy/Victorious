@@ -33,6 +33,7 @@ import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
 import {
   CustomParseError,
+  DebounceError,
   IllegalGameStateError,
   PostgresError,
   RegistrationError,
@@ -42,7 +43,6 @@ import {
   checkClientStateIsUptoDate,
   checkEnoughPlayers,
   checkNotAlreadyInRoom,
-  tapPipeLine,
 } from "../utils";
 import { uuidv4 } from "../../../shared/utils";
 import { registerNewUserQuery } from "../models/users";
@@ -65,6 +65,7 @@ export const handleGameMessage = ({
   | PostgresError
   | ParseError
   | IllegalGameStateError
+  | DebounceError
   | Error
   | CustomParseError
   // can occur when registering bots in game

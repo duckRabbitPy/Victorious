@@ -30,6 +30,9 @@ export class JSONParseError extends Data.TaggedClass("JSONParseError")<{
   message: string;
 }> {}
 
+export class DebounceError extends Data.TaggedClass("DebounceError")<{
+  message: string;
+}> {}
 export class IllegalGameStateError extends Data.TaggedClass(
   "IllegalGameStateError"
 )<{
