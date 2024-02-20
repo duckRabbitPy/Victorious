@@ -12,6 +12,9 @@ import {
   CustomParseError,
   IllegalGameStateError,
   JSONParseError,
+  PostgresError,
+  RegistrationError,
+  DebounceError,
 } from "./customErrors";
 import jwt from "jsonwebtoken";
 import { broadcastToRoom } from "./websocketServer/broadcast";
@@ -20,6 +23,7 @@ import {
   UserInfo,
 } from "./websocketServer/createWebsocketServer";
 import { ParseError } from "@effect/schema/ParseResult";
+import { Pool } from "pg";
 
 export const logAndThrowError = (error: unknown) => {
   console.error(error);
@@ -85,7 +89,16 @@ export const verifyJwt = (token: string, secret: string | undefined) => {
 };
 
 export const sendErrorMsgToClient = (
-  error: ServerError | ParseError,
+  error:
+    | ServerError
+    | PostgresError
+    | ParseError
+    | IllegalGameStateError
+    | DebounceError
+    | Error
+    | CustomParseError
+    | RegistrationError
+    | AuthenticationError,
   msg: ClientPayload | undefined,
   roomConnections: RoomConnections
 ) => {
@@ -95,6 +108,8 @@ export const sendErrorMsgToClient = (
     );
     return E.succeed(E.unit);
   }
+
+  console.log(error);
 
   const errorMessage =
     "message" in error ? error.message : "An unknown server error occured";
@@ -132,8 +147,11 @@ export const parseJSONToClientMsg = (msg: unknown) =>
 export const getUserInfoFromJWT = (authToken: string | undefined) =>
   pipe(
     safeParseNonEmptyString(authToken),
+    tapPipeLine,
     E.flatMap((authToken) => verifyJwt(authToken, process.env.JWT_SECRET_KEY)),
+    tapPipeLine,
     E.flatMap((decoded) => safeParseJWT(decoded)),
+    tapPipeLine,
     E.flatMap((decoded) =>
       E.succeed({
         userId: decoded.userId,
@@ -168,6 +186,18 @@ export const checkClientStateIsUptoDate = ({
     msg.mutationIndex > 0 &&
     msg.mutationIndex < currentGameState.mutation_index
   ) {
+    // if there is a mutation index violation but the last state was created within 500ms, likely due to rapid clicking, debounce so that on frontend can ignore the error rather than stop flow of the game
+    if (
+      currentGameState.created_at &&
+      Date.now() - new Date(currentGameState.created_at).getTime() < 500
+    ) {
+      return E.fail(
+        new IllegalGameStateError({
+          message: "Debounce",
+        })
+      );
+    }
+
     return E.fail(
       new IllegalGameStateError({
         message: `Client state is out of date. Expected mutation index ${currentGameState.mutation_index} but got ${msg.mutationIndex}`,
