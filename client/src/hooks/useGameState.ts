@@ -27,14 +27,14 @@ const updateStateElseError = <T>({
     dataOrError,
     E.mapBoth({
       onFailure: () => {
-        // if debounce error, don't set error message
-        if (errorMessage === "Error: Debounce") {
-          return E.unit;
-        }
         setErrorMessage(errorMessage);
         return E.unit;
       },
       onSuccess: (newState) => {
+        if (newState === "Debounce") {
+          return E.unit;
+        }
+
         updateState(newState);
         return E.unit;
       },
@@ -74,7 +74,7 @@ export const useGameState = () => {
       ).pipe(E.runSync);
 
       console.log("message event data", event.data);
-
+      console.log("eventData", eventData);
       switch (eventData.broadcastType) {
         case "gameState": {
           if (!eventData.gameState) {
