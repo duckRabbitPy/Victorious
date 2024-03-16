@@ -20,7 +20,7 @@ export const isVerifiedUserQuery = (username: string, pool: Pool) => {
   return E.tryPromise({
     try: () => get(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };
 
 export const getHashedPasswordByUsernameQuery = (
@@ -43,7 +43,7 @@ export const getHashedPasswordByUsernameQuery = (
   return E.tryPromise({
     try: () => get(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };
 
 export const getUserIdByUsernameQuery = (username: string, pool: Pool) => {
@@ -63,7 +63,7 @@ export const getUserIdByUsernameQuery = (username: string, pool: Pool) => {
   return E.tryPromise({
     try: () => get(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };
 
 export const getAllRegisteredUserNamesQuery = (pool: Pool) => {
@@ -80,7 +80,7 @@ export const getAllRegisteredUserNamesQuery = (pool: Pool) => {
   return E.tryPromise({
     try: () => get(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };
 
 export const registerNewUserQuery = (
@@ -110,7 +110,7 @@ export const registerNewUserQuery = (
       new RegistrationError({
         message: "Error registering user, email and usernames must be unique",
       }),
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };
 
 export const verifyUserQuery = (confirmation_token: string, pool: Pool) => {
@@ -130,5 +130,5 @@ export const verifyUserQuery = (confirmation_token: string, pool: Pool) => {
   return E.tryPromise({
     try: () => confirm(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };

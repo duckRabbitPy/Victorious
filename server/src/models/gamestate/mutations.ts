@@ -134,7 +134,7 @@ export const createGameSessionQuery = (room: number, pool: Pool) => {
       e instanceof PostgresError
         ? e
         : new PostgresError({ message: "postgres query error" }),
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };
 
 // @mutation
@@ -200,7 +200,7 @@ export const addLivePlayerQuery = ({
     catch: () => {
       return new PostgresError({ message: "postgres query error" });
     },
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };
 
 // @mutation
@@ -250,7 +250,7 @@ export const updateGameState = (newGameState: GameState, pool: Pool) => {
   return E.tryPromise({
     try: () => update(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };
 
 export const writeNewGameStateToDB = (
@@ -291,5 +291,5 @@ export const endStaleGameSessionsMutation = (pool: Pool) => {
   return E.tryPromise({
     try: () => endStaleSessions(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };

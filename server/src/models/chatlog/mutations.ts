@@ -26,7 +26,7 @@ export const getLatestChatLogQuery = ({
   return E.tryPromise({
     try: () => get(),
     catch: () => new Error("postgres query error"),
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };
 
 // @mutation
@@ -77,5 +77,5 @@ export const updateChatLogQuery = ({
   return E.tryPromise({
     try: () => updateChatLog(userInfo, chatMessage),
     catch: (e) => new Error(`error updating chat log: ${e}`),
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };

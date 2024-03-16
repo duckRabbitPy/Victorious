@@ -18,7 +18,7 @@ const updateStateElseError = <T>({
   errorMessage,
   setErrorMessage,
 }: {
-  dataOrError: E.Effect<never, unknown, T>;
+  dataOrError: E.Effect<T, unknown, never>;
   updateState: React.Dispatch<React.SetStateAction<T | null>>;
   errorMessage: string;
   setErrorMessage: React.Dispatch<React.SetStateAction<string | null>>;

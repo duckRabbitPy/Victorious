@@ -61,16 +61,14 @@ export const handleGameMessage = ({
   pool,
   userInfo,
 }: handleGameMessageProps): E.Effect<
-  never,
+  GameState,
   | PostgresError
   | ParseError
   | IllegalGameStateError
   | DebounceError
-  | Error
   | CustomParseError
-  // can occur when registering bots in game
-  | RegistrationError,
-  GameState
+  | RegistrationError
+  | Error
 > => {
   const currentGameState = pipe(
     getLatestGameSnapshotQuery(msg.room, pool),

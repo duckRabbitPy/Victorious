@@ -30,7 +30,11 @@ export const getLatestGameSnapshotQuery = (room: number, pool: Pool) => {
   return E.tryPromise({
     try: () => get(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(E.retryN(1));
+  }).pipe(
+    E.retry({
+      times: 1,
+    })
+  );
 };
 
 // @query
@@ -55,5 +59,5 @@ export const getOpenGameSessionsQuery = (pool: Pool) => {
   return E.tryPromise({
     try: () => get(),
     catch: () => new PostgresError({ message: "postgres query error" }),
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };

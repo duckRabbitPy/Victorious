@@ -23,5 +23,5 @@ export const getLatestChatLogQuery = (sessionId: string, pool: Pool) => {
   return E.tryPromise({
     try: () => getLatestChatLog(sessionId),
     catch: (e) => new Error(`error getting latest chat log: ${e}`),
-  }).pipe(E.retryN(1));
+  }).pipe(E.retry({ times: 1 }));
 };
