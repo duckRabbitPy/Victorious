@@ -6,7 +6,6 @@ import {
   safeParseBoolean,
   safeParseNumber,
   safeParseNumberArray,
-  tapPipeLine,
 } from "../utils";
 import {
   respondWithError,
@@ -93,11 +92,7 @@ export const createGameSession: RequestHandler = (req, res) => {
       })
   );
 
-  const runnable = E.provideService(
-    createGameSession,
-    DBConnection,
-    DBConnectionLive
-  );
+  const runnable = E.provide(createGameSession, DBConnectionLive);
 
   E.runPromise(runnable);
 };
@@ -117,11 +112,7 @@ export const getOpenGameSessions: RequestHandler = (req, res) => {
       })
   );
 
-  const runnable = E.provideService(
-    getOpenGameSessions,
-    DBConnection,
-    DBConnectionLive
-  );
+  const runnable = E.provide(getOpenGameSessions, DBConnectionLive);
 
   E.runPromise(runnable);
 };
@@ -148,7 +139,7 @@ export const login: RequestHandler = (req, res) => {
       })
   );
 
-  const runnable = E.provideService(login, DBConnection, DBConnectionLive);
+  const runnable = E.provide(login, DBConnectionLive);
 
   return E.runPromise(runnable);
 };
@@ -210,11 +201,7 @@ export const register: RequestHandler = (req, res) => {
       })
   );
 
-  const runnable = E.provideService(
-    successMsgOrError,
-    DBConnection,
-    DBConnectionLive
-  );
+  const runnable = E.provide(successMsgOrError, DBConnectionLive);
 
   E.runPromise(runnable);
 };
@@ -243,11 +230,7 @@ export const verify: RequestHandler = (req, res) => {
     E.orElseFail(() => respondWithError(res, 500, "Internal server error"))
   );
 
-  const runnable = E.provideService(
-    usernameOrError,
-    DBConnection,
-    DBConnectionLive
-  );
+  const runnable = E.provide(usernameOrError, DBConnectionLive);
 
   return E.runPromise(runnable);
 };
@@ -346,11 +329,7 @@ export const auth: RequestHandler = (req, res) => {
     )
   );
 
-  const runnable = E.provideService(
-    getUsername,
-    DBConnection,
-    DBConnectionLive
-  );
+  const runnable = E.provide(getUsername, DBConnectionLive);
 
   return E.runPromise(runnable);
 };

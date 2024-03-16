@@ -5,7 +5,7 @@ import { Response } from "express";
 import { GameState } from "../../../shared/common";
 import { DBConnection } from "../db/connection";
 
-type DataOrError<T> = E.Effect<DBConnection, ParseError | ServerError, T>;
+type DataOrError<T> = E.Effect<T, ParseError | ServerError, DBConnection>;
 
 type SendResponseProps<T> = {
   dataOrError: DataOrError<T>;

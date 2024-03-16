@@ -301,9 +301,9 @@ export const cardNameToCard = (cardName: CardName): Card => {
   }
 };
 
-export type CardName = S.Schema.To<typeof CardNames>;
-export type CardCount = S.Schema.To<typeof CardCountStruct>;
-export type Card = S.Schema.To<typeof CardStruct>;
+export type CardName = S.Schema.Type<typeof CardNames>;
+export type CardCount = S.Schema.Type<typeof CardCountStruct>;
+export type Card = S.Schema.Type<typeof CardStruct>;
 export const CardCountStruct = S.record(
   S.union(TreasureNames, VictoryNames, ActionNames),
   S.number
@@ -384,20 +384,22 @@ const registerResultSchema = S.struct({
   confirmation_token: S.string,
 });
 
-export type ActorState = S.Schema.To<typeof ActorStateStruct>;
-export type ActionPhaseDemand = S.Schema.To<typeof actionPhaseDemand>;
-export type GlobalState = S.Schema.To<typeof GlobalStateStruct>;
-export type GameState = S.Schema.To<typeof GameStateStruct>;
-export type ClientPayload = S.Schema.To<typeof ClientPayloadStruct>;
-export type ChatMessage = S.Schema.To<typeof ChatMessageStruct>;
-export type BroadCast = S.Schema.To<typeof BroadCastStruct>;
+export type ActorState = S.Schema.Type<typeof ActorStateStruct>;
+export type ActionPhaseDemand = S.Schema.Type<typeof actionPhaseDemand>;
+export type GlobalState = S.Schema.Type<typeof GlobalStateStruct>;
+export type GameState = S.Schema.Type<typeof GameStateStruct>;
+export type ClientPayload = S.Schema.Type<typeof ClientPayloadStruct>;
+export type ChatMessage = S.Schema.Type<typeof ChatMessageStruct>;
+export type BroadCast = S.Schema.Type<typeof BroadCastStruct>;
 
-export const safeParseNonEmptyString = S.parse(S.string.pipe(S.minLength(1)));
-export const safeParseCardName = S.parse(CardNames);
-export const safeParseBroadCast = S.parse(BroadCastStruct);
-export const safeParseGameState = S.parse(GameStateStruct);
-export const safeParseChatLog = S.parse(S.array(ChatMessageStruct));
-export const safeParseRegisterResult = S.parse(registerResultSchema);
+export const safeParseNonEmptyString = S.decodeUnknown(
+  S.string.pipe(S.minLength(1))
+);
+export const safeParseCardName = S.decodeUnknown(CardNames);
+export const safeParseBroadCast = S.decodeUnknown(BroadCastStruct);
+export const safeParseGameState = S.decodeUnknown(GameStateStruct);
+export const safeParseChatLog = S.decodeUnknown(S.array(ChatMessageStruct));
+export const safeParseRegisterResult = S.decodeUnknown(registerResultSchema);
 
 export type BroadCastType = "gameState" | "chatLog" | "error";
 

@@ -55,11 +55,7 @@ export const handleChatMessage = ({
   msg,
   userInfo,
   pool,
-}: HandleChatMessageProps): E.Effect<
-  never,
-  PostgresError | ParseError | Error | CustomParseError,
-  readonly ChatMessage[]
-> => {
+}: HandleChatMessageProps) => {
   const currentGameState = pipe(
     getLatestGameSnapshotQuery(msg.room, pool),
     E.flatMap(safeParseGameState)

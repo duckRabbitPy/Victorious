@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { Logger, pipe, LogLevel, Effect as E, Effect } from "effect";
+import { Logger, pipe, LogLevel, Effect as E, Effect, Layer } from "effect";
 import {
   getUserInfoFromJWT,
   parseJSONToClientMsg,
@@ -33,7 +33,7 @@ export function createWebsocketServer(app: wsApplication) {
   // !! mutable state
   let roomConnections: RoomConnections = [];
 
-  app.ws("/", (ws, req) => {
+  app.ws("/", (ws, _req) => {
     ws.on("message", (msg: unknown) => {
       const clientMsg = getClientMessage(msg);
       const clientNotInList = clientNotInConnectionList(
@@ -135,9 +135,8 @@ export function createWebsocketServer(app: wsApplication) {
         Logger.withMinimumLogLevel(LogLevel.Error)
       );
 
-      const processMessageRunnable = E.provideService(
+      const processMessageRunnable = E.provide(
         processMessage,
-        DBConnection,
         DBConnectionLive
       );
 
@@ -163,9 +162,8 @@ export function createWebsocketServer(app: wsApplication) {
         )
       );
 
-      const sendBotMessagesRunnable = E.provideService(
+      const sendBotMessagesRunnable = E.provide(
         sendBotMessages,
-        DBConnection,
         DBConnectionLive
       );
 

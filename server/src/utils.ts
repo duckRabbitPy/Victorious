@@ -1,4 +1,4 @@
-import * as Schema from "@effect/schema/Schema";
+import * as S from "@effect/schema/Schema";
 import {
   ClientPayloadStruct,
   safeParseNonEmptyString,
@@ -23,16 +23,16 @@ import {
   UserInfo,
 } from "./websocketServer/createWebsocketServer";
 import { ParseError } from "@effect/schema/ParseResult";
-import { Pool } from "pg";
 
 export const logAndThrowError = (error: unknown) => {
   console.error(error);
   throw error;
 };
 
-export const tapPipeLine = <R, E, A>(
-  effect: E.Effect<R, E, A>
-): E.Effect<R, E, A> =>
+// check after update deps
+export const tapPipeLine = <A, E, R>(
+  effect: E.Effect<A, E, R>
+): E.Effect<A, E, R> =>
   pipe(
     effect,
     E.tapBoth({
@@ -43,29 +43,27 @@ export const tapPipeLine = <R, E, A>(
     })
   );
 
-export const safeParseNumber = Schema.parse(
-  Schema.number.pipe(Schema.positive(), Schema.int(), Schema.nonNaN())
+export const safeParseNumber = S.decodeUnknown(
+  S.number.pipe(S.positive(), S.int(), S.nonNaN())
 );
 
-export const safeParseBoolean = Schema.parse(Schema.boolean);
+export const safeParseBoolean = S.decodeUnknown(S.boolean);
 
-export const safeParseJWT = Schema.parse(
-  Schema.struct({
-    userId: Schema.string,
-    username: Schema.string,
-    iat: Schema.number,
-    exp: Schema.number,
+export const safeParseJWT = S.decodeUnknown(
+  S.struct({
+    userId: S.string,
+    username: S.string,
+    iat: S.number,
+    exp: S.number,
   })
 );
 
-export const safeParseUUIDs = Schema.parse(Schema.array(Schema.UUID));
+export const safeParseUUIDs = S.decodeUnknown(S.array(S.UUID));
 
-export const safeParseUUID = Schema.parse(Schema.UUID);
+export const safeParseUUID = S.decodeUnknown(S.UUID);
 
-export const safeParseNumberArray = Schema.parse(
-  Schema.array(
-    Schema.number.pipe(Schema.positive(), Schema.int(), Schema.nonNaN())
-  )
+export const safeParseNumberArray = S.decodeUnknown(
+  S.array(S.number.pipe(S.positive(), S.int(), S.nonNaN()))
 );
 
 export const verifyJwt = (token: string, secret: string | undefined) => {
@@ -124,7 +122,7 @@ export const sendErrorMsgToClient = (
   );
 };
 
-export const parseClientMessage = Schema.parse(ClientPayloadStruct);
+export const parseClientMessage = S.decodeUnknown(ClientPayloadStruct);
 
 export const parseJSONToClientMsg = (msg: unknown) =>
   pipe(
@@ -147,11 +145,8 @@ export const parseJSONToClientMsg = (msg: unknown) =>
 export const getUserInfoFromJWT = (authToken: string | undefined) =>
   pipe(
     safeParseNonEmptyString(authToken),
-    tapPipeLine,
     E.flatMap((authToken) => verifyJwt(authToken, process.env.JWT_SECRET_KEY)),
-    tapPipeLine,
     E.flatMap((decoded) => safeParseJWT(decoded)),
-    tapPipeLine,
     E.flatMap((decoded) =>
       E.succeed({
         userId: decoded.userId,

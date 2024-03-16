@@ -19,11 +19,7 @@ import { playAction } from "./actions";
 export const handleIfBotPlayerTurn = (
   gameState: GameState,
   pool: Pool
-): E.Effect<
-  never,
-  IllegalGameStateError | ParseError | PostgresError,
-  GameState
-> => {
+): E.Effect<GameState, IllegalGameStateError | ParseError | PostgresError> => {
   const currentActorGameState =
     gameState.actor_state[gameState.turn % gameState.actor_state.length];
   const currentPlayerIsBot = botNamePrefixes.some((prefix) =>

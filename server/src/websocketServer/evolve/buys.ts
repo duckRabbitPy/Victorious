@@ -52,7 +52,7 @@ export const buyCard = ({
   gameState: GameState;
   userId: string;
   cardName: CardName;
-}): E.Effect<never, IllegalGameStateError, GameState> => {
+}) => {
   if (gameState.global_state.supply[cardName] < 1) {
     return E.fail(
       new IllegalGameStateError({
