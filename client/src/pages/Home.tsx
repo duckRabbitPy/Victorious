@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useGetLoggedInUsername } from "../hooks/auth";
+import { FaInfoCircle } from "react-icons/fa";
 import {
   API_ENDPOINT,
   LOCAL_STORAGE_AUTH_KEY,
@@ -78,10 +79,24 @@ export const Home = () => {
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "flex-end", gap: "1rem" }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          gap: "1rem",
+        }}
+      >
         <Link to={"/login"}>Login</Link>
         <Link to={"/register"}>
-          <span style={{ color: "green" }}> Register</span>
+          <span style={{ color: "green" }}>Register</span>
+        </Link>
+
+        <Link
+          to={"/info"}
+          style={{ alignSelf: "center", display: "flex" }}
+          target="_blank"
+        >
+          <FaInfoCircle size={20} color={THEME_COLORS.victory} />
         </Link>
       </div>
       <h1
