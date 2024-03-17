@@ -1,52 +1,47 @@
 # README:
 
-## Development
+Welcome to Victorious, an online realitime multiplayer deck building game. Available to play for free at: https://victorious-duckrabbit.koyeb.app
 
-`yarn dev:server` - start the backend server which runs on port 3000
+## Sign up and log in
 
-`yarn dev:client` - starts the client using vite dev server on port 5173
+Register with an email address and password.
 
-`yarn regen` - wipes out the client node modules and runs the dev server, is useful if dev:client fails due to cacheing issues
+Log in and create a room to play in, or join an open room.
 
-(run these commands in seperate terminals)
+You can now play against other online players, against bots or play with mix of real players and bots!
 
-## Testing
+## Rules:
 
-`yarn test` - runs vite unit tests and db tests
+# How to Play
 
-## Production
+## Cards
 
-`yarn build` - creates a javascript build in /dist in the client and the server directories
+To inspect a card, right click on that card to read the description and understand what the card does.  
+There are 250 cards in the game in total and three types of cards: Treasure, Action and Victory.  
+You start each turn with 5 cards in your hand.
 
-`yarn start` - runs the server in production mode (this should be only be run on the production host server e.g. render.com) the client is served by the express server as a static asset
+## Action phase
 
-## Environmental variables
+Each turn you have the opportunity to play Action cards from your hand if you have them and if you have enough actions to do so.  
+Playing action cards have a variety of positive effects such as increasing the number of buys, actions or cards.
 
-the .env file is not checked into git, add a .env file to the root of the project with the following keys
+## Buy phase
 
-NODE_ENV= string (development | production)
+After the Action phase you have the opportunity to play treasure cards in your hand, the more treasures you play the more cash you will have to buy expensive and powerful cards.  
+Choose which cards you buy wisely based on what you need and how many buys you have available (typically at the start of the game you will need to buy treasure cards and at the end you will buy victory cards).  
+Victory cards secure victory points which will be needed to win the game.  
+When you have run out of buys or cash you must end your turn.
 
-PROD_DATABASE_URL= (postgres connection string e.g. "postgres://postgres.xyz:[YOUR-PASSWORD]@aws-0-eu-west-2.supabase.com")
+## End game
 
-PORT= (number e.g 3000)
-
-JWT_SECRET_KEY= (string e.g "MY_VERY_SECRET_KEY")
-
-SENDER_EMAIL= (string e.g. "sender.account@gmail.com")
-
-GMAIL_APP_PASSWORD= (string e.g "jfijsfnjnwesnksl")
-
-DEV_PG_NAME= (string e.g. "victorious_pg_test")
-
-## Misc
-
-Press ctrl + d to see full gamestate while playing a game
+The game ends when 3 piles are empty, or if the province pile is empty.  
+When the game ends the player with the most victory points wins.
 
 ## Tech stack
 
+I used this project to explore different technologies in my own time, this project was great for playing with websockets and realtime data as well as the EffectTS functional programming ecosystem.
+
 <img width="1260" alt="Screenshot 2024-02-06 at 21 28 49" src="https://github.com/duckRabbitPy/Victorious/assets/78092825/165aba36-aafe-4e18-af96-9317ddb01459">
-
-
 
 ##### Backend
 
@@ -90,3 +85,47 @@ getDataEffect: Effect.Effect<
   Todo | readonly Todo[] | void
 >;
 ```
+
+## Development
+
+If you want to play around with the repo, you'll need a postgres db and a gmail account for nodemailer
+
+`yarn dev:server` - start the backend server which runs on port 3000
+
+`yarn dev:client` - starts the client using vite dev server on port 5173
+
+`yarn regen` - wipes out the client node modules and runs the dev server, is useful if dev:client fails due to cacheing issues
+
+(run these commands in seperate terminals)
+
+## Testing
+
+`yarn test` - runs vite unit tests and db tests
+
+## Production
+
+`yarn build` - creates a javascript build in /dist in the client and the server directories
+
+`yarn start` - runs the server in production mode (this should be only be run on the production host server e.g. render.com) the client is served by the express server as a static asset
+
+## Environmental variables
+
+the .env file is not checked into git, add a .env file to the root of the project with the following keys
+
+NODE_ENV= string (development | production)
+
+PROD_DATABASE_URL= (postgres connection string e.g. "postgres://postgres.xyz:[YOUR-PASSWORD]@aws-0-eu-west-2.supabase.com")
+
+PORT= (number e.g 3000)
+
+JWT_SECRET_KEY= (string e.g "MY_VERY_SECRET_KEY")
+
+SENDER_EMAIL= (string e.g. "sender.account@gmail.com")
+
+GMAIL_APP_PASSWORD= (string e.g "jfijsfnjnwesnksl")
+
+DEV_PG_NAME= (string e.g. "victorious_pg_test")
+
+## Misc
+
+Press ctrl + d to see full gamestate while playing a game

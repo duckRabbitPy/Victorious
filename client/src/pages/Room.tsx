@@ -35,6 +35,7 @@ import { handleBotPlayerTurn } from "../effects/effects";
 import { EndActionsButton } from "../components/EndActionsButton";
 import { Spacer, Spinner } from "../components/Utils";
 import useSound from "../hooks/useSound";
+import { FaInfoCircle } from "react-icons/fa";
 
 const Room = ({
   loggedInUsername,
@@ -352,22 +353,36 @@ const Room = ({
                     alignItems: "center",
                   }}
                 >
-                  <Link
-                    to="/"
+                  <div
                     style={{
-                      backgroundColor: THEME_COLORS.translucentStraw,
-                      maxWidth: "fit-content",
                       display: "flex",
-                      alignItems: "center",
                       gap: "0.5rem",
-                      padding: "0.5rem",
-                      fontSize: "1.2rem",
-                      borderRadius: "0.5rem",
-                      alignSelf: "center",
                     }}
                   >
-                    Back to home <BiSolidCastle size={50} />
-                  </Link>
+                    <Link
+                      to="/"
+                      style={{
+                        backgroundColor: THEME_COLORS.translucentStraw,
+                        maxWidth: "fit-content",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        padding: "0.5rem",
+                        fontSize: "1.2rem",
+                        borderRadius: "0.5rem",
+                        alignSelf: "center",
+                      }}
+                    >
+                      Back to home <BiSolidCastle size={50} />
+                    </Link>
+                    <Link
+                      to={"/info"}
+                      style={{ alignSelf: "flex-start", display: "flex" }}
+                      target="_blank"
+                    >
+                      <FaInfoCircle size={20} color={THEME_COLORS.victory} />
+                    </Link>
+                  </div>
 
                   <BackgroundSelector setBackgroundIndex={setBackgroundIndex} />
                 </div>

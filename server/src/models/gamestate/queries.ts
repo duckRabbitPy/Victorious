@@ -41,13 +41,24 @@ export const getLatestGameSnapshotQuery = (room: number, pool: Pool) => {
 export const getOpenGameSessionsQuery = (pool: Pool) => {
   const get = async () => {
     try {
+      // select from active sessions where max turn is 0 to select games that have'nt started yet
       const result = await pool.query(
-        `SELECT gs.room FROM game_snapshots gs WHERE
-          gs.session_id NOT IN (
-            SELECT session_id FROM inactive_sessions
-          )
-          AND gs.turn = 0
-          GROUP BY gs.room;`
+        `WITH MaxTurns AS (
+          SELECT session_id, MAX(turn) AS max_turn
+          FROM game_snapshots
+          GROUP BY session_id
+      )
+      
+      SELECT gs.room
+      FROM game_snapshots gs
+      JOIN MaxTurns mt ON gs.session_id = mt.session_id
+
+      WHERE gs.session_id NOT IN (
+              SELECT session_id 
+              FROM inactive_sessions
+            )
+            AND gs.turn <= 0
+            AND gs.turn = mt.max_turn;`
       );
 
       return result.rows.map((row) => row.room);
