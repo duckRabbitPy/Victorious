@@ -168,6 +168,7 @@ export const handleGameMessage = ({
         E.flatMap((gamestate) => incrementTurn(gamestate, userInfo.username)),
         E.flatMap(deduceVictoryPoints),
         E.flatMap(resetBuysAndActions),
+        E.flatMap(determineIfGameIsOver),
         E.flatMap((gamestate) => writeNewGameStateToDB(gamestate, pool))
       );
     }

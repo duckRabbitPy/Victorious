@@ -34,7 +34,13 @@ const ActivePlayerInfo = ({ props }: { props: CoreProps }) => {
         </p>
         {
           <>
-            <ol style={{ listStyle: "none", padding: "0" }}>
+            <ol
+              style={{
+                listStyle: "none",
+                padding: "0",
+                minHeight: "5rem",
+              }}
+            >
               {gameState.actor_state.map((actor) => (
                 <li
                   key={actor.id}

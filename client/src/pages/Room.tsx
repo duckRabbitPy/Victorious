@@ -34,6 +34,7 @@ import { handleBotPlayerTurn } from "../effects/effects";
 
 import { EndActionsButton } from "../components/EndActionsButton";
 import { Spacer, Spinner } from "../components/Utils";
+import useSound from "../hooks/useSound";
 
 const Room = ({
   loggedInUsername,
@@ -51,12 +52,28 @@ const Room = ({
   const { gameState, socket, chatLog, errorMessage, setErrorMessage } =
     useGameState();
 
+  const { loseSound, winSound } = useSound();
+
   const isNominatedMsgSenderForBots =
     gameState?.actor_state
       .map((a) => a.name)
       .filter((name) =>
         botNamePrefixes.every((prefix) => !name.startsWith(prefix))
       )[0] === loggedInUsername;
+
+  const winningPlayer = gameState?.actor_state
+    .slice()
+    .sort((a, b) => b.victoryPoints - a.victoryPoints)
+    .map((actor) => actor.name)[0];
+
+  const endGameSound =
+    winningPlayer === loggedInUsername ? winSound : loseSound;
+
+  useEffect(() => {
+    if (gameState?.game_over) {
+      endGameSound?.play();
+    }
+  }, [gameState?.game_over, endGameSound]);
 
   useEffect(() => {
     if (
@@ -149,12 +166,7 @@ const Room = ({
         <div>
           <Link to="/">Back to home</Link>
           <h1 style={{ margin: 0 }}>Game over!</h1>
-          {gameState.actor_state
-            .slice()
-            .sort((a, b) => b.victoryPoints - a.victoryPoints)
-            .map((actor) => actor.name)[0] === loggedInUsername
-            ? "You win!"
-            : "You lose!"}
+          {winningPlayer === loggedInUsername ? "You win!" : "You lose!"}
           <div
             style={{
               display: "flex",
@@ -167,21 +179,32 @@ const Room = ({
             <div>
               <h2>Final scores:</h2>
               <div>
-                {gameState.actor_state.map((actor) => (
-                  <div key={actor.name}>
-                    {actor.name}: {actor.victoryPoints}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ marginBottom: "1rem", color: "lightgreen" }}>
-              <h2 style={{ margin: 0 }}>Winner:</h2>
-              {
-                gameState.actor_state
+                {gameState.actor_state
                   .slice()
                   .sort((a, b) => b.victoryPoints - a.victoryPoints)
-                  .map((actor) => actor.name)[0]
-              }
+                  .map((actor) => (
+                    <div key={actor.name}>
+                      <span
+                        style={{
+                          color: userNameColors[actor.name],
+                        }}
+                      >
+                        {actor.name}:
+                      </span>{" "}
+                      {actor.victoryPoints}
+                    </div>
+                  ))}
+              </div>
+            </div>
+            <div style={{ marginBottom: "1rem" }}>
+              <h2 style={{ margin: 0, color: "lightgreen" }}>Winner:</h2>
+              <span
+                style={{
+                  color: winningPlayer && userNameColors[winningPlayer],
+                }}
+              >
+                {winningPlayer}
+              </span>
             </div>
           </div>
         </div>
