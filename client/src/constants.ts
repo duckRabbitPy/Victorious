@@ -27,6 +27,7 @@ export const THEME_COLORS = {
   victory: "#1133B1",
   translucentBlack: "rgba(28, 26, 27, 0.66)",
   translucentStraw: "rgba(255, 255, 255, 0.7)",
+  white: "#f9f9f9",
   lightRed: "red",
   lightGreen: "lightgreen",
   darkRed: "darkred",
