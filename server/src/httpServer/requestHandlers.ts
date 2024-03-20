@@ -23,7 +23,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import {
   AuthenticationError,
-  CustomParseError,
+  CustomClientPayloadParseError,
   RegistrationError,
 } from "../customErrors";
 import {
@@ -75,7 +75,7 @@ export const createGameSession: RequestHandler = (req, res) => {
         room: safeParseNumber(req.body.room).pipe(
           E.orElseFail(
             () =>
-              new CustomParseError({
+              new CustomClientPayloadParseError({
                 message: "Room number must be a positive integer",
               })
           )

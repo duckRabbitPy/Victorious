@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { Logger, pipe, LogLevel, Effect as E, Effect, Layer } from "effect";
+import { Logger, pipe, LogLevel, Effect as E } from "effect";
 import {
   getUserInfoFromJWT,
   parseJSONToClientMsg,
@@ -12,10 +12,12 @@ import {
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
 import { DBConnection, DBConnectionLive } from "../db/connection";
 import { SupportedEffects } from "../../../shared/common";
-import { getCurrentChatLog, handleChatMessage } from "./handleChatMessage";
-import { handleGameMessage } from "./handleGameMessage";
-import { broadcastToRoom } from "./broadcast";
-import { sendBotMessage } from "./bots/sendBotMessage";
+import {
+  getCurrentChatLogAndBroadcast,
+  handleChatMessageAndBroadcast,
+} from "./handleChatMessage";
+import { handleGameMessageAndBroadcast } from "./handleGameMessage";
+import { getSendBotMessagesRunnable } from "./bots/sendBotMessage";
 import { RuntimeError } from "../customErrors";
 
 export type RoomConnections = {
@@ -60,64 +62,31 @@ export function createWebsocketServer(app: wsApplication) {
               pool: E.succeed(pool),
             }),
             E.flatMap(({ pool, userInfo, msg }) => {
-              // handle chat related messages
-              if (msg.effect === SupportedEffects.getCurrentChatLog) {
-                return pipe(
-                  getCurrentChatLog({
+              switch (msg.effect) {
+                case SupportedEffects.getCurrentChatLog:
+                  return getCurrentChatLogAndBroadcast({
                     msg,
                     pool,
-                  }),
-                  E.flatMap((chatLog) =>
-                    broadcastToRoom({
-                      broadcastType: "chatLog",
-                      payload: chatLog,
-                      room: msg.room,
-                      roomConnections,
-                    })
-                  ),
-                  E.flatMap(() => E.succeed("chat log sent successfully"))
-                );
-              }
-              if (msg.effect === SupportedEffects.sendChatMessage) {
-                return pipe(
-                  handleChatMessage({
+                    roomConnections,
+                  });
+                case SupportedEffects.sendChatMessage:
+                  return handleChatMessageAndBroadcast({
                     msg,
                     userInfo,
                     pool,
-                  }),
-                  E.flatMap((chatLog) =>
-                    broadcastToRoom({
-                      broadcastType: "chatLog",
-                      payload: chatLog,
-                      room: msg.room,
-                      roomConnections,
-                    })
-                  ),
-                  E.flatMap(() => E.succeed("chat message sent successfully"))
-                );
-              }
-
-              // handle game related messages
-              return pipe(
-                handleGameMessage({
-                  msg,
-                  userInfo,
-                  pool,
-                }),
-                E.flatMap((gameState) => {
-                  return broadcastToRoom({
-                    broadcastType: "gameState",
-                    payload: gameState,
-                    room: msg.room,
                     roomConnections,
                   });
-                }),
-                E.flatMap(() => E.succeed("game message sent successfully"))
-              );
+                default:
+                  return handleGameMessageAndBroadcast({
+                    msg,
+                    userInfo,
+                    pool,
+                    roomConnections,
+                  });
+              }
             })
           )
         ),
-        // todo: differentiate between errors that should be sent to client and errors that should be only be logged
         E.catchAll((error) =>
           sendErrorMsgToClient(error, clientMsg, roomConnections)
         ),
@@ -140,31 +109,9 @@ export function createWebsocketServer(app: wsApplication) {
         DBConnectionLive
       );
 
-      const sendBotMessages = DBConnection.pipe(
-        E.flatMap((connection) => connection.pool),
-        E.flatMap((pool) =>
-          pipe(
-            E.all({
-              msg: parseJSONToClientMsg(msg),
-              pool: E.succeed(pool),
-            }),
-            E.flatMap(({ pool, msg }) => {
-              if (msg.chatMessage) {
-                return sendBotMessage(msg, roomConnections, pool);
-              }
-              return E.succeed(E.unit);
-            }),
-            E.catchAll((e) => {
-              console.log(e);
-              return E.succeed(E.unit);
-            })
-          )
-        )
-      );
-
-      const sendBotMessagesRunnable = E.provide(
-        sendBotMessages,
-        DBConnectionLive
+      const sendBotMessagesRunnable = getSendBotMessagesRunnable(
+        clientMsg,
+        roomConnections
       );
 
       E.runPromise(processMessageRunnable)

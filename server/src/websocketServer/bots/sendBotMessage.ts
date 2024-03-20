@@ -12,6 +12,8 @@ import { RoomConnections } from "../createWebsocketServer";
 import { handleChatMessage } from "../handleChatMessage";
 import { sendMsgToAIService } from "./openAI";
 import { Pool } from "pg";
+import { DBConnection, DBConnectionLive } from "../../db/connection";
+import { parseJSONToClientMsg } from "../../utils";
 
 export const sendBotMessage = (
   msg: ClientPayload,
@@ -74,3 +76,32 @@ export const sendBotMessage = (
     )
   );
 };
+
+export function getSendBotMessagesRunnable(
+  msg: ClientPayload | undefined,
+  roomConnections: RoomConnections
+) {
+  const sendBotMessages = DBConnection.pipe(
+    E.flatMap((connection) => connection.pool),
+    E.flatMap((pool) =>
+      pipe(
+        E.all({
+          msg: parseJSONToClientMsg(msg),
+          pool: E.succeed(pool),
+        }),
+        E.flatMap(({ pool, msg }) => {
+          if (msg.chatMessage) {
+            return sendBotMessage(msg, roomConnections, pool);
+          }
+          return E.succeed(E.unit);
+        }),
+        E.catchAll((e) => {
+          console.log(e);
+          return E.succeed(E.unit);
+        })
+      )
+    )
+  );
+
+  return E.provide(sendBotMessages, DBConnectionLive);
+}

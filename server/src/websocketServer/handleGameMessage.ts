@@ -32,8 +32,7 @@ import { deduceVictoryPoints, determineIfGameIsOver } from "./evolve/victory";
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
 import {
-  CustomParseError,
-  DebounceError,
+  CustomClientPayloadParseError,
   IllegalGameStateError,
   PostgresError,
   RegistrationError,
@@ -46,6 +45,8 @@ import {
 } from "../utils";
 import { uuidv4 } from "../../../shared/utils";
 import { registerNewUserQuery } from "../models/users";
+import { RoomConnections, UserInfo } from "./createWebsocketServer";
+import { broadcastToRoom } from "./broadcast";
 
 type handleGameMessageProps = {
   msg: ClientPayload;
@@ -65,8 +66,7 @@ export const handleGameMessage = ({
   | PostgresError
   | ParseError
   | IllegalGameStateError
-  | DebounceError
-  | CustomParseError
+  | CustomClientPayloadParseError
   | RegistrationError
   | Error
 > => {
@@ -85,7 +85,9 @@ export const handleGameMessage = ({
     safeParseCardName(msg.cardName),
     E.orElseFail(
       () =>
-        new CustomParseError({ message: "Invalid card name in client payload" })
+        new CustomClientPayloadParseError({
+          message: "Invalid card name in client payload",
+        })
     )
   );
 
@@ -308,3 +310,32 @@ export const handleGameMessage = ({
     }
   }
 };
+
+export function handleGameMessageAndBroadcast({
+  msg,
+  userInfo,
+  pool,
+  roomConnections,
+}: {
+  msg: ClientPayload;
+  userInfo: UserInfo;
+  pool: Pool;
+  roomConnections: RoomConnections;
+}) {
+  return pipe(
+    handleGameMessage({
+      msg,
+      userInfo,
+      pool,
+    }),
+    E.flatMap((gameState) => {
+      return broadcastToRoom({
+        broadcastType: "gameState",
+        payload: gameState,
+        room: msg.room,
+        roomConnections,
+      });
+    }),
+    E.flatMap(() => E.succeed("game message sent successfully"))
+  );
+}

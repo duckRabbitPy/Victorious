@@ -9,12 +9,12 @@ import { Effect as E, pipe } from "effect";
 import {
   AuthenticationError,
   ServerError,
-  CustomParseError,
+  CustomClientPayloadParseError,
   IllegalGameStateError,
   JSONParseError,
   PostgresError,
   RegistrationError,
-  DebounceError,
+  RuntimeError,
 } from "./customErrors";
 import jwt from "jsonwebtoken";
 import { broadcastToRoom } from "./websocketServer/broadcast";
@@ -23,6 +23,7 @@ import {
   UserInfo,
 } from "./websocketServer/createWebsocketServer";
 import { ParseError } from "@effect/schema/ParseResult";
+import { Run } from "openai/resources/beta/threads/runs/runs";
 
 export const logAndThrowError = (error: unknown) => {
   console.error(error);
@@ -86,17 +87,18 @@ export const verifyJwt = (token: string, secret: string | undefined) => {
   );
 };
 
+type AllPossibleErrors =
+  | ParseError
+  | AuthenticationError
+  | Error
+  | PostgresError
+  | IllegalGameStateError
+  | CustomClientPayloadParseError
+  | RegistrationError
+  | RuntimeError;
+
 export const sendErrorMsgToClient = (
-  error:
-    | ServerError
-    | PostgresError
-    | ParseError
-    | IllegalGameStateError
-    | DebounceError
-    | Error
-    | CustomParseError
-    | RegistrationError
-    | AuthenticationError,
+  error: AllPossibleErrors,
   msg: ClientPayload | undefined,
   roomConnections: RoomConnections
 ) => {
@@ -107,19 +109,37 @@ export const sendErrorMsgToClient = (
     return E.succeed(E.unit);
   }
 
-  console.log(error);
+  // server log
+  console.error(error.message);
 
-  const errorMessage =
-    "message" in error ? error.message : "An unknown server error occured";
+  const errorMessage = getClientErrorMessages(error);
 
-  return E.succeed(
-    broadcastToRoom({
-      broadcastType: "error",
-      payload: errorMessage,
-      roomConnections,
-      room: msg.room,
-    })
-  );
+  return broadcastToRoom({
+    broadcastType: "error",
+    payload: errorMessage,
+    room: msg.room,
+    roomConnections,
+  });
+};
+
+const getClientErrorMessages = (error: AllPossibleErrors) => {
+  if (
+    error instanceof IllegalGameStateError ||
+    error instanceof RegistrationError ||
+    error instanceof RuntimeError
+  ) {
+    return error.message;
+  } else if (error instanceof AuthenticationError) {
+    return "Authentication error, check your login status";
+  } else if (error instanceof CustomClientPayloadParseError) {
+    return "Failed to parse data from client, try again";
+  } else if (error instanceof JSONParseError) {
+    return "A data parsing error on server occurred, try again";
+  } else if (error instanceof PostgresError) {
+    return "A database error occurred, try again";
+  }
+
+  return "An unknown server error occurred, try again";
 };
 
 export const parseClientMessage = S.decodeUnknown(ClientPayloadStruct);
@@ -136,7 +156,7 @@ export const parseJSONToClientMsg = (msg: unknown) =>
     E.flatMap((msg) => parseClientMessage(msg)),
     E.orElseFail(
       () =>
-        new CustomParseError({
+        new CustomClientPayloadParseError({
           message: "Failed to parse client message to match type ClientPayload",
         })
     )
