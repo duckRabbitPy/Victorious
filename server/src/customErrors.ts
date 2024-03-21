@@ -22,7 +22,9 @@ export class RegistrationError extends Data.TaggedClass("RegistrationError")<{
   message: string;
 }> {}
 
-export class CustomParseError extends Data.TaggedClass("CustomParseError")<{
+export class CustomClientPayloadParseError extends Data.TaggedClass(
+  "CustomClientPayloadParseError"
+)<{
   message: string;
 }> {}
 
@@ -30,9 +32,6 @@ export class JSONParseError extends Data.TaggedClass("JSONParseError")<{
   message: string;
 }> {}
 
-export class DebounceError extends Data.TaggedClass("DebounceError")<{
-  message: string;
-}> {}
 export class IllegalGameStateError extends Data.TaggedClass(
   "IllegalGameStateError"
 )<{

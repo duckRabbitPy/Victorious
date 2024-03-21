@@ -1,7 +1,6 @@
 import { pipe, Effect as E } from "effect";
 
 import {
-  ChatMessage,
   ClientPayload,
   safeParseChatLog,
   safeParseGameState,
@@ -13,10 +12,11 @@ import {
 } from "../models/chatlog/mutations";
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
-import { UserInfo } from "./createWebsocketServer";
+import { RoomConnections, UserInfo } from "./createWebsocketServer";
 import { ParseError } from "@effect/schema/ParseResult";
-import { CustomParseError, PostgresError } from "../customErrors";
+import { CustomClientPayloadParseError } from "../customErrors";
 import dotenv from "dotenv";
+import { broadcastToRoom } from "./broadcast";
 
 dotenv.config();
 
@@ -65,7 +65,7 @@ export const handleChatMessage = ({
     safeParseNonEmptyString(msg.chatMessage),
     E.orElseFail(
       () =>
-        new CustomParseError({
+        new CustomClientPayloadParseError({
           message: "Chat message must be a non-empty string",
         })
     )
@@ -87,3 +87,58 @@ export const handleChatMessage = ({
     E.flatMap(safeParseChatLog)
   );
 };
+
+export function getCurrentChatLogAndBroadcast({
+  msg,
+  pool,
+  roomConnections,
+}: {
+  msg: ClientPayload;
+  pool: Pool;
+  roomConnections: RoomConnections;
+}) {
+  return pipe(
+    getCurrentChatLog({
+      msg,
+      pool,
+    }),
+    E.flatMap((chatLog) =>
+      broadcastToRoom({
+        broadcastType: "chatLog",
+        payload: chatLog,
+        room: msg.room,
+        roomConnections,
+      })
+    ),
+    E.flatMap(() => E.succeed("chat log sent successfully"))
+  );
+}
+
+export function handleChatMessageAndBroadcast({
+  msg,
+  userInfo,
+  pool,
+  roomConnections,
+}: {
+  msg: ClientPayload;
+  userInfo: UserInfo;
+  pool: Pool;
+  roomConnections: RoomConnections;
+}) {
+  return pipe(
+    handleChatMessage({
+      msg,
+      userInfo,
+      pool,
+    }),
+    E.flatMap((chatLog) =>
+      broadcastToRoom({
+        broadcastType: "chatLog",
+        payload: chatLog,
+        room: msg.room,
+        roomConnections,
+      })
+    ),
+    E.flatMap(() => E.succeed("chat message sent successfully"))
+  );
+}
