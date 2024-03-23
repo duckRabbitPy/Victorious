@@ -32,12 +32,12 @@ import { deduceVictoryPoints, determineIfGameIsOver } from "./evolve/victory";
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
 import {
+  AllPossibleWebsocketErrors,
   CustomClientPayloadParseError,
   IllegalGameStateError,
   PostgresError,
   RegistrationError,
 } from "../customErrors";
-import { ParseError } from "@effect/schema/ParseResult";
 import {
   checkClientStateIsUptoDate,
   checkEnoughPlayers,
@@ -47,6 +47,7 @@ import { uuidv4 } from "../../../shared/utils";
 import { registerNewUserQuery } from "../models/users";
 import { RoomConnections, UserInfo } from "./createWebsocketServer";
 import { broadcastToRoom } from "./broadcast";
+import { ParseError } from "@effect/schema/ParseResult";
 
 type handleGameMessageProps = {
   msg: ClientPayload;

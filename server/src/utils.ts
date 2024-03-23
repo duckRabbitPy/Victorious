@@ -1,6 +1,5 @@
 import * as S from "@effect/schema/Schema";
 import {
-  ClientPayloadStruct,
   safeParseNonEmptyString,
   ClientPayload,
   GameState,
@@ -8,13 +7,12 @@ import {
 import { Effect as E, pipe } from "effect";
 import {
   AuthenticationError,
-  ServerError,
   CustomClientPayloadParseError,
   IllegalGameStateError,
-  JSONParseError,
   PostgresError,
   RegistrationError,
   RuntimeError,
+  AllPossibleWebsocketErrors,
 } from "./customErrors";
 import jwt from "jsonwebtoken";
 import { broadcastToRoom } from "./websocketServer/broadcast";
@@ -22,8 +20,6 @@ import {
   RoomConnections,
   UserInfo,
 } from "./websocketServer/createWebsocketServer";
-import { ParseError } from "@effect/schema/ParseResult";
-import { Run } from "openai/resources/beta/threads/runs/runs";
 
 export const logAndThrowError = (error: unknown) => {
   console.error(error);
@@ -50,14 +46,14 @@ export const safeParseNumber = S.decodeUnknown(
 
 export const safeParseBoolean = S.decodeUnknown(S.boolean);
 
-export const safeParseJWT = S.decodeUnknown(
-  S.struct({
-    userId: S.string,
-    username: S.string,
-    iat: S.number,
-    exp: S.number,
-  })
-);
+export class UserJWT extends S.Class<UserJWT>("ParsedJWT")({
+  userId: S.string,
+  username: S.string,
+  iat: S.number,
+  exp: S.number,
+}) {}
+
+export const safeParseUserJWT = S.decodeUnknown(UserJWT);
 
 export const safeParseUUIDs = S.decodeUnknown(S.array(S.UUID));
 
@@ -87,18 +83,8 @@ export const verifyJwt = (token: string, secret: string | undefined) => {
   );
 };
 
-type AllPossibleErrors =
-  | ParseError
-  | AuthenticationError
-  | Error
-  | PostgresError
-  | IllegalGameStateError
-  | CustomClientPayloadParseError
-  | RegistrationError
-  | RuntimeError;
-
 export const sendErrorMsgToClient = (
-  error: AllPossibleErrors,
+  error: AllPossibleWebsocketErrors,
   msg: ClientPayload | undefined,
   roomConnections: RoomConnections
 ) => {
@@ -122,7 +108,7 @@ export const sendErrorMsgToClient = (
   });
 };
 
-const getClientErrorMessages = (error: AllPossibleErrors) => {
+const getClientErrorMessages = (error: AllPossibleWebsocketErrors) => {
   if (
     error instanceof IllegalGameStateError ||
     error instanceof RegistrationError ||
@@ -132,26 +118,24 @@ const getClientErrorMessages = (error: AllPossibleErrors) => {
   } else if (error instanceof AuthenticationError) {
     return "Authentication error, check your login status";
   } else if (error instanceof CustomClientPayloadParseError) {
-    return "Failed to parse data from client, try again";
-  } else if (error instanceof JSONParseError) {
-    return "A data parsing error on server occurred, try again";
+    return "Server failed to parse data from browser, try again";
   } else if (error instanceof PostgresError) {
     return "A database error occurred, try again";
   }
 
-  return "An unknown server error occurred, try again";
+  return "An unexpected server error occurred, try again";
 };
 
-export const parseClientMessage = S.decodeUnknown(ClientPayloadStruct);
+export const parseClientMessage = S.decodeUnknown(ClientPayload);
 
 export const parseJSONToClientMsg = (msg: unknown) =>
   pipe(
     E.try({
       try: () => JSON.parse(msg as string),
-      catch: (e) =>
-        new JSONParseError({
-          message: `error parsing client string to json ${e}`,
-        }),
+      catch: (e) => {
+        console.error(e);
+        return e;
+      },
     }),
     E.flatMap((msg) => parseClientMessage(msg)),
     E.orElseFail(
@@ -166,7 +150,7 @@ export const getUserInfoFromJWT = (authToken: string | undefined) =>
   pipe(
     safeParseNonEmptyString(authToken),
     E.flatMap((authToken) => verifyJwt(authToken, process.env.JWT_SECRET_KEY)),
-    E.flatMap((decoded) => safeParseJWT(decoded)),
+    E.flatMap((decoded) => safeParseUserJWT(decoded)),
     E.flatMap((decoded) =>
       E.succeed({
         userId: decoded.userId,

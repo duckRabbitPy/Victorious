@@ -19,49 +19,49 @@ export const ALL_CARD_NAMES: CardName[] = [
 ] as const;
 
 const copper = {
-  name: "copper",
+  name: "copper" as const,
   cost: 0,
   type: "treasure",
   value: 1,
 } as const;
 
 const silver = {
-  name: "silver",
+  name: "silver" as const,
   cost: 3,
   type: "treasure",
   value: 2,
 } as const;
 
 const gold = {
-  name: "gold",
+  name: "gold" as const,
   cost: 6,
   type: "treasure",
   value: 3,
 } as const;
 
 const estate = {
-  name: "estate",
+  name: "estate" as const,
   cost: 2,
   type: "victory",
   value: 1,
 } as const;
 
 const duchy = {
-  name: "duchy",
+  name: "duchy" as const,
   cost: 5,
   type: "victory",
   value: 3,
 } as const;
 
 const province = {
-  name: "province",
+  name: "province" as const,
   cost: 8,
   type: "victory",
   value: 6,
 } as const;
 
 const village = {
-  name: "village",
+  name: "village" as const,
   cost: 3,
   type: "action",
   value: 0,
@@ -69,7 +69,7 @@ const village = {
 } as const;
 
 const smithy = {
-  name: "smithy",
+  name: "smithy" as const,
   cost: 4,
   type: "action",
   value: 0,
@@ -77,7 +77,7 @@ const smithy = {
 } as const;
 
 const market = {
-  name: "market",
+  name: "market" as const,
   cost: 5,
   type: "action",
   value: 0,
@@ -85,7 +85,7 @@ const market = {
 } as const;
 
 const councilRoom = {
-  name: "councilRoom",
+  name: "councilRoom" as const,
   cost: 5,
   type: "action",
   value: 0,
@@ -93,7 +93,7 @@ const councilRoom = {
 } as const;
 
 const laboratory = {
-  name: "laboratory",
+  name: "laboratory" as const,
   cost: 5,
   type: "action",
   value: 0,
@@ -101,7 +101,7 @@ const laboratory = {
 } as const;
 
 const festival = {
-  name: "festival",
+  name: "festival" as const,
   cost: 5,
   type: "action",
   value: 0,
@@ -109,7 +109,7 @@ const festival = {
 } as const;
 
 const mine = {
-  name: "mine",
+  name: "mine" as const,
   cost: 5,
   type: "action",
   value: 0,
@@ -118,7 +118,7 @@ const mine = {
 } as const;
 
 const workshop = {
-  name: "workshop",
+  name: "workshop" as const,
   cost: 3,
   type: "action",
   value: 0,
@@ -126,7 +126,7 @@ const workshop = {
 } as const;
 
 const moneylender = {
-  name: "moneylender",
+  name: "moneylender" as const,
   cost: 4,
   type: "action",
   value: 0,
@@ -158,19 +158,20 @@ export const ActionNames = S.union(
 );
 
 const CardNames = S.union(TreasureNames, VictoryNames, ActionNames);
+
 const CardTypes = S.union(
   S.literal("treasure"),
   S.literal("victory"),
   S.literal("action")
 );
 
-const CardStruct = S.struct({
+class Card extends S.Class<Card>("Card")({
   name: CardNames,
   cost: S.number,
   type: CardTypes,
   value: S.number,
   description: S.optional(S.string),
-});
+}) {}
 
 export const getCardCostByName = (cardName: CardName): number => {
   return cardNameToCard(cardName).cost;
@@ -303,33 +304,35 @@ export const cardNameToCard = (cardName: CardName): Card => {
 
 export type CardName = S.Schema.Type<typeof CardNames>;
 export type CardCount = S.Schema.Type<typeof CardCountStruct>;
-export type Card = S.Schema.Type<typeof CardStruct>;
+
 export const CardCountStruct = S.record(
   S.union(TreasureNames, VictoryNames, ActionNames),
   S.number
 );
 
-const requirement = S.struct({
+export class Requirement extends S.Class<Requirement>("Requirement")({
   type: S.optional(
     S.union(S.literal("Treasure"), S.literal("Victory"), S.literal("Action"))
   ),
   maxValue: S.optional(S.number),
   minValue: S.optional(S.number),
-});
+}) {}
 
-const actionPhaseDemand = S.struct({
+export class ActionPhaseDemand extends S.Class<ActionPhaseDemand>(
+  "ActionPhaseDemand"
+)({
   actionCard: ActionNames,
   demandType: S.union(S.literal("Gain"), S.literal("Trash")),
-  requirement: S.optional(requirement),
+  requirement: S.optional(Requirement),
   count: S.number,
-});
+}) {}
 
 export enum Phases {
   Action = "action",
   Buy = "buy",
 }
 
-const ActorStateStruct = S.struct({
+export class ActorState extends S.Class<ActorState>("ActorState")({
   id: S.UUID,
   name: S.string,
   hand: CardCountStruct,
@@ -340,66 +343,58 @@ const ActorStateStruct = S.struct({
   victoryPoints: S.number,
   discardPile: S.array(S.union(TreasureNames, VictoryNames, ActionNames)),
   deck: S.array(S.union(TreasureNames, VictoryNames, ActionNames)),
-  actionPhaseDemand: S.nullable(actionPhaseDemand),
+  actionPhaseDemand: S.nullable(ActionPhaseDemand),
   phase: S.enums(Phases),
-});
+}) {}
 
-const GlobalStateStruct = S.struct({
+export class GlobalState extends S.Class<GlobalState>("GlobalState")({
   supply: CardCountStruct,
   history: S.array(S.string),
-});
+}) {}
 
-export const GameStateStruct = S.struct({
+export class GameState extends S.Class<GameState>("GameState")({
   id: S.number,
   room: S.number,
   turn: S.number,
   session_id: S.UUID,
   mutation_index: S.number,
-  actor_state: S.array(ActorStateStruct),
-  global_state: GlobalStateStruct,
+  actor_state: S.array(ActorState),
+  global_state: GlobalState,
   created_at: S.ValidDateFromSelf,
   game_over: S.boolean,
-});
+}) {}
 
-export const ChatMessageStruct = S.struct({
+export class ChatMessage extends S.Class<ChatMessage>("ChatMessage")({
   username: S.string,
   message: S.string,
-});
+}) {}
 
-export const BroadCastStruct = S.struct({
+export class BroadCast extends S.Class<BroadCast>("BroadCast")({
   broadcastType: S.union(
     S.literal("gameState"),
     S.literal("chatLog"),
     S.literal("error")
   ),
-  gameState: S.optional(GameStateStruct),
-  chatLog: S.optional(S.array(ChatMessageStruct)),
+  gameState: S.optional(GameState),
+  chatLog: S.optional(S.array(ChatMessage)),
   error: S.optional(S.string),
-});
+}) {}
 
-const registerResultSchema = S.struct({
+class RegisterResult extends S.Class<RegisterResult>("RegisterResult")({
   user_id: S.string,
   username: S.string,
   email: S.string,
   confirmation_token: S.string,
-});
-
-export type ActorState = S.Schema.Type<typeof ActorStateStruct>;
-export type ActionPhaseDemand = S.Schema.Type<typeof actionPhaseDemand>;
-export type GlobalState = S.Schema.Type<typeof GlobalStateStruct>;
-export type GameState = S.Schema.Type<typeof GameStateStruct>;
-export type ClientPayload = S.Schema.Type<typeof ClientPayloadStruct>;
-export type ChatMessage = S.Schema.Type<typeof ChatMessageStruct>;
-export type BroadCast = S.Schema.Type<typeof BroadCastStruct>;
+}) {}
 
 export const safeParseNonEmptyString = S.decodeUnknown(
   S.string.pipe(S.minLength(1))
 );
 export const safeParseCardName = S.decodeUnknown(CardNames);
-export const safeParseBroadCast = S.decodeUnknown(BroadCastStruct);
-export const safeParseGameState = S.decodeUnknown(GameStateStruct);
-export const safeParseChatLog = S.decodeUnknown(S.array(ChatMessageStruct));
-export const safeParseRegisterResult = S.decodeUnknown(registerResultSchema);
+export const safeParseBroadCast = S.decodeUnknown(BroadCast);
+export const safeParseGameState = S.decodeUnknown(GameState);
+export const safeParseChatLog = S.decodeUnknown(S.array(ChatMessage));
+export const safeParseRegisterResult = S.decodeUnknown(RegisterResult);
 
 export type BroadCastType = "gameState" | "chatLog" | "error";
 
@@ -421,14 +416,14 @@ export enum SupportedEffects {
   trashCardToMeetDemand = "trashCardToMeetDemand",
 }
 
-export const ClientPayloadStruct = S.struct({
+export class ClientPayload extends S.Class<ClientPayload>("ClientPayload")({
   mutationIndex: S.number,
   effect: S.enums(SupportedEffects),
   cardName: S.optional(S.union(TreasureNames, VictoryNames, ActionNames)),
   room: S.number,
   authToken: S.string,
   chatMessage: S.optional(S.string),
-});
+}) {}
 
 export const zeroCardCount: CardCount = {
   copper: 0,

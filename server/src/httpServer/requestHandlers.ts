@@ -35,7 +35,7 @@ import {
   verifyUserQuery,
 } from "../models/users";
 
-import { safeParseJWT, verifyJwt } from "../utils";
+import { safeParseUserJWT, verifyJwt } from "../utils";
 import {
   sendAuthenticatedUserResponse,
   sendLoginResponse,
@@ -52,7 +52,7 @@ const checkHasValidToken = (req: Request, pool: Pool) => {
     req.headers.authorization?.split(" ")[1],
     safeParseNonEmptyString,
     E.flatMap((authToken) => verifyJwt(authToken, process.env.JWT_SECRET_KEY)),
-    E.flatMap((decoded) => safeParseJWT(decoded)),
+    E.flatMap((decoded) => safeParseUserJWT(decoded)),
     E.flatMap(() => E.succeed(pool)),
     E.orElseFail(
       () =>
@@ -313,7 +313,7 @@ export const auth: RequestHandler = (req, res) => {
   const userNameOrError = pipe(
     authToken,
     E.flatMap((authToken) => verifyJwt(authToken, process.env.JWT_SECRET_KEY)),
-    E.flatMap((decoded) => safeParseJWT(decoded)),
+    E.flatMap((decoded) => safeParseUserJWT(decoded)),
     E.flatMap((decoded) => E.succeed(decoded.username))
   );
 
