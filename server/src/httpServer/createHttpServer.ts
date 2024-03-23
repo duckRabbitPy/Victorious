@@ -13,6 +13,7 @@ export function createHttpServer(app: wsApplication) {
     ? process.cwd()
     : path.resolve(__dirname, "../../../../..");
   const clientDistPath = path.join(rootPath, "client/dist");
+  const MAX_CACHE_AGE = isDev ? "0" : "2h";
 
   app.use(cors());
 
@@ -26,17 +27,30 @@ export function createHttpServer(app: wsApplication) {
   app.use("/api/game-sessions", gameRouter);
 
   // React app running on the same port as the server, in development use Vite server on port 5173
-  app.use("/", express.static(clientDistPath));
+  app.use("/", express.static(clientDistPath, { maxAge: MAX_CACHE_AGE }));
 
   // Serve static files from the dist/client folder in production
   if (!isDev) {
-    app.use("/public", express.static(path.join(rootPath, "dist/public")));
-    app.use("/", express.static(path.join(rootPath, "dist/client")));
+    app.use(
+      "/public",
+      express.static(path.join(rootPath, "dist/public"), {
+        maxAge: MAX_CACHE_AGE,
+      })
+    );
+
+    app.use(
+      "/",
+      express.static(path.join(rootPath, "dist/client"), {
+        maxAge: MAX_CACHE_AGE,
+      })
+    );
   }
 
   // Handle any other client routes by serving the React app's entry point
   app.get("*", (_, res) => {
-    res.sendFile(path.join(clientDistPath, "index.html"));
+    res.sendFile(path.join(clientDistPath, "index.html"), {
+      maxAge: MAX_CACHE_AGE,
+    });
   });
 
   console.log("HTTP server created");
