@@ -140,7 +140,6 @@ const PlayerHand = ({
 
           const buttonStyle = {
             margin: "0.1rem",
-            fontSize: "small",
             border: getCardInHandColor(),
             cursor: disabled ? "not-allowed" : "pointer",
           };

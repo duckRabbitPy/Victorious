@@ -137,8 +137,7 @@ const Room = ({
         flexDirection: "column",
         gap: "1rem",
         maxHeight: "100vh",
-        // todo use media queries
-        minWidth: "1200px",
+        justifyContent: "center",
       }}
     >
       {errorMessage && (
@@ -205,13 +204,7 @@ const Room = ({
         </div>
       ) : (
         <>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              gap: "1rem",
-            }}
-          >
+          <div id="active-gameroom-outer-container">
             <div>
               {!gameStarted && (
                 <ActivePlayerInfo
@@ -316,13 +309,7 @@ const Room = ({
               />
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "1rem",
-                flexDirection: "column",
-              }}
-            >
+            <div id="game-history-chat-controls-container">
               <div style={{ display: "flex", gap: "1rem" }}>
                 <div
                   style={{
