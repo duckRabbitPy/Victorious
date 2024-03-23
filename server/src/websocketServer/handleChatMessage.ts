@@ -13,7 +13,6 @@ import {
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
 import { RoomConnections, UserInfo } from "./createWebsocketServer";
-import { ParseError } from "@effect/schema/ParseResult";
 import { CustomClientPayloadParseError } from "../customErrors";
 import dotenv from "dotenv";
 import { broadcastToRoom } from "./broadcast";
