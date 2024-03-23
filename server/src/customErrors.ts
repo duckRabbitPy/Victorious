@@ -23,10 +23,6 @@ export class AuthenticationError extends Data.TaggedClass(
   message: string;
 }> {}
 
-export class AuthorisationError extends Data.TaggedClass("AuthorisationError")<{
-  message: string;
-}> {}
-
 export class RegistrationError extends Data.TaggedClass("RegistrationError")<{
   message: string;
 }> {}

@@ -1,6 +1,6 @@
 import { ClientPayload } from "../../../../shared/common";
 
-export class OpenAIStub {
+class OpenAIStub {
   apiKey: string;
   chat: {
     completions: {

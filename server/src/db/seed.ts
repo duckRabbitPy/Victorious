@@ -36,7 +36,7 @@ export const testUser2 = {
   confirmation_token: "3d61b80d-7275-4ba0-994b-67f59438275a",
 };
 
-export const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
+const GAME_SNAPSHOT_SEED_VALUES: GameSnapshot = {
   game_snapshots: [
     {
       id: 1454425,

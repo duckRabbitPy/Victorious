@@ -133,19 +133,19 @@ const moneylender = {
   description: "Trash a copper from your hand. If you do, +3 treasure",
 } as const;
 
-export const TreasureNames = S.union(
+const TreasureNames = S.union(
   S.literal("copper"),
   S.literal("silver"),
   S.literal("gold")
 );
 
-export const VictoryNames = S.union(
+const VictoryNames = S.union(
   S.literal("estate"),
   S.literal("duchy"),
   S.literal("province")
 );
 
-export const ActionNames = S.union(
+const ActionNames = S.union(
   S.literal("village"),
   S.literal("smithy"),
   S.literal("market"),
@@ -234,15 +234,6 @@ export const hasActionCard = (hand: CardCount): boolean => {
   return false;
 };
 
-export const hasTreasureCard = (hand: CardCount): boolean => {
-  for (const cardName of Object.keys(hand) as Array<CardName>) {
-    if (getCardTypeByName(cardName) === "treasure" && hand[cardName] > 0) {
-      return true;
-    }
-  }
-  return false;
-};
-
 export const getTreasureValue = (hand: CardCount): number => {
   return (
     hand.copper * getCardValueByName("copper") +
@@ -305,12 +296,12 @@ export const cardNameToCard = (cardName: CardName): Card => {
 export type CardName = S.Schema.Type<typeof CardNames>;
 export type CardCount = S.Schema.Type<typeof CardCountStruct>;
 
-export const CardCountStruct = S.record(
+const CardCountStruct = S.record(
   S.union(TreasureNames, VictoryNames, ActionNames),
   S.number
 );
 
-export class Requirement extends S.Class<Requirement>("Requirement")({
+class Requirement extends S.Class<Requirement>("Requirement")({
   type: S.optional(
     S.union(S.literal("Treasure"), S.literal("Victory"), S.literal("Action"))
   ),
