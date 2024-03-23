@@ -204,7 +204,7 @@ export const addLivePlayerQuery = ({
 };
 
 // @mutation
-export const updateGameState = (newGameState: GameState, pool: Pool) => {
+const updateGameState = (newGameState: GameState, pool: Pool) => {
   const {
     room,
     turn,

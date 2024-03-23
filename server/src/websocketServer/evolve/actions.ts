@@ -13,7 +13,7 @@ import {
 import { indefiniteArticle } from "../../../../shared/utils";
 import { dealCards } from "./hand";
 
-export const applyAction = (
+const applyAction = (
   gameState: GameState,
   userId: string,
   cardName: CardName

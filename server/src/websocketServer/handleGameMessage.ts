@@ -32,7 +32,6 @@ import { deduceVictoryPoints, determineIfGameIsOver } from "./evolve/victory";
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
 import {
-  AllPossibleWebsocketErrors,
   CustomClientPayloadParseError,
   IllegalGameStateError,
   PostgresError,

@@ -6,16 +6,14 @@ import {
   safeParseGameState,
   safeParseNonEmptyString,
 } from "../../../shared/common";
-import {
-  getLatestChatLogQuery,
-  updateChatLogQuery,
-} from "../models/chatlog/mutations";
+import { updateChatLogQuery } from "../models/chatlog/mutations";
 import { Pool } from "pg";
 import { getLatestGameSnapshotQuery } from "../models/gamestate/queries";
 import { RoomConnections, UserInfo } from "./createWebsocketServer";
 import { CustomClientPayloadParseError } from "../customErrors";
 import dotenv from "dotenv";
 import { broadcastToRoom } from "./broadcast";
+import { getLatestChatLogQuery } from "../models/chatlog/queries";
 
 dotenv.config();
 
@@ -30,7 +28,7 @@ type GetCurrentChatLogProps = {
   pool: Pool;
 };
 
-export const getCurrentChatLog = ({ msg, pool }: GetCurrentChatLogProps) => {
+const getCurrentChatLog = ({ msg, pool }: GetCurrentChatLogProps) => {
   const currentGameState = pipe(
     getLatestGameSnapshotQuery(msg.room, pool),
     E.flatMap(safeParseGameState)

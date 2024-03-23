@@ -26,7 +26,6 @@ export const logAndThrowError = (error: unknown) => {
   throw error;
 };
 
-// check after update deps
 export const tapPipeLine = <A, E, R>(
   effect: E.Effect<A, E, R>
 ): E.Effect<A, E, R> =>
@@ -46,7 +45,7 @@ export const safeParseNumber = S.decodeUnknown(
 
 export const safeParseBoolean = S.decodeUnknown(S.boolean);
 
-export class UserJWT extends S.Class<UserJWT>("ParsedJWT")({
+class UserJWT extends S.Class<UserJWT>("ParsedJWT")({
   userId: S.string,
   username: S.string,
   iat: S.number,
@@ -54,10 +53,6 @@ export class UserJWT extends S.Class<UserJWT>("ParsedJWT")({
 }) {}
 
 export const safeParseUserJWT = S.decodeUnknown(UserJWT);
-
-export const safeParseUUIDs = S.decodeUnknown(S.array(S.UUID));
-
-export const safeParseUUID = S.decodeUnknown(S.UUID);
 
 export const safeParseNumberArray = S.decodeUnknown(
   S.array(S.number.pipe(S.positive(), S.int(), S.nonNaN()))
@@ -126,7 +121,7 @@ const getClientErrorMessages = (error: AllPossibleWebsocketErrors) => {
   return "An unexpected server error occurred, try again";
 };
 
-export const parseClientMessage = S.decodeUnknown(ClientPayload);
+const parseClientMessage = S.decodeUnknown(ClientPayload);
 
 export const parseJSONToClientMsg = (msg: unknown) =>
   pipe(

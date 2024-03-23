@@ -2,18 +2,20 @@ import { Pool } from "pg";
 import { logAndThrowError } from "../../utils";
 import { Effect as E } from "effect";
 
-export const getLatestChatLogQuery = (sessionId: string, pool: Pool) => {
-  const getLatestChatLog = async (sessionId: string) => {
+export const getLatestChatLogQuery = ({
+  sessionId,
+  pool,
+}: {
+  sessionId: string;
+  pool: Pool;
+}) => {
+  const get = async () => {
     try {
       const result = await pool.query(
-        `
-        SELECT username, message
-        FROM chat_log
-        WHERE session_id = $1
-        ORDER BY created_at ASC;
-        `,
+        "SELECT username, message FROM chat_log WHERE session_id = $1 ORDER BY created_at ASC;",
         [sessionId]
       );
+
       return result.rows;
     } catch (error) {
       logAndThrowError(error);
@@ -21,7 +23,7 @@ export const getLatestChatLogQuery = (sessionId: string, pool: Pool) => {
   };
 
   return E.tryPromise({
-    try: () => getLatestChatLog(sessionId),
-    catch: (e) => new Error(`error getting latest chat log: ${e}`),
+    try: () => get(),
+    catch: () => new Error("postgres query error"),
   }).pipe(E.retry({ times: 1 }));
 };

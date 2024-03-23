@@ -13,7 +13,9 @@ export function createHttpServer(app: wsApplication) {
     ? process.cwd()
     : path.resolve(__dirname, "../../../../..");
   const clientDistPath = path.join(rootPath, "client/dist");
-  const MAX_CACHE_AGE = isDev ? "0" : "2h";
+
+  // 20 min browser cache
+  const MAX_CACHE_AGE = isDev ? "0" : String(1000 * 60 * 20);
 
   app.use(cors());
 

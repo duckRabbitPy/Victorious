@@ -15,7 +15,7 @@ import { Pool } from "pg";
 import { DBConnection, DBConnectionLive } from "../../db/connection";
 import { parseJSONToClientMsg } from "../../utils";
 
-export const sendBotMessage = (
+const sendBotMessage = (
   msg: ClientPayload,
   roomConnections: RoomConnections,
   pool: Pool
