@@ -33,9 +33,10 @@ import { ResetPlayedTreasuresButton } from "../components/ResetPlayedTreasures";
 import { handleBotPlayerTurn } from "../effects/effects";
 
 import { EndActionsButton } from "../components/EndActionsButton";
-import { Spacer, Spinner } from "../components/Utils";
+import { Spacer } from "../components/Utils";
 import useSound from "../hooks/useSound";
 import { FaInfoCircle } from "react-icons/fa";
+import { ConnectingStatus } from "../components/Connecting";
 
 const Room = ({
   loggedInUsername,
@@ -122,14 +123,7 @@ const Room = ({
   };
 
   if (!gameState || !socket)
-    return (
-      <div>
-        <p>{!socket && "connecting to server"}</p>
-        <p>{!gameState && "loading gamesate"}</p>
-        <Spinner />
-        <Link to="/"> Go home</Link>
-      </div>
-    );
+    return <ConnectingStatus gameState={gameState} socket={socket} />;
 
   const userNameColors = getUserNameColors(
     gameState.actor_state.map((a) => a.name)
