@@ -1,4 +1,9 @@
 :root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem;
+  text-align: center;
+
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -17,6 +22,22 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  @media screen and (max-width: 1200px) {
+    font-size: 1rem;
+  }
+
+  @media screen and (max-width: 800px) {
+    font-size: 0.8rem;
+  }
+
+  @media screen and (max-width: 600px) {
+    font-size: 0.6rem;
+  }
+
+  @media screen and (max-width: 500px) {
+    font-size: 0.4rem;
+  }
 }
 
 a {
@@ -34,9 +55,13 @@ body {
   letter-spacing: 0.02em;
   margin: 0;
   display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  justify-content: space-around;
+
+  @media screen and (min-width: 1200px) {
+    min-width: 320px;
+    min-height: 100vh;
+    place-items: center;
+  }
 }
 
 h1 {
@@ -56,6 +81,18 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
   background-color: #f9f9f9;
+
+  @media screen and (max-width: 1199px) {
+    font-size: small;
+    font-weight: 400;
+    padding: 0.3em;
+  }
+
+  @media screen and (max-width: 800px) {
+    font-size: x-small;
+    font-weight: 200;
+    padding: 0.2em;
+  }
 }
 button:hover {
   border-color: #646cff;
@@ -64,6 +101,29 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+#game-history-chat-controls-container {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column;
+}
+
+@media screen and (max-width: 1199px) {
+  #game-history-chat-controls-container {
+    display: none; /* Hide on screens smaller than 1200px */
+  }
+}
+
+#active-gameroom-outer-container {
+  display: flex;
+  gap: 1rem;
+  flex-direction: column-reverse;
+
+  @media screen and (min-width: 1200px) {
+    flex-direction: row;
+    justify-content: center;
+  }
 }
 
 .spinner {
@@ -82,5 +142,17 @@ button:focus-visible {
   }
   100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
   }
 }
