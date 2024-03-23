@@ -1,5 +1,14 @@
 import { Data } from "effect";
 
+export type AllPossibleWebsocketErrors =
+  | AuthenticationError
+  | Error
+  | PostgresError
+  | IllegalGameStateError
+  | CustomClientPayloadParseError
+  | RegistrationError
+  | RuntimeError;
+
 export interface ServerError {
   message: string;
 }
@@ -25,10 +34,6 @@ export class RegistrationError extends Data.TaggedClass("RegistrationError")<{
 export class CustomClientPayloadParseError extends Data.TaggedClass(
   "CustomClientPayloadParseError"
 )<{
-  message: string;
-}> {}
-
-export class JSONParseError extends Data.TaggedClass("JSONParseError")<{
   message: string;
 }> {}
 
