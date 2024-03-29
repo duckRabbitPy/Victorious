@@ -37,6 +37,13 @@ When you have run out of buys or cash you must end your turn.
 The game ends when 3 piles are empty, or if the province pile is empty.  
 When the game ends the player with the most victory points wins.
 
+#####  Game Preview
+
+<img width="1048" alt="Screenshot 2024-03-17 at 11 18 18" src="https://github.com/duckRabbitPy/Victorious/assets/78092825/f4ef3e59-c89b-424e-b58f-a30e0520f138">
+
+<img width="1126" alt="Screenshot 2024-03-17 at 11 17 32" src="https://github.com/duckRabbitPy/Victorious/assets/78092825/6882cc3a-8bf8-4b06-a380-30303d55e821">
+
+
 # Tech stack
 
 I used this project to explore different technologies in my own time, this project was great for playing with websockets and realtime data as well as the EffectTS functional programming ecosystem.
