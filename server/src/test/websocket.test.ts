@@ -18,6 +18,8 @@ import {
 } from "../../../shared/common";
 import { handleChatMessage } from "../websocketServer/handleChatMessage";
 import { executeGameOperation } from "./helpers";
+import { delay } from "../utils";
+import { getSendBotMessagesRunnable } from "../websocketServer/bots/sendBotMessage";
 
 const getTestSession = E.provideService(
   DBConnection.pipe(
@@ -103,7 +105,7 @@ describe("gamestate tests", () => {
     expect(postTestTotalCards).toEqual(11);
   });
 
-  it("only buy only the cards paying for cards are removed from cardsInPlay", async () => {
+  it("only the cards used for purchase are removed from cardsInPlay", async () => {
     // Fetch initial game state
     const startingGameState = await setUpGame();
 
@@ -193,6 +195,10 @@ describe("gamestate tests", () => {
 });
 
 describe("chat tests", () => {
+  beforeEach(async () => {
+    await resetAndSeedDatabase();
+  });
+
   it("send chat message", async () => {
     const initialGamestate = await E.runPromise(getTestSession);
 
@@ -236,5 +242,101 @@ describe("chat tests", () => {
     expect((await E.runPromise(runnable))[0].message).toEqual(
       testMsg.chatMessage
     );
+  });
+
+  it("can add bot and have converstion with bot", async () => {
+    const initialGameState = await E.runPromise(getTestSession);
+    const addBotPlayerRunnable = pipe(
+      executeGameOperation({
+        effect: SupportedEffects.addLivePlayer,
+        userId: testUser1.userId,
+        lastGameState: initialGameState,
+      }),
+      E.flatMap((gamestate) =>
+        executeGameOperation({
+          effect: SupportedEffects.addBotPlayer,
+          userId: testUser1.userId,
+          lastGameState: gamestate,
+        })
+      )
+    );
+
+    const testMsg1 = {
+      mutationIndex: initialGameState.mutation_index,
+      authToken: testUser1.authToken,
+      effect: SupportedEffects.sendChatMessage,
+      room: initialGameState.room,
+      cardName: undefined,
+      userId: testUser1.userId,
+      chatMessage: "test chat message 1",
+    } as ClientPayload;
+
+    const testMsg2 = {
+      ...testMsg1,
+      chatMessage: "test chat message 2",
+    } as ClientPayload;
+
+    const sendChatMessage1 = DBConnection.pipe(
+      E.flatMap((connection) => connection.pool),
+      E.flatMap((pool) =>
+        E.all({
+          pool: E.succeed(pool),
+          msg: E.succeed(testMsg1),
+        })
+      ),
+      E.flatMap(({ msg, pool }) =>
+        handleChatMessage({
+          msg,
+          pool,
+          userInfo: {
+            userId: testUser1.userId,
+            username: testUser1.username,
+          },
+        })
+      ),
+      E.flatMap(safeParseChatLog)
+    );
+
+    const sendChatMessage2 = DBConnection.pipe(
+      E.flatMap((connection) => connection.pool),
+      E.flatMap((pool) =>
+        E.all({
+          pool: E.succeed(pool),
+          msg: E.succeed(testMsg2),
+        })
+      ),
+      E.flatMap(({ msg, pool }) =>
+        handleChatMessage({
+          msg,
+          pool,
+          userInfo: {
+            userId: testUser1.userId,
+            username: testUser1.username,
+          },
+        })
+      ),
+      E.flatMap(safeParseChatLog)
+    );
+
+    const sendChatMessage1Runnable = E.provideService(
+      sendChatMessage1,
+      DBConnection,
+      DBConnectionTest
+    );
+
+    const sendBotMessagesRunnable = getSendBotMessagesRunnable(testMsg1, []);
+
+    const sendChatMessage2Runnable = E.provideService(
+      sendChatMessage2,
+      DBConnection,
+      DBConnectionTest
+    );
+
+    await E.runPromise(addBotPlayerRunnable);
+    await E.runPromise(sendChatMessage1Runnable);
+    await E.runPromise(sendBotMessagesRunnable);
+    const resultLog = await E.runPromise(sendChatMessage2Runnable);
+    expect(resultLog.some((msg) => msg.username.match(/_bot_/))).toEqual(true);
+    expect(resultLog.length).toEqual(3);
   });
 });
