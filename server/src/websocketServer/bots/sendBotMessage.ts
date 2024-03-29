@@ -83,24 +83,17 @@ export function getSendBotMessagesRunnable(
 ) {
   const sendBotMessages = DBConnection.pipe(
     E.flatMap((connection) => connection.pool),
-    E.flatMap((pool) =>
-      pipe(
-        E.all({
-          msg: parseJSONToClientMsg(msg),
-          pool: E.succeed(pool),
-        }),
-        E.flatMap(({ pool, msg }) => {
-          if (msg.chatMessage) {
-            return sendBotMessage(msg, roomConnections, pool);
-          }
-          return E.succeed(E.unit);
-        }),
-        E.catchAll((e) => {
-          console.log(e);
-          return E.succeed(E.unit);
-        })
-      )
-    )
+    E.flatMap((pool) => {
+      if (msg?.chatMessage) {
+        return sendBotMessage(msg, roomConnections, pool);
+      }
+      return E.succeed(E.unit);
+    }),
+
+    E.catchAll((e) => {
+      console.log(e);
+      return E.succeed(E.unit);
+    })
   );
 
   return E.provide(sendBotMessages, DBConnectionLive);
