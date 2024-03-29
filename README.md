@@ -73,7 +73,7 @@ I used this project to explore different technologies in my own time, this proje
 
 EffectTS is a library that provides a powerful way to work with systems that can both succeed and fail in different places and in different ways.
 
-The Effect module provides us with an immutable value `Effect<Error, Value, Requirements>` that represents both the success case and the failure case of an operation in its type definition.
+The Effect module provides us with an immutable value `Effect<Value, Error, Requirements>` that represents both the success case and the failure case of an operation in its type definition.
 
 These immutable lazy values can be passed around the program so that every operation that requires a success result is guaranteed to have it.
 
