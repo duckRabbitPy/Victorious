@@ -1,6 +1,9 @@
 import { Request, RequestHandler } from "express";
 import { pipe, Effect as E, Effect } from "effect";
-import { getOpenGameSessionsQuery } from "../models/gamestate/queries";
+import {
+  getHealthCheckSnapShotCount,
+  getOpenGameSessionsQuery,
+} from "../models/gamestate/queries";
 import path from "path";
 import {
   safeParseBoolean,
@@ -64,7 +67,6 @@ const checkHasValidToken = (req: Request, pool: Pool) => {
 };
 
 export const createGameSession: RequestHandler = (req, res) => {
-  safeParseNonEmptyString(req.headers.authorization);
   const createGameSession = DBConnection.pipe(
     E.flatMap((connection) => connection.pool),
     E.flatMap((pool) => checkHasValidToken(req, pool)),
@@ -330,6 +332,24 @@ export const auth: RequestHandler = (req, res) => {
   );
 
   const runnable = E.provide(getUsername, DBConnectionLive);
+
+  return E.runPromise(runnable);
+};
+
+export const ping: RequestHandler = (req, res) => {
+  const healthCheckKey = req.query.key;
+  if (healthCheckKey !== process.env.HEALTH_CHECK_KEY) {
+    return res.status(403).send("Incorrect health check key");
+  }
+  const getSnapShotCount = DBConnection.pipe(
+    E.flatMap((connection) => connection.pool),
+    E.flatMap((pool) => getHealthCheckSnapShotCount(pool)),
+    E.map((count) => {
+      res.status(200).send(`pong! Snapshot count: ${count}`);
+    })
+  );
+
+  const runnable = E.provide(getSnapShotCount, DBConnectionLive);
 
   return E.runPromise(runnable);
 };
