@@ -72,3 +72,19 @@ export const getOpenGameSessionsQuery = (pool: Pool) => {
     catch: () => new PostgresError({ message: "postgres query error" }),
   }).pipe(E.retry({ times: 1 }));
 };
+
+export const getHealthCheckSnapShotCount = (pool: Pool) => {
+  const get = async () => {
+    try {
+      const result = await pool.query(`SELECT COUNT(*) FROM game_snapshots`);
+      return result.rows[0].count;
+    } catch (error) {
+      logAndThrowError(error);
+    }
+  };
+
+  return E.tryPromise({
+    try: () => get(),
+    catch: () => new PostgresError({ message: "postgres query error" }),
+  }).pipe(E.retry({ times: 1 }));
+};

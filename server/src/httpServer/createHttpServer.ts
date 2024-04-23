@@ -6,6 +6,8 @@ import { registerRouter } from "./routes/register/register";
 import { authRouter } from "./routes/auth/auth";
 import path from "path";
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
+import { ping } from "./requestHandlers";
+import { pingRouter } from "./routes/db-ping/ping";
 
 export function createHttpServer(app: wsApplication) {
   const isDev = process.env.NODE_ENV === "development";
@@ -26,6 +28,7 @@ export function createHttpServer(app: wsApplication) {
   app.use("/api/login", loginRouter);
   app.use("/api/register", registerRouter);
   app.use("/api/auth", authRouter);
+  app.use("/api/ping", pingRouter);
   app.use("/api/game-sessions", gameRouter);
 
   // React app running on the same port as the server, in development use Vite server on port 5173

@@ -94,9 +94,13 @@ button {
     padding: 0.2em;
   }
 }
-button:hover {
+button:not(:disabled):hover {
   border-color: #646cff;
   color: #747bff;
+}
+
+button:disabled:hover {
+  color: grey;
 }
 button:focus,
 button:focus-visible {
