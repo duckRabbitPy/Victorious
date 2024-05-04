@@ -133,44 +133,44 @@ const moneylender = {
   description: "Trash a copper from your hand. If you do, +3 treasure",
 } as const;
 
-const TreasureNames = S.union(
-  S.literal("copper"),
-  S.literal("silver"),
-  S.literal("gold")
+const TreasureNames = S.Union(
+  S.Literal("copper"),
+  S.Literal("silver"),
+  S.Literal("gold")
 );
 
-const VictoryNames = S.union(
-  S.literal("estate"),
-  S.literal("duchy"),
-  S.literal("province")
+const VictoryNames = S.Union(
+  S.Literal("estate"),
+  S.Literal("duchy"),
+  S.Literal("province")
 );
 
-const ActionNames = S.union(
-  S.literal("village"),
-  S.literal("smithy"),
-  S.literal("market"),
-  S.literal("councilRoom"),
-  S.literal("laboratory"),
-  S.literal("festival"),
-  S.literal("mine"),
-  S.literal("workshop"),
-  S.literal("moneylender")
+const ActionNames = S.Union(
+  S.Literal("village"),
+  S.Literal("smithy"),
+  S.Literal("market"),
+  S.Literal("councilRoom"),
+  S.Literal("laboratory"),
+  S.Literal("festival"),
+  S.Literal("mine"),
+  S.Literal("workshop"),
+  S.Literal("moneylender")
 );
 
-const CardNames = S.union(TreasureNames, VictoryNames, ActionNames);
+const CardNames = S.Union(TreasureNames, VictoryNames, ActionNames);
 
-const CardTypes = S.union(
-  S.literal("treasure"),
-  S.literal("victory"),
-  S.literal("action")
+const CardTypes = S.Union(
+  S.Literal("treasure"),
+  S.Literal("victory"),
+  S.Literal("action")
 );
 
 class Card extends S.Class<Card>("Card")({
   name: CardNames,
-  cost: S.number,
+  cost: S.Number,
   type: CardTypes,
-  value: S.number,
-  description: S.optional(S.string),
+  value: S.Number,
+  description: S.optional(S.String),
 }) {}
 
 export const getCardCostByName = (cardName: CardName): number => {
@@ -296,26 +296,26 @@ export const cardNameToCard = (cardName: CardName): Card => {
 export type CardName = S.Schema.Type<typeof CardNames>;
 export type CardCount = S.Schema.Type<typeof CardCountStruct>;
 
-const CardCountStruct = S.record(
-  S.union(TreasureNames, VictoryNames, ActionNames),
-  S.number
+const CardCountStruct = S.Record(
+  S.Union(TreasureNames, VictoryNames, ActionNames),
+  S.Number
 );
 
 class Requirement extends S.Class<Requirement>("Requirement")({
   type: S.optional(
-    S.union(S.literal("Treasure"), S.literal("Victory"), S.literal("Action"))
+    S.Union(S.Literal("Treasure"), S.Literal("Victory"), S.Literal("Action"))
   ),
-  maxValue: S.optional(S.number),
-  minValue: S.optional(S.number),
+  maxValue: S.optional(S.Number),
+  minValue: S.optional(S.Number),
 }) {}
 
 export class ActionPhaseDemand extends S.Class<ActionPhaseDemand>(
   "ActionPhaseDemand"
 )({
   actionCard: ActionNames,
-  demandType: S.union(S.literal("Gain"), S.literal("Trash")),
+  demandType: S.Union(S.Literal("Gain"), S.Literal("Trash")),
   requirement: S.optional(Requirement),
-  count: S.number,
+  count: S.Number,
 }) {}
 
 export enum Phases {
@@ -325,66 +325,66 @@ export enum Phases {
 
 export class ActorState extends S.Class<ActorState>("ActorState")({
   id: S.UUID,
-  name: S.string,
+  name: S.String,
   hand: CardCountStruct,
   cardsInPlay: CardCountStruct,
-  bonusTreasureValue: S.number,
-  actions: S.number,
-  buys: S.number,
-  victoryPoints: S.number,
-  discardPile: S.array(S.union(TreasureNames, VictoryNames, ActionNames)),
-  deck: S.array(S.union(TreasureNames, VictoryNames, ActionNames)),
-  actionPhaseDemand: S.nullable(ActionPhaseDemand),
-  phase: S.enums(Phases),
+  bonusTreasureValue: S.Number,
+  actions: S.Number,
+  buys: S.Number,
+  victoryPoints: S.Number,
+  discardPile: S.Array(S.Union(TreasureNames, VictoryNames, ActionNames)),
+  deck: S.Array(S.Union(TreasureNames, VictoryNames, ActionNames)),
+  actionPhaseDemand: S.NullishOr(ActionPhaseDemand),
+  phase: S.Enums(Phases),
 }) {}
 
 export class GlobalState extends S.Class<GlobalState>("GlobalState")({
   supply: CardCountStruct,
-  history: S.array(S.string),
+  history: S.Array(S.String),
 }) {}
 
 export class GameState extends S.Class<GameState>("GameState")({
-  id: S.number,
-  room: S.number,
-  turn: S.number,
+  id: S.Number,
+  room: S.Number,
+  turn: S.Number,
   session_id: S.UUID,
-  mutation_index: S.number,
-  actor_state: S.array(ActorState),
+  mutation_index: S.Number,
+  actor_state: S.Array(ActorState),
   global_state: GlobalState,
   created_at: S.ValidDateFromSelf,
-  game_over: S.boolean,
+  game_over: S.Boolean,
 }) {}
 
 export class ChatMessage extends S.Class<ChatMessage>("ChatMessage")({
-  username: S.string,
-  message: S.string,
+  username: S.String,
+  message: S.String,
 }) {}
 
 export class BroadCast extends S.Class<BroadCast>("BroadCast")({
-  broadcastType: S.union(
-    S.literal("gameState"),
-    S.literal("chatLog"),
-    S.literal("error")
+  broadcastType: S.Union(
+    S.Literal("gameState"),
+    S.Literal("chatLog"),
+    S.Literal("error")
   ),
   gameState: S.optional(GameState),
-  chatLog: S.optional(S.array(ChatMessage)),
-  error: S.optional(S.string),
+  chatLog: S.optional(S.Array(ChatMessage)),
+  error: S.optional(S.String),
 }) {}
 
 class RegisterResult extends S.Class<RegisterResult>("RegisterResult")({
-  user_id: S.string,
-  username: S.string,
-  email: S.string,
-  confirmation_token: S.string,
+  user_id: S.String,
+  username: S.String,
+  email: S.String,
+  confirmation_token: S.String,
 }) {}
 
 export const safeParseNonEmptyString = S.decodeUnknown(
-  S.string.pipe(S.minLength(1))
+  S.String.pipe(S.minLength(1))
 );
 export const safeParseCardName = S.decodeUnknown(CardNames);
 export const safeParseBroadCast = S.decodeUnknown(BroadCast);
 export const safeParseGameState = S.decodeUnknown(GameState);
-export const safeParseChatLog = S.decodeUnknown(S.array(ChatMessage));
+export const safeParseChatLog = S.decodeUnknown(S.Array(ChatMessage));
 export const safeParseRegisterResult = S.decodeUnknown(RegisterResult);
 
 export type BroadCastType = "gameState" | "chatLog" | "error";
@@ -408,12 +408,12 @@ export enum SupportedEffects {
 }
 
 export class ClientPayload extends S.Class<ClientPayload>("ClientPayload")({
-  mutationIndex: S.number,
-  effect: S.enums(SupportedEffects),
-  cardName: S.optional(S.union(TreasureNames, VictoryNames, ActionNames)),
-  room: S.number,
-  authToken: S.string,
-  chatMessage: S.optional(S.string),
+  mutationIndex: S.Number,
+  effect: S.Enums(SupportedEffects),
+  cardName: S.optional(S.Union(TreasureNames, VictoryNames, ActionNames)),
+  room: S.Number,
+  authToken: S.String,
+  chatMessage: S.optional(S.String),
 }) {}
 
 export const zeroCardCount: CardCount = {

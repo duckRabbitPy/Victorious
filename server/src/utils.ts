@@ -40,22 +40,22 @@ export const tapPipeLine = <A, E, R>(
   );
 
 export const safeParseNumber = S.decodeUnknown(
-  S.number.pipe(S.positive(), S.int(), S.nonNaN())
+  S.Number.pipe(S.positive(), S.int(), S.nonNaN())
 );
 
-export const safeParseBoolean = S.decodeUnknown(S.boolean);
+export const safeParseBoolean = S.decodeUnknown(S.Boolean);
 
 class UserJWT extends S.Class<UserJWT>("ParsedJWT")({
-  userId: S.string,
-  username: S.string,
-  iat: S.number,
-  exp: S.number,
+  userId: S.String,
+  username: S.String,
+  iat: S.Number,
+  exp: S.Number,
 }) {}
 
 export const safeParseUserJWT = S.decodeUnknown(UserJWT);
 
 export const safeParseNumberArray = S.decodeUnknown(
-  S.array(S.number.pipe(S.positive(), S.int(), S.nonNaN()))
+  S.Array(S.Number.pipe(S.positive(), S.int(), S.nonNaN()))
 );
 
 export const verifyJwt = (token: string, secret: string | undefined) => {
@@ -87,7 +87,7 @@ export const sendErrorMsgToClient = (
     console.error(
       "No room number provided, cannot send error message to client"
     );
-    return E.succeed(E.unit);
+    return E.succeed(E.void);
   }
 
   // server log
@@ -155,9 +155,10 @@ export const getUserInfoFromJWT = (authToken: string | undefined) =>
   );
 
 export const getClientMessage = (msg: unknown) =>
-  parseClientMessage(JSON.parse(msg as string))
-    .pipe(E.orElseSucceed(() => undefined))
-    .pipe(E.runSync);
+  parseClientMessage(JSON.parse(msg as string)).pipe(
+    E.orElseSucceed(() => undefined),
+    E.runSync
+  );
 
 export const clientNotInConnectionList = (
   room: number | undefined,

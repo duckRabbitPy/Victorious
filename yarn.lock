@@ -14,10 +14,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@effect/schema@^0.64":
-  version "0.64.5"
-  resolved "https://registry.yarnpkg.com/@effect/schema/-/schema-0.64.5.tgz#b38cdedf19612fc2681f522c4383ed9ff3256e92"
-  integrity sha512-yYhwdYkGyj4GEepuo7kNvhtYqi3UxdbFR3A+W3/Ln9cKQa0WGJP8v6jKuSBpAJKz8aFuFVsJ6wRtrx1pgjE0OQ==
+"@effect/schema@^0.66":
+  version "0.66.14"
+  resolved "https://registry.yarnpkg.com/@effect/schema/-/schema-0.66.14.tgz#c52db8b93cf9215a102bca2ff39bd68bc686e124"
+  integrity sha512-2Yc6gnXpcMmwQnbU2JUwDl0ckeOJmFZzteXn2jjVWuNi9PGv+jp2yK7jxv0pALcieuYwdR5tKkCRI7STuhEwfg==
 
 "@esbuild/aix-ppc64@0.19.12":
   version "0.19.12"
@@ -1199,10 +1199,10 @@ ee-first@1.1.1:
   resolved "https://registry.yarnpkg.com/ee-first/-/ee-first-1.1.1.tgz#590c61156b0ae2f4f0255732a158b266bc56b21d"
   integrity sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==
 
-effect@2.4.7:
-  version "2.4.7"
-  resolved "https://registry.yarnpkg.com/effect/-/effect-2.4.7.tgz#c0cefa86e71d7f3d15a53d2c2441dabd646b124e"
-  integrity sha512-4YOPi4r7nLFJAK1W/l7FM3fptZBtrJkqa5Rh2u7gkFCECn+RiwuQ8KYPm8sf4RFIp+fSQXGA87GIDtyxrz0mbA==
+effect@3.1.2:
+  version "3.1.2"
+  resolved "https://registry.yarnpkg.com/effect/-/effect-3.1.2.tgz#e270c0a6c1442203088bd992adf12b5c47b90271"
+  integrity sha512-XakSWck6w6ROqKyEys0tKE9K6Gx2p8W/09u2ZTEZZrneO5Z3QEdPhXzWTyC73kD5zUvfJinZLVIas8I1xoHaTg==
 
 emoji-regex@^8.0.0:
   version "8.0.0"

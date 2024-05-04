@@ -4,7 +4,7 @@
     "body-parser": "^1.19.1",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "effect": "2.4.7",
+    "effect": "3.1.2",
     "eslint": "^8.0.0",
     "express": "^4.18.2",
     "fast-check": "^3.13.2",
@@ -39,7 +39,7 @@
   "author": "duckRabbitPy",
   "license": "ISC",
   "devDependencies": {
-    "@effect/schema": "^0.64",
+    "@effect/schema": "^0.66",
     "@total-typescript/ts-reset": "^0.5.1",
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.17",
