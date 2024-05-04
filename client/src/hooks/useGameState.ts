@@ -28,15 +28,15 @@ const updateStateElseError = <T>({
     E.mapBoth({
       onFailure: () => {
         setErrorMessage(errorMessage);
-        return E.unit;
+        return E.void;
       },
       onSuccess: (newState) => {
         if (newState === "Debounce") {
-          return E.unit;
+          return E.void;
         }
 
         updateState(newState);
-        return E.unit;
+        return E.void;
       },
     }),
     E.runSync

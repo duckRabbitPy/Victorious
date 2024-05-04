@@ -41,7 +41,7 @@ const registerUserTest = (pool: Pool) => {
     expect(registerResponseJson).toMatchObject({ successMsg: "Email sent" });
   });
 
-  return E.succeed(E.unit);
+  return E.succeed(E.void);
 };
 
 const loginFailsForUnverifiedTest = (pool: Pool) => {
@@ -64,7 +64,7 @@ const loginFailsForUnverifiedTest = (pool: Pool) => {
     });
   });
 
-  return E.succeed(E.unit);
+  return E.succeed(E.void);
 };
 
 const verifyUserEmailTest = (pool: Pool) => {
@@ -91,7 +91,7 @@ const verifyUserEmailTest = (pool: Pool) => {
     expect(verified).toBe(true);
   });
 
-  return E.succeed(E.unit);
+  return E.succeed(E.void);
 };
 
 const loginUserTest = (pool: Pool) => {
@@ -114,7 +114,7 @@ const loginUserTest = (pool: Pool) => {
     });
   });
 
-  return E.succeed(E.unit);
+  return E.succeed(E.void);
 };
 
 const createRoomTest = (pool: Pool) => {
@@ -156,7 +156,7 @@ const createRoomTest = (pool: Pool) => {
     );
   });
 
-  return E.succeed(E.unit);
+  return E.succeed(E.void);
 };
 
 const createRoomAuthProtectedTest = (pool: Pool) => {
@@ -183,7 +183,7 @@ const createRoomAuthProtectedTest = (pool: Pool) => {
     });
   });
 
-  return E.succeed(E.unit);
+  return E.succeed(E.void);
 };
 
 const getOpenRoomsAuthProtectedTest = (pool: Pool) => {
@@ -201,7 +201,7 @@ const getOpenRoomsAuthProtectedTest = (pool: Pool) => {
     expect(openGameSessionResponse.status).toBe(401);
   });
 
-  return E.succeed(E.unit);
+  return E.succeed(E.void);
 };
 
 const getOpenRooms = (pool: Pool) => {
@@ -234,7 +234,7 @@ const getOpenRooms = (pool: Pool) => {
     expect(openGameSessionResponseJson.data.openRooms).toContain(TEST_ROOM);
   });
 
-  return E.succeed(E.unit);
+  return E.succeed(E.void);
 };
 
 function runAllTests(pool: Pool) {
