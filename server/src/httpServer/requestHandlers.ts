@@ -176,7 +176,7 @@ export const register: RequestHandler = (req, res) => {
               })
             );
           }
-          return E.unit;
+          return E.void;
         }),
         E.flatMap(() =>
           registerNewUserQuery(username, email, hashedPassword, pool)

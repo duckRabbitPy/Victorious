@@ -37,5 +37,5 @@ export const broadcastToRoom = <
     };
   });
 
-  return E.unit;
+  return E.void;
 };

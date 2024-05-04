@@ -6,7 +6,6 @@ import { registerRouter } from "./routes/register/register";
 import { authRouter } from "./routes/auth/auth";
 import path from "path";
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
-import { ping } from "./requestHandlers";
 import { pingRouter } from "./routes/db-ping/ping";
 
 export function createHttpServer(app: wsApplication) {

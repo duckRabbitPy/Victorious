@@ -87,12 +87,12 @@ export function getSendBotMessagesRunnable(
       if (msg?.chatMessage) {
         return sendBotMessage(msg, roomConnections, pool);
       }
-      return E.succeed(E.unit);
+      return E.succeed(E.void);
     }),
 
     E.catchAll((e) => {
       console.log(e);
-      return E.succeed(E.unit);
+      return E.succeed(E.void);
     })
   );
 
