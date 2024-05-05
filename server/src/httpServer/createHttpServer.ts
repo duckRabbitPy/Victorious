@@ -5,6 +5,7 @@ import { gameRouter } from "./routes/game-sessions/game-sessions";
 import { registerRouter } from "./routes/register/register";
 import { authRouter } from "./routes/auth/auth";
 import path from "path";
+import { Response } from "express";
 import { wsApplication } from "@wll8/express-ws/dist/src/type";
 import { pingRouter } from "./routes/db-ping/ping";
 
@@ -34,26 +35,31 @@ export function createHttpServer(app: wsApplication) {
   app.use("/", express.static(clientDistPath, { maxAge: MAX_CACHE_AGE }));
 
   // Serve static files from the dist/client folder in production
+
+  const setHeaders = (res: Response) => {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  };
+
+  // no-cache, no-store, must-revalidate"
   if (!isDev) {
     app.use(
       "/public",
       express.static(path.join(rootPath, "dist/public"), {
-        maxAge: MAX_CACHE_AGE,
+        setHeaders,
       })
     );
 
-    app.use(
-      "/",
-      express.static(path.join(rootPath, "dist/client"), {
-        maxAge: MAX_CACHE_AGE,
-      })
-    );
+    app.use("/", express.static(path.join(rootPath, "dist/client"), {}));
   }
 
   // Handle any other client routes by serving the React app's entry point
   app.get("*", (_, res) => {
     res.sendFile(path.join(clientDistPath, "index.html"), {
-      maxAge: MAX_CACHE_AGE,
+      headers: {
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      },
     });
   });
 
