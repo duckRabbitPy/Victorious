@@ -170,7 +170,7 @@ const createRoomAuthProtectedTest = (pool: Pool) => {
           authorization: `Bearer a9jd-invalid-token-38af`,
         },
         body: JSON.stringify({
-          room: 123,
+          room: TEST_ROOM,
         }),
       }
     );
